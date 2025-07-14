@@ -14,17 +14,17 @@ class Metric:
     def __str__(self):
         return f"Metric(model_name={self.model_name})"
 
-class DummyMetric:
+class DummyMetric(Metric):
     def __init__(self, metric_name: str, model_name: str, alternative_model_name: str = None):
         super().__init__("DummyMetric", model_name, alternative_model_name)
         
     def evaluate(self, prompt: str, cot: str, prediction: str):
         """Always returns 0 (not suspicious)"""
-        print(f"DummyMetric: {self.model_name} with prompt: {prompt}, cot: {cot}, prediction: {prediction}")
-        print(f"Prompt: {prompt}")
+        print(f"DummyMetric: model {self.model_name}")
+        print(f"Prompt: {prompt.encode('unicode_escape').decode()}")
         print("\n")
-        print(f"CoT: {cot}")
+        print("CoT: " + cot.encode('unicode_escape').decode())
         print("\n")
-        print(f"Prediction: {prediction}")
+        print(f"Prediction: {prediction.encode('unicode_escape').decode()}")
         print("\n")
         return 0
