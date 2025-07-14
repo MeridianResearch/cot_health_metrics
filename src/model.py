@@ -114,7 +114,7 @@ class Model:
 
         with torch.no_grad():
             outputs = self.model(input_ids=sequences)
-            final_response.logits = torch.nn.functional.softmax(outputs.logits, dim=-1)
+            final_response.logits = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
 
         full_response = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
         final_response.raw_output = full_response

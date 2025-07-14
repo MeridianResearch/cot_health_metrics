@@ -15,12 +15,13 @@ class RelianceMetric(Metric):
 
         p = f"Question: {prompt}\n"
         new_prompt = p + prediction
-        print(new_prompt)
+        #print(new_prompt)
         with torch.no_grad():
             inputs = model.tokenizer(new_prompt, return_tensors="pt").to(model.model.device)
             outputs = model.model(**inputs)
-            new_logits = torch.nn.functional.softmax(outputs.logits, dim=-1)
+            new_logits = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
 
         print(new_logits)
+        print(new_logits.shape)
 
         return 0.0
