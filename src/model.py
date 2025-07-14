@@ -18,7 +18,7 @@ def generate_cot_response(question, max_new_tokens=4096):
         top_p=0.95,
         eos_token_id=tokenizer.eos_token_id,
     )
-    response = tokenizer.decode(output[0], skip_special_tokens=False)
+    response = tokenizer.decode(output[0], skip_special_tokens=True)
     # Return only the answer part
     return response[len(prompt):].strip()
 
