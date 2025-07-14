@@ -24,7 +24,9 @@ class Model:
             **inputs,
             max_new_tokens=max_new_tokens,
             do_sample=True,
-            temperature=0.7,
+            temperature=0.6,
+            top_k=20,
+            min_p=0.0,
             top_p=0.95,
             eos_token_id=self.tokenizer.eos_token_id,
         )
