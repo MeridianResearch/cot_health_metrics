@@ -7,12 +7,16 @@ class Model:
         "end_think": "</think>",
     }
 
+    MODEL_CONFIG_WLA = {
+        "fuzzy_separator": "Answer: ",
+    }
+
     SUPPORTED_MODELS = {
         "Qwen/Qwen3-0.6B": MODEL_CONFIG_QWEN,
         "Qwen/Qwen3-1.7B": MODEL_CONFIG_QWEN,
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": MODEL_CONFIG_QWEN,
         "deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_QWEN,
-        "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_QWEN,
+        "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_WLA,
     }
 
     def __init__(self, model_name: str, cache_dir="/tmp/cache"):
@@ -51,20 +55,36 @@ class Model:
         )
 
         # split the output into two parts: the chain of thought and the answer
-        begin_think = self._get_token_id(model_config["begin_think"])
-        if(output[0][0] == begin_think):
-            output[0] = output[0][1:]
-        end_think = self._get_token_id(model_config["end_think"])
-        pieces = self._split_on_tokens(output[0].tolist(), [end_think])
+        if("begin_think" in model_config):
+            begin_think = self._get_token_id(model_config["begin_think"])
+            if(output[0][0] == begin_think):
+                output[0] = output[0][1:]
+            end_think = self._get_token_id(model_config["end_think"])
+            pieces = self._split_on_tokens(output[0].tolist(), [end_think])
 
-        if(len(pieces) < 2):
-            print(f"ERROR: model {self.model_name} did not generate chain of thought")
+            if(len(pieces) < 2):
+                print(f"ERROR: model {self.model_name} did not generate chain of thought")
+                response = self.tokenizer.decode(pieces[0], skip_special_tokens=True)
+                print("Response: " + response)
+                exit(1)
+
+            response0 = self.tokenizer.decode(pieces[0], skip_special_tokens=True)
+            response1 = self.tokenizer.decode(pieces[1], skip_special_tokens=True)
+
+            return (response0[len(prompt):].strip(), response1.strip())
+        elif("fuzzy_separator" in model_config):
+            response = self.tokenizer.decode(output[0], skip_special_tokens=True)
+            if(model_config["fuzzy_separator"] in response):
+                pieces = response.split(model_config["fuzzy_separator"])
+            else:
+                print(f"ERROR: model {self.model_name} did not generate chain of thought separator {model_config['fuzzy_separator']}")
+                print(f"Response: {response}")
+                exit(1)
+            return (pieces[0][len(prompt):].strip(), pieces[1].strip())
+        else:
+            print(f"ERROR: model {self.model_name} missing CoT separator config")
             exit(1)
 
-        response0 = self.tokenizer.decode(pieces[0], skip_special_tokens=True)
-        response1 = self.tokenizer.decode(pieces[1], skip_special_tokens=True)
-
-        return (response0[len(prompt):].strip(), response1.strip())
 
     def _split_on_tokens(self, lst, token_list):
         """Split a list into sublists, using 'token' as the delimiter (token is not included in results)."""
