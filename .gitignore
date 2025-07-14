@@ -1,4 +1,4 @@
 /env
-src/__pycache__
-logs
-hf_cache
+__pycache__
+/logs
+/hf_cache
