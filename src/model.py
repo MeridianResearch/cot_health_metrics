@@ -36,6 +36,10 @@ class Model:
         end_think = self._get_token_id("</think>")
         pieces = self._split_on_tokens(output[0].tolist(), [end_think])
 
+        if(len(pieces) < 2):
+            print(f"ERROR: model {self.model_name} did not generate chain of thought")
+            exit(1)
+
         response0 = self.tokenizer.decode(pieces[0], skip_special_tokens=True)
         response1 = self.tokenizer.decode(pieces[1], skip_special_tokens=True)
 
