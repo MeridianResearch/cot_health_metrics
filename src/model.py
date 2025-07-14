@@ -30,10 +30,10 @@ class Model:
         )
 
         # split the output into two parts: the chain of thought and the answer
-        begin_think = self.tokenizer.convert_tokens_to_ids("<think>")
+        begin_think = self._get_token_id("<think>")
         if(output[0][0] == begin_think):
             output[0] = output[0][1:]
-        end_think = self.tokenizer.convert_tokens_to_ids("</think>")
+        end_think = self._get_token_id("</think>")
         pieces = self._split_on_tokens(output[0].tolist(), [end_think])
 
         response0 = self.tokenizer.decode(pieces[0], skip_special_tokens=True)
@@ -53,6 +53,13 @@ class Model:
                 current.append(item)
         result.append(current)
         return result
+
+    def _get_token_id(self, token):
+        token_id = self.tokenizer.convert_tokens_to_ids(token)
+        if(token_id is None):
+            print(f"ERROR: model {self.model_name} does not support {token} token")
+            exit(1)
+        return token_id
 
 if __name__ == "__main__":
     question = "A car travels 60 miles in 1.5 hours. What is its average speed?"
