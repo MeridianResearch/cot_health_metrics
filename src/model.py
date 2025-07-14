@@ -4,10 +4,17 @@ import torch
 class Model:
     def __init__(self, model_name: str, cache_dir="/tmp/cache"):
         self.model_name = model_name
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            model_name, cache_dir=cache_dir)
-        self.model = AutoModelForCausalLM.from_pretrained(
-            model_name, torch_dtype=torch.float16, device_map="auto")
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                model_name, cache_dir=cache_dir)
+            self.model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                torch_dtype=torch.float16,
+                device_map="auto",
+                cache_dir=cache_dir)
+        except Exception as e:
+            print(f"Error loading model {model_name}: {e}")
+            raise
 
     def generate_cot_response(self, question, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""

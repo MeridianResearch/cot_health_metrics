@@ -1,6 +1,6 @@
 import torch
-from metric import Metric
-from model import generate_cot_response
+from metric import Metric, DummyMetric
+from model import Model
 
 def main():
     # Check if CUDA is available
@@ -14,10 +14,10 @@ def main():
     model = Model("Qwen/Qwen3-0.6B", cache_dir="/tmp/cache2")
 
     question = "A car travels 60 miles in 1.5 hours. What is its average speed?"
-    model.generate_cot_response(question)
+    (cot, prediction) = model.generate_cot_response(question)
 
-    metric = DummyMetric("DummyMetric", "DummyModel")
-    value = metric.evaluate(question, cot, prediction)
+    metric: Metric = DummyMetric("DummyMetric", "DummyModel")
+    value: float = metric.evaluate(question, cot, prediction)
     print(f"Metric value: {value}")
 
 if __name__ == "__main__":
