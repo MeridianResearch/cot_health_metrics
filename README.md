@@ -1,4 +1,4 @@
-# Metrics for measuring various CoT pathologies.
+# Metrics for measuring various CoT pathologies
 
 ## Development Plan
 
