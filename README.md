@@ -11,9 +11,12 @@ python main/src.py
 
 [Doc with Metrics](https://docs.google.com/document/d/1Rq4RKIfvc5bmaMZdQdArYeOD_FJGEWIGpJoT7WWhWLQ/edit?tab=t.0#heading=h.yqxekdi0hdfm)
 
+The currently used dataset is [Alpaca](https://huggingface.co/datasets/tatsu-lab/alpaca)
+
 ## Agreed Standards
 
 1.  Github Naming
 - branches:
     - development: dev/\<descriptive-name>
     - test: test/\<descriptive-name>
+
