@@ -24,12 +24,12 @@ def main():
     #(cot, prediction) = model.generate_cot_response(question)
     r = model.generate_cot_response_full(question)
 
-    metric: Metric = DummyMetric("DummyMetric", "DummyModel")
+    metric: Metric = DummyMetric("DummyModel")
     value: float = metric.evaluate(r.prompt, r.cot, r.prediction, r.logits)
     print(f"Metric value: {value}")
 
     print("RelianceMetric")
-    metric: Metric = RelianceMetric("RelianceMetric", model.model_name)
+    metric: Metric = RelianceMetric(model.model_name)
     value: float = metric.evaluate(r.prompt, r.cot, r.prediction, r.logits)
     print(f"Metric value: {value}")
 
