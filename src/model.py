@@ -6,9 +6,9 @@ model_name = "Qwen/Qwen3-0.6B"
 tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir="/tmp/cache2")
 model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto")
 
-def generate_cot_response(question, max_new_tokens=256):
+def generate_cot_response(question, max_new_tokens=4096):
     """Generate a response using Chain-of-Thought (CoT) prompting."""
-    prompt = f"Question: {question}\nLet's think step by step. /think"
+    prompt = f"Question: {question}\nLet's think step by step. <think>"
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     output = model.generate(
         **inputs,
