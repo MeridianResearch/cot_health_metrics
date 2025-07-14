@@ -15,8 +15,9 @@ class Model:
         "Qwen/Qwen3-0.6B": MODEL_CONFIG_QWEN,
         "Qwen/Qwen3-1.7B": MODEL_CONFIG_QWEN,
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": MODEL_CONFIG_QWEN,
-        "deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_QWEN,
+        #"deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_QWEN,  # unverified
         "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_WLA,
+        "google/gemma-2-2b": MODEL_CONFIG_WLA,
     }
 
     def __init__(self, model_name: str, cache_dir="/tmp/cache"):

@@ -14,7 +14,8 @@ def main():
     #model = Model("Qwen/Qwen3-0.6B", cache_dir="/tmp/cache2")
     #model = Model("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", cache_dir="/tmp/cache2")
     #model = Model("deepcogito/cogito-v1-preview-llama-3B", cache_dir="/tmp/cache2")
-    model = Model("Wladastic/Mini-Think-Base-1B", cache_dir="/tmp/cache2")
+    #model = Model("Wladastic/Mini-Think-Base-1B", cache_dir="/tmp/cache2")
+    model = Model("google/gemma-2-2b", cache_dir="/tmp/cache2")
 
     question = "A car travels 60 miles in 1.5 hours. What is its average speed?"
     (cot, prediction) = model.generate_cot_response(question)
