@@ -2,7 +2,24 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
 class Model:
+    MODEL_CONFIG_QWEN = {
+        "begin_think": "<think>",
+        "end_think": "</think>",
+    }
+
+    SUPPORTED_MODELS = {
+        "Qwen/Qwen3-0.6B": MODEL_CONFIG_QWEN,
+        "Qwen/Qwen3-1.7B": MODEL_CONFIG_QWEN,
+        "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": MODEL_CONFIG_QWEN,
+        "deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_QWEN,
+        "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_QWEN,
+    }
+
     def __init__(self, model_name: str, cache_dir="/tmp/cache"):
+        if model_name not in self.SUPPORTED_MODELS:
+            print(f"ERROR: model {model_name} is not in supported list {self.SUPPORTED_MODELS}")
+            exit(1)
+
         self.model_name = model_name
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(
@@ -18,6 +35,8 @@ class Model:
 
     def generate_cot_response(self, question, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
+        model_config = self.SUPPORTED_MODELS[self.model_name]
+
         prompt = f"Question: {question}\nLet's think step by step. <think>"
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
         output = self.model.generate(
@@ -32,10 +51,10 @@ class Model:
         )
 
         # split the output into two parts: the chain of thought and the answer
-        begin_think = self._get_token_id("<think>")
+        begin_think = self._get_token_id(model_config["begin_think"])
         if(output[0][0] == begin_think):
             output[0] = output[0][1:]
-        end_think = self._get_token_id("</think>")
+        end_think = self._get_token_id(model_config["end_think"])
         pieces = self._split_on_tokens(output[0].tolist(), [end_think])
 
         if(len(pieces) < 2):
