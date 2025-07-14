@@ -1,6 +1,8 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
+### edit prompt to original prompt + produce CoT thinking tokens before answering
+
 class Model:
     def __init__(self, model_name: str, cache_dir="/tmp/cache"):
         self.model_name = model_name
@@ -16,6 +18,37 @@ class Model:
             print(f"Error loading model {model_name}: {e}")
             raise
 
+    def generate_internalized_cot_response(self, question, max_new_tokens=4096):
+        """Generate a response using internalized Chain-of-Thought (CoT) prompting."""
+        prompt = f"Question: {question}\n Produce CoT thinking tokens (that is, your internalized thoughts) instead of standard CoT before answering <think>"
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+        output = self.model.generate(
+            **inputs,
+            max_new_tokens=max_new_tokens,
+            do_sample=False,
+            temperature=0.6,
+            top_k=20,
+            min_p=0.0,
+            top_p=0.95,
+            eos_token_id=self.tokenizer.eos_token_id,
+        )
+
+        # split the output into two parts: the chain of thought and the answer
+        begin_think = self._get_token_id("<think>")
+        if(output[0][0] == begin_think):
+            output[0] = output[0][1:]
+        end_think = self._get_token_id("</think>")
+        pieces = self._split_on_tokens(output[0].tolist(), [end_think])
+
+        if(len(pieces) < 2):
+            print(f"ERROR: model {self.model_name} did not generate chain of thought")
+            exit(1)
+
+        response0 = self.tokenizer.decode(pieces[0], skip_special_tokens=True)
+        response1 = self.tokenizer.decode(pieces[1], skip_special_tokens=True)
+
+        return (response0[len(prompt):].strip(), response1.strip())
+
     def generate_cot_response(self, question, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         prompt = f"Question: {question}\nLet's think step by step. <think>"
@@ -23,7 +56,7 @@ class Model:
         output = self.model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
-            do_sample=True,
+            do_sample=False,
             temperature=0.6,
             top_k=20,
             min_p=0.0,
@@ -71,8 +104,8 @@ if __name__ == "__main__":
     question = "A car travels 60 miles in 1.5 hours. What is its average speed?"
     print("Prompt: " + question.encode('unicode_escape').decode())
 
-    model = Model("Qwen/Qwen3-0.6B", cache_dir="/tmp/cache2")
-    (cot, answer) = model.generate_cot_response(question)
+    model = Model("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", cache_dir="/tmp/cache2")
+    (cot, answer) = model.generate_internalized_cot_response(question)
     print("\n")
     print("CoT: " + cot.encode('unicode_escape').decode())
     print("\n")
