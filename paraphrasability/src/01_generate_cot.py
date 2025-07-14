@@ -2,6 +2,7 @@
 python -m src.01_generate_cot --data-file paraphrasability/data/initial_input.json \
                               --output-file paraphrasability/data/generated_cot.jsonl \
                               --num-samples 200 --max-new-tokens 512 --log-every 50
+
 """
 
 import argparse
