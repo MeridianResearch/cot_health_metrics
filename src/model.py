@@ -18,6 +18,7 @@ class Model:
         #"deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_QWEN,  # unverified
         "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_WLA,
         "google/gemma-2-2b": MODEL_CONFIG_WLA,
+        #"microsoft/phi-2": MODEL_CONFIG_WLA,  # not very consistent
     }
 
     def __init__(self, model_name: str, cache_dir="/tmp/cache"):
@@ -57,6 +58,7 @@ class Model:
 
         # split the output into two parts: the chain of thought and the answer
         if("begin_think" in model_config):
+            # Split before decoding
             begin_think = self._get_token_id(model_config["begin_think"])
             if(output[0][0] == begin_think):
                 output[0] = output[0][1:]
