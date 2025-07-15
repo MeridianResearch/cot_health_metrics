@@ -2,48 +2,19 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 from dataclasses import dataclass
 
-#@dataclass
-#class ModelResponse:
-#    prompt: str
-#    cot: str
-#    prediction: str
-#    raw_output: str
-#    logits: torch.Tensor
-#
-#    def __post_init__(self):
-#        self.basic_pair = (self.cot, self.prediction)
-
-# 
+@dataclass
 class ModelResponse:
-    def __init__(self, prompt: str, cot: str = None, prediction: str = None, raw_output: str = None, logits: torch.Tensor = None):
-        self.prompt = prompt
-        self.cot = cot
-        self.prediction = prediction
-        self.raw_output = raw_output
-        self.logits = logits
+    question: str
+    prompt: str
+    cot: str
+    prediction: str
+    raw_output: str
+    logits: torch.Tensor
 
-    def get_pair(self):
-        return (self.cot, self.prediction)
+    def __post_init__(self):
+        self.basic_pair = (self.cot, self.prediction)
 
-    def get_prompt(self):
-        return self.prompt
-
-    def get_cot(self):
-        return self.cot
-    
-    def get_prediction(self):
-        return self.prediction
-    
-    def get_raw_output(self):
-        return self.raw_output
-    
-    def get_logits(self):
-        return self.logits
-
-    def _encode(self, text: str):
-        return text.encode('unicode_escape').decode()
-
-    def __str__(self):
+    def old__str__(self):
         return f"""
 ModelResponse(
     Prompt: {self._encode(self.prompt)}
@@ -100,14 +71,21 @@ class Model:
 
     def generate_cot_response(self, question, max_new_tokens=4096):
         final_response = self.generate_cot_response_full(question, max_new_tokens)
-        return final_response.get_pair()
+        return final_response.basic_pair
 
-    def generate_cot_response_full(self, question, max_new_tokens=4096):
+    def make_prompt(self, question):
+        model_config = self.SUPPORTED_MODELS[self.model_name]
+        if("begin_think" in model_config):
+            return f"Question: {question}\nLet's think step by step. <think>"
+        elif("fuzzy_separator" in model_config):
+            return f"Question: {question}\nLet's think step by step. {model_config['fuzzy_separator']}"
+        else:
+            print(f"ERROR: model {self.model_name} missing CoT separator config")
+            exit(1)
+
+    def do_generate(self, prompt, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         model_config = self.SUPPORTED_MODELS[self.model_name]
-
-        prompt = f"Question: {question}\nLet's think step by step. <think>"
-        final_response = ModelResponse(question)
 
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
         output = self.model.generate(
@@ -122,15 +100,16 @@ class Model:
             output_scores=True,
             return_dict_in_generate=True,
         )
+        return output
 
-        sequences = output.sequences
-
+    def get_logits(self, sequences):
         with torch.no_grad():
             outputs = self.model(input_ids=sequences)
-            final_response.logits = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
+            logits = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
+        return logits
 
-        full_response = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
-        final_response.raw_output = full_response
+    def do_split(self, sequences, prompt):
+        model_config = self.SUPPORTED_MODELS[self.model_name]
 
         # split the output into two parts: the chain of thought and the answer
         if("begin_think" in model_config):
@@ -149,8 +128,8 @@ class Model:
             response0 = self.tokenizer.decode(pieces[0], skip_special_tokens=True)
             response1 = self.tokenizer.decode(pieces[1], skip_special_tokens=True)
 
-            final_response.cot = response0[len(prompt):].strip()
-            final_response.prediction = response1.strip()
+            cot = response0[len(prompt):].strip()
+            prediction = response1.strip()
         elif("fuzzy_separator" in model_config):
             if(model_config["fuzzy_separator"] in full_response):
                 pieces = full_response.split(model_config["fuzzy_separator"])
@@ -158,12 +137,51 @@ class Model:
                 print(f"ERROR: model {self.model_name} did not generate chain of thought separator {model_config['fuzzy_separator']}")
                 print(f"Response: {full_response}")
                 exit(1)
-            final_response.cot = pieces[0][len(prompt):].strip()
-            final_response.prediction = pieces[1].strip()
+            cot = pieces[0][len(prompt):].strip()
+            prediction = pieces[1].strip()
         else:
             print(f"ERROR: model {self.model_name} missing CoT separator config")
             exit(1)
-        return final_response
+        return (cot, prediction)
+
+    def generate_cot_response_full(self, question, max_new_tokens=4096):
+        """Generate a response using Chain-of-Thought (CoT) prompting."""
+        prompt = self.make_prompt(question)
+        output = self.do_generate(prompt, max_new_tokens)
+        sequences = output.sequences
+        logits = self.get_logits(sequences)
+
+        full_response = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
+        raw_output = full_response
+
+        (cot, prediction) = self.do_split(sequences, question)
+
+        return ModelResponse(
+            question=question,
+            prompt=prompt,
+            cot=cot,
+            prediction=prediction,
+            raw_output=raw_output,
+            logits=logits)
+
+    def evaluate_cot_response(self, prompt, max_new_tokens=4096):
+        """Generate a response using Chain-of-Thought (CoT) prompting."""
+        prompt_tokens = self.tokenizer.encode(prompt, return_tensors="pt").to(self.model.device)
+
+        logits = self.get_logits(prompt_tokens)
+
+        full_response = self.tokenizer.decode(logits[0], skip_special_tokens=True)
+        raw_output = full_response
+
+        (cot, prediction) = self.do_split(logits, question)
+
+        return ModelResponse(
+            question=question,
+            prompt=prompt,
+            cot=cot,
+            prediction=prediction,
+            raw_output=raw_output,
+            logits=logits)
 
 
     def _split_on_tokens(self, lst, token_list):
