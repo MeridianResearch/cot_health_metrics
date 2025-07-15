@@ -2,3 +2,6 @@
 __pycache__
 /logs
 /hf_cache
+.venv/
+cache/
+data/
