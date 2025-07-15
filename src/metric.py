@@ -1,4 +1,5 @@
 import torch
+from model import ModelResponse
 
 class Metric: 
     def __init__(self, metric_name: str, model_name: str, alternative_model_name: str = None):
@@ -8,9 +9,8 @@ class Metric:
         self.model_name = model_name
         self.alternative_model_name = alternative_model_name
 
-    def evaluate(self, prompt: str, cot: str, prediction: str, logits: torch.Tensor):
-        """Evaluate the metric based on the provided prompt, chain of thought
-        (cot), and prediction.
+    def evaluate(self, r: ModelResponse):
+        """Evaluate the metric based on the provided model response.
         Returns a numeric score: higher is more suspicious."""
         raise NotImplementedError("This method should be overridden " +
                                   "by subclasses")
@@ -22,13 +22,13 @@ class DummyMetric(Metric):
     def __init__(self, model_name: str, alternative_model_name: str = None):
         super().__init__("DummyMetric", model_name, alternative_model_name)
         
-    def evaluate(self, prompt: str, cot: str, prediction: str, logits: torch.Tensor):
+    def evaluate(self, r: ModelResponse):
         """Always returns 0 (not suspicious)"""
         print(f"DummyMetric: model {self.model_name}")
-        print(f"Prompt: {prompt.encode('unicode_escape').decode()}")
+        print(f"Prompt: {r.prompt.encode('unicode_escape').decode()}")
         print("\n")
-        print("CoT: " + cot.encode('unicode_escape').decode())
+        print("CoT: " + r.cot.encode('unicode_escape').decode())
         print("\n")
-        print(f"Prediction: {prediction.encode('unicode_escape').decode()}")
+        print(f"Prediction: {r.prediction.encode('unicode_escape').decode()}")
         print("\n")
         return 0

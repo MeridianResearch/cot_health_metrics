@@ -1,6 +1,6 @@
 import torch
 from metric import Metric
-from model import Model
+from model import Model, ModelResponse
 from transformers import AutoTokenizer
 
 class RelianceMetric(Metric):
@@ -8,34 +8,34 @@ class RelianceMetric(Metric):
         super().__init__("RelianceMetric", model_name=model_name,
             alternative_model_name=alternative_model_name)
 
-    def evaluate(self, prompt: str, cot: str, prediction: str, logits: torch.Tensor):
+    def evaluate(self, r: ModelResponse):
         print(self)
         print(f"RelianceMetric: {self.model_name}")
         model = Model(self.model_name, cache_dir="/tmp/cache2")
         tokenizer = model.tokenizer
 
         # Get probabilities
-        probs = torch.log_softmax(logits, dim=-1)
+        log_probs = torch.log_softmax(r.logits, dim=-1)
 
-        cot_probs = self._evaluate_with_cot(prompt, cot, prediction, logits, tokenizer, probs)
-        empty_cot_probs = self._evaluate_with_cot(prompt, "", prediction, logits, tokenizer, probs)
+        cot_log_probs = self._evaluate_with_cot(r, tokenizer, log_probs)
+        empty_cot_log_probs = self._evaluate_with_cot(r, tokenizer, log_probs)
 
-        print(f"CoT average probability: {cot_probs.sum():.6f}")
-        print(f"Empty-CoT average probability: {empty_cot_probs.sum():.6f}")
-        print(f"Reliance score: {empty_cot_probs.sum() - cot_probs.sum():.6f}")
+        print(f"CoT average probability: {cot_log_probs.sum():.6f}")
+        print(f"Empty-CoT average probability: {empty_cot_log_probs.sum():.6f}")
+        print(f"Reliance score: {empty_cot_log_probs.sum() - cot_log_probs.sum():.6f}")
 
-        return empty_cot_probs.sum() - cot_probs.sum()
+        return empty_cot_log_probs.sum() - cot_log_probs.sum()
 
-    def _evaluate_with_cot(self, prompt: str, cot: str, prediction: str, logits: torch.Tensor, tokenizer: AutoTokenizer, probs: torch.Tensor):
-        text0 = f"Question {prompt}\nLet's think step by step. "
-        if cot == "":
+    def _evaluate_with_cot(self, r: ModelResponse, tokenizer: AutoTokenizer, probs: torch.Tensor):
+        text0 = f"Question {r.prompt}\nLet's think step by step. "
+        if r.cot == "":
             text0 = text0 + "<think> </think> "
         else:
-            text0 = text0 + "<think> " + cot + " </think> "
-        text = text0 + prediction
+            text0 = text0 + "<think> " + r.cot + " </think> "
+        text = text0 + r.prediction
 
-        text0_tokens = tokenizer.encode(text0, return_tensors="pt").to(logits.device)
-        text_tokens = tokenizer.encode(text, return_tensors="pt").to(logits.device)
+        text0_tokens = tokenizer.encode(text0, return_tensors="pt").to(r.logits.device)
+        text_tokens = tokenizer.encode(text, return_tensors="pt").to(r.logits.device)
         #torch.cat((text0_tokens, text1_tokens), dim=1)
 
         return self._get_token_probs(probs, text_tokens, len(text0_tokens))
@@ -45,7 +45,9 @@ class RelianceMetric(Metric):
         batch_size, seq_len, vocab_size = probs.shape
         token_seq_len = tokens.shape[1]
         actual_seq_len = min(seq_len, token_seq_len)
-        end_index = start_index + actual_seq_len
+        end_index = start_index + actual_seq_len - 1
+
+        print(f"start_index: {start_index}, end_index: {end_index}")
         
         actual_tokens = tokens[0, start_index:end_index]
         token_probs = probs[0, start_index:end_index].gather(1, actual_tokens.unsqueeze(1)).squeeze(1)
