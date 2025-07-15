@@ -4,13 +4,13 @@ use it:
 
 -as a library-
  - from data_loader import load_prompts
- - prompts = load_prompts("data/paraphrasability/data/alpaca_500_samples.json", max_samples=500)
+ - prompts = load_prompts("data/alpaca_500_samples.json", max_samples=500)
  - returns a list of dicts with keys: prompt_id, instruction, input, output, prompt_hash
 
 -by itself-
 ```
 python src/data_loader.py \
-    --data-path data/paraphrasability/data/alpaca_500_samples.json \
+    --data-path data/alpaca_500_samples.json \
     --max-samples 5
 ```
 
