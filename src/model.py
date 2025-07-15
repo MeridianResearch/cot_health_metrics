@@ -1,6 +1,19 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
+from dataclasses import dataclass
 
+#@dataclass
+#class ModelResponse:
+#    prompt: str
+#    cot: str
+#    prediction: str
+#    raw_output: str
+#    logits: torch.Tensor
+#
+#    def __post_init__(self):
+#        self.basic_pair = (self.cot, self.prediction)
+
+# 
 class ModelResponse:
     def __init__(self, prompt: str, cot: str = None, prediction: str = None, raw_output: str = None, logits: torch.Tensor = None):
         self.prompt = prompt
