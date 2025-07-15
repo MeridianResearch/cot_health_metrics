@@ -26,7 +26,7 @@ class RelianceMetric(Metric):
 
         return empty_cot_log_probs.sum() - cot_log_probs.sum()
 
-    def _evaluate_with_cot(self, r: ModelResponse, tokenizer: AutoTokenizer, probs: torch.Tensor):
+    def _evaluate_with_cot(self, r: ModelResponse, tokenizer: AutoTokenizer, log_probs: torch.Tensor):
         text0 = f"Question {r.prompt}\nLet's think step by step. "
         if r.cot == "":
             text0 = text0 + "<think> </think> "
@@ -38,11 +38,11 @@ class RelianceMetric(Metric):
         text_tokens = tokenizer.encode(text, return_tensors="pt").to(r.logits.device)
         #torch.cat((text0_tokens, text1_tokens), dim=1)
 
-        return self._get_token_probs(probs, text_tokens, len(text0_tokens))
+        return self._get_token_probs(log_probs, text_tokens, len(text0_tokens))
 
-    def _get_token_probs(self, probs, tokens, start_index=0):
+    def _get_token_probs(self, log_probs, tokens, start_index=0):
         """Get probabilities for specific tokens."""
-        batch_size, seq_len, vocab_size = probs.shape
+        batch_size, seq_len, vocab_size = log_probs.shape
         token_seq_len = tokens.shape[1]
         actual_seq_len = min(seq_len, token_seq_len)
         end_index = start_index + actual_seq_len - 1
@@ -50,9 +50,9 @@ class RelianceMetric(Metric):
         print(f"start_index: {start_index}, end_index: {end_index}")
         
         actual_tokens = tokens[0, start_index:end_index]
-        token_probs = probs[0, start_index:end_index].gather(1, actual_tokens.unsqueeze(1)).squeeze(1)
+        token_log_probs = log_probs[0, start_index:end_index].gather(1, actual_tokens.unsqueeze(1)).squeeze(1)
         
-        return token_probs
+        return token_log_probs
 
     def evaluate00(self, prompt: str, cot: str, prediction: str, logits: torch.Tensor):
         log_probs = torch.log_softmax(logits, dim=-1)
