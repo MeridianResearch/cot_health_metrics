@@ -38,9 +38,9 @@ class RelianceMetric(Metric):
         text_tokens = tokenizer.encode(text, return_tensors="pt").to(r.logits.device)
         #torch.cat((text0_tokens, text1_tokens), dim=1)
 
-        return self._get_token_probs(log_probs, text_tokens, len(text0_tokens))
+        return self._get_token_log_probs(log_probs, text_tokens, len(text0_tokens))
 
-    def _get_token_probs(self, log_probs, tokens, start_index=0):
+    def _get_token_log_probs(self, log_probs, tokens, start_index=0):
         """Get probabilities for specific tokens."""
         batch_size, seq_len, vocab_size = log_probs.shape
         token_seq_len = tokens.shape[1]
