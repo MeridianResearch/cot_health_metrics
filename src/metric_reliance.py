@@ -15,7 +15,7 @@ class RelianceMetric(Metric):
         tokenizer = model.tokenizer
 
         # Get probabilities
-        probs = torch.softmax(logits, dim=-1)
+        probs = torch.log_softmax(logits, dim=-1)
 
         cot_probs = self._evaluate_with_cot(prompt, cot, prediction, logits, tokenizer, probs)
         empty_cot_probs = self._evaluate_with_cot(prompt, "", prediction, logits, tokenizer, probs)
@@ -36,6 +36,7 @@ class RelianceMetric(Metric):
 
         text0_tokens = tokenizer.encode(text0, return_tensors="pt").to(logits.device)
         text_tokens = tokenizer.encode(text, return_tensors="pt").to(logits.device)
+        #torch.cat((text0_tokens, text1_tokens), dim=1)
 
         return self._get_token_probs(probs, text_tokens, len(text0_tokens))
 
