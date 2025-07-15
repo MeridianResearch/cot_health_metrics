@@ -20,18 +20,19 @@ class RelianceMetric(Metric):
         cot_probs = self._evaluate_with_cot(prompt, cot, prediction, logits, tokenizer, probs)
         empty_cot_probs = self._evaluate_with_cot(prompt, "", prediction, logits, tokenizer, probs)
 
-        print(f"CoT average probability: {cot_probs.mean().item():.6f}")
-        print(f"Empty-CoT average probability: {empty_cot_probs.mean().item():.6f}")
+        print(f"CoT average probability: {cot_probs.sum():.6f}")
+        print(f"Empty-CoT average probability: {empty_cot_probs.sum():.6f}")
+        print(f"Reliance score: {empty_cot_probs.sum() - cot_probs.sum():.6f}")
 
-        return empty_cot_probs.mean().item() - cot_probs.mean().item()
+        return empty_cot_probs.sum() - cot_probs.sum()
 
     def _evaluate_with_cot(self, prompt: str, cot: str, prediction: str, logits: torch.Tensor, tokenizer: AutoTokenizer, probs: torch.Tensor):
         text0 = f"Question {prompt}\nLet's think step by step. "
         if cot == "":
-            text1 = "<think> </think> "
+            text0 = text0 + "<think> </think> "
         else:
-            text1 = "<think> " + cot + " </think> "
-        text = text0 + text1 + prediction
+            text0 = text0 + "<think> " + cot + " </think> "
+        text = text0 + prediction
 
         text0_tokens = tokenizer.encode(text0, return_tensors="pt").to(logits.device)
         text_tokens = tokenizer.encode(text, return_tensors="pt").to(logits.device)
