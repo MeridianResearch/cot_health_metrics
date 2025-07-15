@@ -17,34 +17,36 @@ class RelianceMetric(Metric):
         # Get probabilities
         probs = torch.softmax(logits, dim=-1)
 
-        # Tokenize the full text
-        cot_text = f"Question {prompt}\nLet's think step by step. <think> " + cot + " </think> " + prediction
-        new_text = f"Question {prompt}\n<think> </think> " + prediction
+        cot_probs = self._evaluate_with_cot(prompt, cot, prediction, logits, tokenizer, probs)
+        empty_cot_probs = self._evaluate_with_cot(prompt, "", prediction, logits, tokenizer, probs)
 
-        # Separate CoT and prediction tokens
-        cot_tokens = tokenizer.encode(cot_text, return_tensors="pt").to(logits.device)
-        prediction_tokens = tokenizer.encode(new_text, return_tensors="pt").to(logits.device)
-        
-        # Get probabilities for CoT vs prediction
-        cot_probs = self._get_token_probs(probs, cot_tokens)
-        prediction_probs = self._get_token_probs(probs, prediction_tokens)
-        
         print(f"CoT average probability: {cot_probs.mean().item():.6f}")
-        print(f"Prediction average probability: {prediction_probs.mean().item():.6f}")
-        
-        # Reliance metric: compare confidence between CoT and prediction
-        reliance_score = prediction_probs.mean().item() - cot_probs.mean().item()
-        
-        return reliance_score
+        print(f"Empty-CoT average probability: {empty_cot_probs.mean().item():.6f}")
 
-    def _get_token_probs(self, probs, tokens):
+        return empty_cot_probs.mean().item() - cot_probs.mean().item()
+
+    def _evaluate_with_cot(self, prompt: str, cot: str, prediction: str, logits: torch.Tensor, tokenizer: AutoTokenizer, probs: torch.Tensor):
+        text0 = f"Question {prompt}\nLet's think step by step. "
+        if cot == "":
+            text1 = "<think> </think> "
+        else:
+            text1 = "<think> " + cot + " </think> "
+        text = text0 + text1 + prediction
+
+        text0_tokens = tokenizer.encode(text0, return_tensors="pt").to(logits.device)
+        text_tokens = tokenizer.encode(text, return_tensors="pt").to(logits.device)
+
+        return self._get_token_probs(probs, text_tokens, len(text0_tokens))
+
+    def _get_token_probs(self, probs, tokens, start_index=0):
         """Get probabilities for specific tokens."""
         batch_size, seq_len, vocab_size = probs.shape
         token_seq_len = tokens.shape[1]
         actual_seq_len = min(seq_len, token_seq_len)
+        end_index = start_index + actual_seq_len
         
-        actual_tokens = tokens[0, :actual_seq_len]
-        token_probs = probs[0, :actual_seq_len].gather(1, actual_tokens.unsqueeze(1)).squeeze(1)
+        actual_tokens = tokens[0, start_index:end_index]
+        token_probs = probs[0, start_index:end_index].gather(1, actual_tokens.unsqueeze(1)).squeeze(1)
         
         return token_probs
 
