@@ -125,12 +125,12 @@ class Model:
 
     def do_split(self, sequences, full_response, prompt):
         model_config = self.SUPPORTED_MODELS[self.model_name]
-        
+
         # split the output into two parts: the chain of thought and the answer
-        if "begin_think" in model_config:
+        if("begin_think" in model_config):
             # Split before decoding
             begin_think = self._get_token_id(model_config["begin_think"])
-            if sequences[0][0] == begin_think:
+            if(sequences[0][0] == begin_think):
                 sequences[0] = sequences[0][1:]
             end_think = self._get_token_id(model_config["end_think"])
             pieces = self._split_on_tokens(sequences[0].tolist(), [end_think])
@@ -146,20 +146,19 @@ class Model:
 
             cot = response0[len(prompt):].strip()
             prediction = response1.strip()
-        elif("fuzzy_separator" in model_config):
-            if(model_config["fuzzy_separator"] in full_response):
-                pieces = full_response.split(model_config["fuzzy_separator"])
-            else:
-                print(f"ERROR: model {self.model_name} did not generate chain of thought separator {model_config['fuzzy_separator']}")
-                print(f"Response: {full_response}")
-                exit(1)
-            cot = pieces[0][len(prompt):].strip()
-            prediction = pieces[1].strip()
+        elif "fuzzy_separator" in model_config:
+            full = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
+            sep = model_config["fuzzy_separator"]
+            if sep not in full:
+                raise RuntimeError(f"Separator {sep!r} missing in output: {full}")
+            before, after = full.split(sep, 1)
+            cot = before[len(prompt):].strip()
+            prediction = after.strip()
 
         else:
             raise RuntimeError(f"Model {self.model_name} missing CoT separator config")
 
-        return cot, prediction
+        return (cot, prediction)
 
     def generate_cot_response_full(self, question, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
