@@ -60,8 +60,76 @@ class TransferabilityMetric(Metric):
         print(mean_scores)
         # Get probabilities
 
+    def evaluate01(self, batch_size=8):
+        print(f"TransferabilityMetric: {self.model_name}")
+        model1 = Model(self.model_name, cache_dir="/tmp/cache2")
+        tokenizer1 = model1.tokenizer
+        model2 = Model(self.alternative_model_name, cache_dir="/tmp/cache2")
+        tokenizer2 = model2.tokenizer
 
+        results = []
 
+        for dataset_name, dataset in datasets_to_use.items():
+            print(f"\n====== Dataset: {dataset_name} ======")
+
+            all_questions = []
+            all_groundtruth_cot = []
+            all_groundtruth_answer = []
+
+            for sample in dataset:
+                question = sample["question"]
+                groundtruth_cot = sample["answer"].split("####")[0]
+                groundtruth_answer = sample["answer"].split("####")[1]
+
+                all_questions.append(question)
+                all_groundtruth_cot.append(groundtruth_cot)
+                all_groundtruth_answer.append(groundtruth_answer)
+
+            # Process in batches
+            for start_idx in range(0, len(all_questions), batch_size):
+                end_idx = min(start_idx + batch_size, len(all_questions))
+                batch_questions = all_questions[start_idx:end_idx]
+
+                # === Get R1, A1, log_prob from model1 ===
+                batch_results = model1.get_cot_answer_logprob_batch(batch_questions)
+
+                # Prepare inputs for model2
+                prompts_for_M2 = [".".join([r1, q, a1])
+                                  for (r1, a1, _), q in zip(batch_results, batch_questions)]
+
+                prompt_tokens = tokenizer2(prompts_for_M2, return_tensors="pt", padding=True, truncation=True).to(
+                    "cuda")
+
+                # === Get log_probs from model2 ===
+                _, mean_logp_M2 = model2.get_logits_and_mean_logp(prompt_tokens["input_ids"])
+
+                # Collect results
+                for i, ((R1, A1, logprob_M1_A1), logprob_M2_Q_R1_A1) in enumerate(zip(batch_results, mean_logp_M2)):
+                    results.append({
+                        "dataset": dataset_name,
+                        "question": batch_questions[i],
+                        "groundtruth_cot": all_groundtruth_cot[start_idx + i],
+                        "groundtruth_answer": all_groundtruth_answer[start_idx + i],
+                        "R1": R1,
+                        "A1": A1,
+                        "log_prob_A1_R1_M2": logprob_M2_Q_R1_A1.item(),
+                        "log_prob_A1_M1": logprob_M1_A1
+                    })
+                    print({
+                        "log_prob_A1_R1_M2": logprob_M2_Q_R1_A1.item(),
+                        "log_prob_A1_M1": logprob_M1_A1
+                    })
+
+            # Save after each dataset
+            with open(f"transferability_results_{dataset_name}.json", "w") as f:
+                json.dump(results, f, indent=2, ensure_ascii=False)
+
+        # Summary
+        df = pd.DataFrame(results)
+        print("\n=== Summary of transferability metrics ===")
+        mean_scores = df.mean(numeric_only=True)
+        print("\n=== Average scores for each metric ===")
+        print(mean_scores)
 
     def _evaluate_with_cot(self, r: ModelResponse, tokenizer: AutoTokenizer, log_probs: torch.Tensor):
         text0 = f"Question {r.prompt}\nLet's think step by step. "
@@ -111,4 +179,5 @@ class TransferabilityMetric(Metric):
     #     return 0.0
 if __name__ == "__main__":
     t = TransferabilityMetric(SupportedModel.QWEN3_0_6B.value, SupportedModel.QWEN3_1_7B.value)
-    t.evaluate00()
+    # t.evaluate00()
+    t.evaluate01(batch_size=8)
