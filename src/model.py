@@ -146,14 +146,15 @@ class Model:
 
             cot = response0[len(prompt):].strip()
             prediction = response1.strip()
-        elif "fuzzy_separator" in model_config:
-            full = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
-            sep = model_config["fuzzy_separator"]
-            if sep not in full:
-                raise RuntimeError(f"Separator {sep!r} missing in output: {full}")
-            before, after = full.split(sep, 1)
-            cot = before[len(prompt):].strip()
-            prediction = after.strip()
+        elif("fuzzy_separator" in model_config):
+            if(model_config["fuzzy_separator"] in full_response):
+                pieces = full_response.split(model_config["fuzzy_separator"])
+            else:
+                print(f"ERROR: model {self.model_name} did not generate chain of thought separator {model_config['fuzzy_separator']}")
+                print(f"Response: {full_response}")
+                exit(1)
+            cot = pieces[0][len(prompt):].strip()
+            prediction = pieces[1].strip()
 
         else:
             raise RuntimeError(f"Model {self.model_name} missing CoT separator config")
