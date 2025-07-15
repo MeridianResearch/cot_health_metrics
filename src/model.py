@@ -69,7 +69,6 @@ class Model:
             self.tokenizer = AutoTokenizer.from_pretrained(
                 model_name,
                 cache_dir=cache_dir,
-                trust_remote_code=True,
             )
             self.model = AutoModelForCausalLM.from_pretrained(
                 model_name,
@@ -77,7 +76,6 @@ class Model:
                 torch_dtype=torch.float16,
                 device_map="auto",
                 cache_dir=cache_dir,
-                trust_remote_code=True,
             )
 
         except Exception as e:
