@@ -23,14 +23,15 @@ def main():
     # This interface also works, convenient for testing
     #(cot, prediction) = model.generate_cot_response(question)
     r = model.generate_cot_response_full(question)
+    print(r)
 
     metric: Metric = DummyMetric("DummyModel")
-    value: float = metric.evaluate(r.prompt, r.cot, r.prediction, r.logits)
+    value: float = metric.evaluate(r)
     print(f"Metric value: {value}")
 
     print("RelianceMetric")
     metric: Metric = RelianceMetric(model.model_name)
-    value: float = metric.evaluate(r.prompt, r.cot, r.prediction, r.logits)
+    value: float = metric.evaluate(r)
     print(f"Metric value: {value}")
 
 if __name__ == "__main__":
