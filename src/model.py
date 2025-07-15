@@ -108,7 +108,7 @@ class Model:
             logits = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
         return logits
 
-    def do_split(self, sequences, prompt):
+    def do_split(self, sequences, full_response, prompt):
         model_config = self.SUPPORTED_MODELS[self.model_name]
 
         # split the output into two parts: the chain of thought and the answer
@@ -154,7 +154,7 @@ class Model:
         full_response = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
         raw_output = full_response
 
-        (cot, prediction) = self.do_split(sequences, question)
+        (cot, prediction) = self.do_split(sequences, full_response, question)
 
         return ModelResponse(
             question=question,
