@@ -30,8 +30,7 @@ class TransferabilityMetric(Metric):
                 # === A1: LLM1 consuming R1 ===
                 R1, A1, logprob_M1_A1 = model1.get_cot_answer_logprob(question)
                 prompt_tokens = tokenizer2.encode(".".join([R1, question, A1]), return_tensors="pt").to("cuda")
-                logprob_M2_Q_R1_A1 = model2.get_logits(prompt_tokens)
-
+                _,logprob_M2_Q_R1_A1=model2.get_logits_and_mean_logp(prompt_tokens)
                 results.append({
                     "dataset": dataset_name,
                     "question": question,
@@ -39,6 +38,12 @@ class TransferabilityMetric(Metric):
                     "groundtruth_answer": groundtruth_answer,
                     "R1": R1,
                     "A1": A1,
+                    "log_prob_A1_R1_M2": logprob_M2_Q_R1_A1,
+                    "log_prob_A1_M1": logprob_M1_A1
+
+                })
+                print({
+
                     "log_prob_A1_R1_M2": logprob_M2_Q_R1_A1,
                     "log_prob_A1_M1": logprob_M1_A1
 
@@ -104,5 +109,6 @@ class TransferabilityMetric(Metric):
     #     print(new_logits.shape)
     #
     #     return 0.0
-t=TransferabilityMetric(SupportedModel.QWEN3_0_6B.value,SupportedModel.QWEN3_1_7B.value)
-t.evaluate00()
+if __name__ == "__main__":
+    t = TransferabilityMetric(SupportedModel.QWEN3_0_6B.value, SupportedModel.QWEN3_1_7B.value)
+    t.evaluate00()
