@@ -4,4 +4,3 @@ __pycache__
 /hf_cache
 .venv/
 cache/
-data/
