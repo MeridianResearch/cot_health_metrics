@@ -1,4 +1,5 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoConfig
 import torch
 from dataclasses import dataclass
 
@@ -57,14 +58,26 @@ class Model:
             exit(1)
 
         self.model_name = model_name
+        
+        config = AutoConfig.from_pretrained(
+            model_name,
+            cache_dir=cache_dir,
+            trust_remote_code=True,
+        )
+
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(
-                model_name, cache_dir=cache_dir)
+                model_name,
+                cache_dir=cache_dir,
+            )
             self.model = AutoModelForCausalLM.from_pretrained(
                 model_name,
+                config=config,
                 torch_dtype=torch.float16,
                 device_map="auto",
-                cache_dir=cache_dir)
+                cache_dir=cache_dir,
+            )
+
         except Exception as e:
             print(f"Error loading model {model_name}: {e}")
             raise
@@ -108,7 +121,7 @@ class Model:
             logits = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
         return logits
 
-    def do_split(self, sequences, prompt):
+    def do_split(self, sequences, full_response, prompt):
         model_config = self.SUPPORTED_MODELS[self.model_name]
 
         # split the output into two parts: the chain of thought and the answer
@@ -120,10 +133,11 @@ class Model:
             end_think = self._get_token_id(model_config["end_think"])
             pieces = self._split_on_tokens(sequences[0].tolist(), [end_think])
 
-            if(len(pieces) < 2):
-                print(f"ERROR: model {self.model_name} did not generate chain of thought")
-                print("Response: " + full_response)
-                exit(1)
+            if len(pieces) < 2:
+                full = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
+                raise RuntimeError(
+                    f"Failed to extract CoT (too few pieces) from: {full}"
+                )
 
             response0 = self.tokenizer.decode(pieces[0], skip_special_tokens=True)
             response1 = self.tokenizer.decode(pieces[1], skip_special_tokens=True)
@@ -139,9 +153,10 @@ class Model:
                 exit(1)
             cot = pieces[0][len(prompt):].strip()
             prediction = pieces[1].strip()
+
         else:
-            print(f"ERROR: model {self.model_name} missing CoT separator config")
-            exit(1)
+            raise RuntimeError(f"Model {self.model_name} missing CoT separator config")
+
         return (cot, prediction)
 
     def generate_cot_response_full(self, question, max_new_tokens=4096):
@@ -154,7 +169,7 @@ class Model:
         full_response = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
         raw_output = full_response
 
-        (cot, prediction) = self.do_split(sequences, question)
+        (cot, prediction) = self.do_split(sequences, full_response, question)
 
         return ModelResponse(
             question=question,
