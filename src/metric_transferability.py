@@ -66,11 +66,11 @@ class TransferabilityMetric(Metric):
                 logits2 = model2.get_logits(prompt_tokens)
                 log_probs2 = utils2.get_answer_log_probs(model_response.prompt, R1, A1, logits2)
 
-                score = (log_probs1 - log_probs2) / log_probs1
+                score = ((log_probs1 - log_probs2) / log_probs1).mean()
 
-                print(f"log_probs1: {log_probs1}")
-                print(f"log_probs2: {log_probs2}")
-                print(f"score: {score}")
+                # print(f"log_probs1: {log_probs1}")
+                # print(f"log_probs2: {log_probs2}")
+                # print(f"score: {score}")
 
 
                 results.append({
@@ -80,14 +80,15 @@ class TransferabilityMetric(Metric):
                     "groundtruth_answer": groundtruth_answer,
                     "R1": R1,
                     "A1": A1,
-                    "log_prob_A1_R1_M2": logprob_M2_Q_R1_A1,
-                    "log_prob_A1_M1": logprob_M1_A1
+                    "log_prob_A1_R1_M2": log_probs1.mean(-1),
+                    "log_prob_A1_M1": log_probs2
 
                 })
                 print({
 
-                    "log_prob_A1_R1_M2": logprob_M2_Q_R1_A1,
-                    "log_prob_A1_M1": logprob_M1_A1
+                    "log_prob_A1_R1_M2": log_probs1,
+                    "log_prob_A1_M1": log_probs2,
+                    "score": score
 
                 })
             # Write to JSON file
