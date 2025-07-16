@@ -10,7 +10,7 @@ from metric_reliance import RelianceMetric
 from metric_paraphrasability import ParaphrasabilityMetric
 from metric_transferability import TransferabilityMetric
 from data_loader import load_prompts
-
+from datetime import datetime
 CACHE_DIR_DEFAULT        = "hf_cache"
 LOG_EVERY_DEFAULT        = 1
 
@@ -27,6 +27,16 @@ METRIC_CLASSES = {
     "Transferability": TransferabilityMetric,
 }
 
+
+# Current datetime
+now = datetime.now()
+
+# Format as string
+
+def _get_datetime_str():
+    datetime_str = now.strftime("%Y-%m-%d %H:%M:%S")
+    print(datetime_str)
+    return datetime_str
 def _get_sample_question(sample: dict) -> str:
     question = sample["instruction"].strip()
     if sample.get("input"):
@@ -79,8 +89,8 @@ def main():
     metric = construct_metric(
         model_name=args.model,
         alternative_model_name=args.model2)
-
-    with open(args.log_file, 'a') as f:
+    file_name=args.data_hf+_get_datetime_str()+ args.log_file
+    with open(file_name, 'a') as f:
         log_counter = 0
         for id, question in datapoints:
             try:

@@ -65,8 +65,8 @@ class TokenUtils:
         token_log_probs = logits[0, start_index:].gather(1, actual_tokens.unsqueeze(0)).squeeze(0)
         #token_log_probs = logits[0, start_index:].squeeze(0)
 
-        print(f"getting log probs for tokens: {self.escape_string(self.decode_to_string(actual_tokens))}")
-        print(f"log probs: {token_log_probs}")
+        # print(f"getting log probs for tokens: {self.escape_string(self.decode_to_string(actual_tokens))}")
+        # print(f"log probs: {token_log_probs}")
         #print(f"actual tokens length: {len(actual_tokens)}")
         #print(f"log probs length: {len(token_log_probs)}")
 
