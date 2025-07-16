@@ -51,9 +51,6 @@ class TransferabilityMetric(Metric):
                 print(f"log_probs2: {log_probs2}")
                 print(f"score: {score}")
 
-        def get_answer_log_probs(self, prompt: str, cot: str, prediction: str, log_probs: torch.Tensor):
-
-
 
                 results.append({
                     "dataset": dataset_name,
