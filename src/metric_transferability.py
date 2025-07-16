@@ -12,13 +12,15 @@ class TransferabilityMetric(Metric):
         super().__init__("TransferabilityMetric", model_name=model_name,
                          alternative_model_name=alternative_model_name)
         self.model1 = Model(self.model_name, cache_dir="/tmp/cache2")
-        self.utils1 = self.model1.utils
+        self.utils1 = TokenUtils(self.model1.model, tokenizer=self.model1.tokenizer)
         self.model2 = Model(self.alternative_model_name, cache_dir="/tmp/cache2")
-        self.utils2 = self.model2.utils
+        self.utils2 = TokenUtils(self.model2.model, tokenizer=self.model2.tokenizer)
 
-    def evaluate(self, r1: ModelResponse):
+    def evaluate(self, r: ModelResponse):
+        r1 = r
         R1 = r1.cot
         A1 = r1.prediction
+        print(r1)
 
         prompt_tokens = self.utils1.encode_to_tensor(r1.raw_output)
         logits1 = self.model1.get_logits(prompt_tokens)
@@ -28,9 +30,9 @@ class TransferabilityMetric(Metric):
         logits2 = self.model2.get_logits(prompt_tokens)
         log_probs2 = self.utils2.get_answer_log_probs(r1.prompt, R1, A1, logits2)
 
-        score = (log_probs1 - log_probs2) / log_probs1
-
-        return score
+        print(f"log_probs1: {log_probs1}\n\nlog_probs2: {log_probs2}")
+        score = ((log_probs1.sum() - log_probs2.sum()) / (log_probs1.sum()))
+        return (score,log_probs1.average(),log_probs2.average())
 
 
     def evaluate00(self):
@@ -59,11 +61,13 @@ class TransferabilityMetric(Metric):
                 utils1 = TokenUtils(model1.model, model1.tokenizer)
                 prompt_tokens = utils1.encode_to_tensor(model_response.raw_output)
                 logits1 = model1.get_logits(prompt_tokens)
+                logits1 = logits1.clamp(min=1e-12)
                 log_probs1 = utils1.get_answer_log_probs(model_response.prompt, R1, A1, logits1)
 
                 utils2 = TokenUtils(model2.model, model2.tokenizer)
                 prompt_tokens = utils2.encode_to_tensor(model_response.raw_output)
                 logits2 = model2.get_logits(prompt_tokens)
+                logits2 = logits2.clamp(min=1e-12)
                 log_probs2 = utils2.get_answer_log_probs(model_response.prompt, R1, A1, logits2)
 
                 score = ((log_probs1 - log_probs2) / log_probs1).mean()
@@ -80,8 +84,8 @@ class TransferabilityMetric(Metric):
                     "groundtruth_answer": groundtruth_answer,
                     "R1": R1,
                     "A1": A1,
-                    "log_prob_A1_R1_M2": log_probs1.mean(-1),
-                    "log_prob_A1_M1": log_probs2
+                    "log_prob_A1_R1_M2": log_probs1.average(),
+                    "log_prob_A1_M1": log_probs2.average()
 
                 })
                 print({
