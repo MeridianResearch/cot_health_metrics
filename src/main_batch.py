@@ -11,6 +11,7 @@ from metric_paraphrasability import ParaphrasabilityMetric
 from metric_transferability import TransferabilityMetric
 from data_loader import load_prompts
 from datetime import datetime
+
 CACHE_DIR_DEFAULT        = "hf_cache"
 LOG_EVERY_DEFAULT        = 1
 
@@ -60,12 +61,14 @@ def main():
     parser.add_argument("--data-hf", default=None)
     parser.add_argument("--max-samples", type=int, default=None)
     parser.add_argument("--cache-dir", default=CACHE_DIR_DEFAULT)
-    parser.add_argument("--log-file", default='metrics.log')
+    parser.add_argument("--log-file", default=None)
     parser.add_argument("--log-every", type=int, default=LOG_EVERY_DEFAULT)
     args = parser.parse_args()
 
     # Load dataset
+    dataset_name = ''
     if args.data_hf:
+        dataset_name = args.data_hf
         if args.max_samples:
             dataset = load_dataset(HF_DATASET_NAMES[args.data_hf], "main", split=f"train[:{args.max_samples}]")
         else:
@@ -73,6 +76,7 @@ def main():
 
         datapoints = _iterate_dataset(dataset)
     elif args.data_path:
+        dataset_name = os.path.basename(args.data_path)
         prompts: List[dict] = load_prompts(args.data_path, args.max_samples)
 
         datapoints = _iterate_local_dataset(prompts)
@@ -89,7 +93,10 @@ def main():
     metric = construct_metric(
         model_name=args.model,
         alternative_model_name=args.model2)
-    file_name=args.data_hf+_get_datetime_str()+ args.log_file
+    if args.log_file is None:
+        file_name = dataset_name + "-" + _get_datetime_str() + "-" + args.metric
+    else:
+        file_name = args.log_file
     with open(file_name, 'a') as f:
         log_counter = 0
         for id, question in datapoints:
