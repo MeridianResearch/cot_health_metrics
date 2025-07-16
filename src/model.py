@@ -168,8 +168,7 @@ class Model:
         sequences = output.sequences
         logits = self.get_logits(sequences)
 
-        full_response = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
-        raw_output = full_response
+        raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
 
         (cot, prediction) = self.do_split(sequences, full_response, question)
 
@@ -185,28 +184,47 @@ class Model:
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         prompt_tokens = self.utils.encode_to_tensor(prompt)
 
+    def evaluate_cot_response_from_tokens(self, prompt_tokens: torch.Tensor, max_new_tokens=4096):
         logits = self.get_logits(prompt_tokens)
 
-        full_response = self.utils.decode_to_string(logits[0])
-        raw_output = full_response
+        print(prompt_tokens)
+        raw_output = self.tokenizer.decode(prompt_tokens, skip_special_tokens=True)
 
         (cot, prediction) = self.do_split(logits, full_response, prompt)
 
         return ModelResponse(
             question=question,
-            prompt=prompt,
+            prompt=prompt_tokens,
             cot=cot,
             prediction=prediction,
             raw_output=raw_output,
             logits=logits)
 
-    def test(self, question, new_cot):
-        prompt = self.make_prompt(question, custom_instruction="What is the capital of France?")
-        prompt += self.SUPPORTED_MODELS[self.model_name]['begin_think']
-        prompt += new_cot
-        prompt += self.SUPPORTED_MODELS[self.model_name]['end_think']
-        prompt += " "
-        return self.evaluate_cot_response(prompt)
+    def evaluate_cot_response(self, prompt: str, max_new_tokens=4096):
+        """Generate a response using Chain-of-Thought (CoT) prompting."""
+        prompt_tokens = self.tokenizer.encode(prompt, return_tensors="pt").to(self.model.device)
+        return self.evaluate_cot_response_from_tokens(prompt_tokens, max_new_tokens)
+
+    def evaluate_with_custom_cot_tokens(self, question, original_cot_tokens):
+        model_config = self.SUPPORTED_MODELS[self.model_name]
+
+        prompt0 = self.make_prompt(question, custom_instruction="Only use the word THINK in your thinking tags.")
+        prompt0_tokens = self.tokenizer.encode(prompt0, return_tensors="pt").to(self.model.device)
+
+        begin_think = self._get_token_id(model_config["begin_think"])
+        end_think = self._get_token_id(model_config["end_think"])
+
+        think_token = self._get_token_id("think")
+        cot_prime_tokens = [think_token for _ in range(len(original_cot_tokens))]
+
+        # Convert EVERYTHING to tensors, shaped [1, N]
+        begin_think_tensor = torch.tensor([[begin_think]], device=self.model.device)
+        end_think_tensor = torch.tensor([[end_think]], device=self.model.device)
+        cot_prime_tensor = torch.tensor([cot_prime_tokens], device=self.model.device)
+
+        # Now cat along dim=1 (columns)
+        full_prime = torch.cat((prompt0_tokens, begin_think_tensor, cot_prime_tensor, end_think_tensor), dim=1)
+        return self.evaluate_cot_response_from_tokens(full_prime.squeeze(0))
 
 
     def _split_on_tokens(self, lst, token_list):
@@ -233,9 +251,18 @@ if __name__ == "__main__":
     question = "A car travels 60 miles in 1.5 hours. What is its average speed?"
     print("Prompt: " + question.encode('unicode_escape').decode())
 
-    model = Model("Qwen/Qwen3-0.6B", cache_dir="/tmp/cache2")
+    model = Model("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", cache_dir="/tmp/cache2")
     (cot, answer) = model.generate_cot_response(question)
     print("\n")
     print("CoT: " + cot.encode('unicode_escape').decode())
     print("\n")
     print("Answer: " + answer.encode('unicode_escape').decode())
+    print("\n")
+    print("Evaluate replacing CoT with thinking TOKENS:")
+    print("\n")
+    model.evaluate_with_custom_cot_tokens(question,
+        model.tokenizer.encode(cot, return_tensors="pt").to(model.model.device).squeeze(0))
+
+
+
+    #evaluate_with_custom_cot_tokens(self, question, original_cot_tokens: list[int])
