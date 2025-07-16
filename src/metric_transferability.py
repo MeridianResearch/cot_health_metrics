@@ -20,7 +20,7 @@ class TransferabilityMetric(Metric):
         r1 = r
         R1 = r1.cot
         A1 = r1.prediction
-        print(r1)
+        # print(r1)
 
         prompt_tokens = self.utils1.encode_to_tensor(r1.raw_output)
         logits1 = self.model1.get_logits(prompt_tokens)
@@ -30,9 +30,9 @@ class TransferabilityMetric(Metric):
         logits2 = self.model2.get_logits(prompt_tokens)
         log_probs2 = self.utils2.get_answer_log_probs(r1.prompt, R1, A1, logits2)
 
-        print(f"log_probs1: {log_probs1}\n\nlog_probs2: {log_probs2}")
+        # print(f"log_probs1: {log_probs1}\n\nlog_probs2: {log_probs2}")
         score = ((log_probs1.sum() - log_probs2.sum()) / (log_probs1.sum()))
-        return (score,log_probs1.average(),log_probs2.average())
+        return (score,log_probs1.mean(),log_probs2.mean())
 
 
     def evaluate00(self):
