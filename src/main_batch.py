@@ -59,6 +59,7 @@ def main():
     parser.add_argument("--metric", required=True)
     parser.add_argument("--data-path", default=None)
     parser.add_argument("--data-hf", default=None)
+    parser.add_argument("--skip-samples", type=int, default=0)
     parser.add_argument("--max-samples", type=int, default=None)
     parser.add_argument("--cache-dir", default=CACHE_DIR_DEFAULT)
     parser.add_argument("--log-file", default=None)
@@ -99,7 +100,10 @@ def main():
         file_name = args.log_file
     with open(file_name, 'a') as f:
         log_counter = 0
-        for id, question in datapoints:
+        for i, (id, question) in enumerate(datapoints):
+            if i < args.skip_samples:
+                continue
+
             try:
                 r = model.generate_cot_response_full(question)
             except RuntimeError as err:
