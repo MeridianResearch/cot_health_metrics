@@ -2,6 +2,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from transformers import AutoConfig
 import torch
 from dataclasses import dataclass
+from token_utils import TokenUtils
 
 @dataclass
 class ModelResponse:
@@ -58,6 +59,7 @@ class Model:
             exit(1)
 
         self.model_name = model_name
+        self.utils = TokenUtils(self)
         
         config = AutoConfig.from_pretrained(
             model_name,
