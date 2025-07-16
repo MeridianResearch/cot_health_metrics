@@ -188,6 +188,10 @@ class Model:
         mean_logp = -sum(F.log_softmax(step_logits, dim=-1)[0, gen_ids[i]].item()
                          for i, step_logits in enumerate(scores)) / len(scores)
         mean_logp = float(mean_logp)
+
+        logits = self.get_logits(sequences)
+        #utils.get_answer_log_probs(prompt, gen_out, ans, logits)
+
         # for step_idx, step_logits in enumerate(scores):
         #     # step_logits: [1, vocab_size]
         #     logprobs = F.log_softmax(step_logits, dim=-1)  # [1, V]
