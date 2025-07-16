@@ -113,25 +113,32 @@ class Model:
             return_dict_in_generate=True,
         )
 
-        sequences = outputs.sequences  # [B, prompt_len + gen_len]
-        scores = outputs.scores  # list of length gen_len, each [B, V]
+        sequences = outputs.sequences  # [B, total_len]
+        scores = outputs.scores  # list of gen_len tensors [B, vocab_size]
 
+
+        batch_size = sequences.shape[0]
         gen_len = len(scores)
-        prompt_lens = prompt_input_ids.shape[1]  # scalar if uniform
+        prompt_len = sequences.shape[1] - gen_len
 
-        # === Compute per-token log-probs ===
-        batch_logprobs = []
-        for b in range(sequences.size(0)):
-            gen_ids = sequences[b, prompt_lens:].tolist()  # ids of generated tokens after prompt
+        # 3) Extract the generated token ids
+        gen_ids = sequences[:, prompt_len:]  # [B, gen_len]
 
-            per_step_logps = []
-            for step_idx, step_logits in enumerate(scores):
-                logprobs = F.log_softmax(step_logits, dim=-1)  # [B, V]
-                token_id = gen_ids[step_idx]
-                per_step_logps.append(logprobs[b, token_id].item())
+        # 4) Compute log probs for all steps and all batch in one shot
+        #    log_probs_per_step: list of [B, vocab_size]
+        log_probs_per_step = [F.log_softmax(torch.nan_to_num(step_logits, nan=1), dim=-1) for step_logits in scores]
 
-            mean_logp = sum(per_step_logps) / len(per_step_logps)
-            batch_logprobs.append(mean_logp)
+        # 5) Gather log probs of the actually generated tokens at each step
+        per_token_logps = torch.stack([
+            log_probs.gather(1, gen_ids[:, i].unsqueeze(-1)).squeeze(-1)
+            for i, log_probs in enumerate(log_probs_per_step)
+        ], dim=1)  # [B, gen_len]
+
+        # 6) Compute mean negative log prob per example in batch
+        mean_logps = -per_token_logps.mean(dim=1)  # [B]
+
+        # 7) Convert to Python list of floats
+        mean_logps = mean_logps.tolist()
 
         # === Extract CoT and Answer
         outputs_list = []
@@ -155,7 +162,7 @@ class Model:
                 cot = head[len(prompts[i]):].strip()
                 ans = tail.strip()
 
-            outputs_list.append((cot, ans, batch_logprobs[i]))
+            outputs_list.append((cot, ans, mean_logps[i]))
 
         return outputs_list
 
@@ -178,14 +185,17 @@ class Model:
 
         # 3) For each generation step, pick out the log‑prob of the chosen token
         per_step_logps = []
-        for step_idx, step_logits in enumerate(scores):
-            # step_logits: [1, vocab_size]
-            logprobs = F.log_softmax(step_logits, dim=-1)  # [1, V]
-            token_id = gen_ids[step_idx]
-            per_step_logps.append(logprobs[0, token_id].item())
-
-        # 4) Average log‑prob across all generated tokens
-        mean_logp = -sum(per_step_logps) / len(per_step_logps)
+        mean_logp = -sum(F.log_softmax(step_logits, dim=-1)[0, gen_ids[i]].item()
+                         for i, step_logits in enumerate(scores)) / len(scores)
+        mean_logp = float(mean_logp)
+        # for step_idx, step_logits in enumerate(scores):
+        #     # step_logits: [1, vocab_size]
+        #     logprobs = F.log_softmax(step_logits, dim=-1)  # [1, V]
+        #     token_id = gen_ids[step_idx]
+        #     per_step_logps.append(logprobs[0, token_id].item())
+        #
+        # # 4) Average log‑prob across all generated tokens
+        # mean_logp = -sum(per_step_logps) / len(per_step_logps)
 
         # 5) Split into CoT vs answer
         model_config = self.SUPPORTED_MODELS[self.model_name]
@@ -249,7 +259,32 @@ class Model:
             outputs = self.model(input_ids=sequences)
             logits = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
         return logits
+    def get_logits_and_mean_logp_batch(self, sequences):
+        """
+        sequences: [batch_size, seq_len] tensor of token IDs
 
+        Returns:
+        - logits: [batch_size, seq_len, vocab_size]
+        - mean_logp_per_seq: [batch_size] tensor with average log-prob assigned to actual tokens
+        """
+        with torch.no_grad():
+            outputs = self.model(input_ids=sequences)
+            logits = torch.nn.functional.log_softmax(outputs.logits, dim=-1)  # [B, T, V]
+
+        # Gather the log-prob for the actual next token at each position
+        # We skip the first token since there's no prediction for it
+        target_tokens = sequences[:, 1:]  # [B, T-1]
+        predicted_logits = logits[:, :-1, :]  # [B, T-1, V]
+
+
+
+        # Compute mean log-prob per sequence
+        actual_logp = predicted_logits.gather(2, target_tokens.unsqueeze(-1)).squeeze(-1)  # [B, T-1]
+
+        # Mean over all tokens in all sequences
+        mean_logp_per_seq = -actual_logp.mean(dim=1)  # shape [B]
+
+        return logits, mean_logp_per_seq
     def get_logits_and_mean_logp(self, sequences):
         """
         sequences: [batch_size, seq_len] tensor of token IDs
@@ -273,8 +308,8 @@ class Model:
         actual_logp = predicted_logits.gather(2, target_tokens.unsqueeze(-1)).squeeze(-1)  # [B, T-1]
 
         # Mean over all tokens in all sequences
-        # mean_logp = -actual_logp.mean()
-        mean_logp_per_seq = actual_logp.mean(dim=1)  # shape [B]
+        mean_logp = -float(actual_logp.mean())
+        mean_logp_per_seq = -actual_logp.mean(dim=1)  # shape [B]
 
         return logits, mean_logp_per_seq
 
