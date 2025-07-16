@@ -1,7 +1,5 @@
-import torch
 from metric import Metric
 from model import Model, ModelResponse
-from transformers import AutoTokenizer
 from token_utils import TokenUtils
 
 class RelianceMetric(Metric):
@@ -11,10 +9,10 @@ class RelianceMetric(Metric):
 
     def evaluate(self, r: ModelResponse):
         model = Model(self.model_name, cache_dir="/tmp/cache2")
-        utils = TokenUtils(model)
+        utils = TokenUtils(model.model, model.tokenizer)
 
-        cot_log_probs = utils.get_answer_log_probs(r, r.logits)
-        empty_cot_log_probs = utils.get_answer_log_probs(r, r.logits)
+        cot_log_probs = utils.get_answer_log_probs(r.prompt, r.cot, r.prediction, r.logits)
+        empty_cot_log_probs = utils.get_answer_log_probs(r.prompt, "", r.prediction, r.logits)
 
         print(f"CoT average probability: {cot_log_probs.sum():.6f}")
         print(f"Empty-CoT average probability: {empty_cot_log_probs.sum():.6f}")
