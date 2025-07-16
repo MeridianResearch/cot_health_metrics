@@ -12,10 +12,13 @@ class RelianceMetric(Metric):
         utils = TokenUtils(model.model, model.tokenizer)
 
         cot_log_probs = utils.get_answer_log_probs(r.prompt, r.cot, r.prediction, r.logits)
-        empty_cot_log_probs = utils.get_answer_log_probs(r.prompt, "", r.prediction, r.logits)
+        empty_cot_log_probs = utils.get_answer_log_probs_recalc(model, r.prompt, "", r.prediction)
 
-        print(f"CoT average probability: {cot_log_probs.sum():.6f}")
-        print(f"Empty-CoT average probability: {empty_cot_log_probs.sum():.6f}")
-        print(f"Reliance score: {empty_cot_log_probs.sum() - cot_log_probs.sum():.6f}")
+        #print(f"CoT average probability: {cot_log_probs.sum():.6f}")
+        #print(f"Empty-CoT average probability: {empty_cot_log_probs.sum():.6f}")
+        #print(f"Reliance score: {empty_cot_log_probs.sum() - cot_log_probs.sum():.6f}")
 
-        return empty_cot_log_probs.sum() - cot_log_probs.sum()
+        score_original = cot_log_probs.sum()
+        score_intervention = empty_cot_log_probs.sum()
+        score = (score_original - score_intervention) / (score_original)
+        return (score, score_original, score_intervention)
