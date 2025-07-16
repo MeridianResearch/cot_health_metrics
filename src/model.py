@@ -182,11 +182,9 @@ class Model:
 
     def evaluate_cot_response(self, prompt, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
-        prompt_tokens = self.utils.encode_to_tensor(prompt)
-
+        prompt_tokens = self.tokenizer.encode(prompt, return_tensors="pt").to(self.model.device)
     def evaluate_cot_response_from_tokens(self, prompt_tokens: torch.Tensor, max_new_tokens=4096):
         logits = self.get_logits(prompt_tokens)
-
         #print(prompt_tokens)
         raw_output = self.tokenizer.decode(prompt_tokens, skip_special_tokens=True)
 
@@ -199,6 +197,7 @@ class Model:
             prediction=prediction,
             raw_output=raw_output,
             logits=logits)
+
 
     def evaluate_cot_response(self, prompt: str, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
