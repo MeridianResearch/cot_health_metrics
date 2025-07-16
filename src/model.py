@@ -91,7 +91,7 @@ class Model:
         if("begin_think" in model_config):
             return f"Question: {question}\nLet's think step by step. <think>"
         elif("fuzzy_separator" in model_config):
-            return f"Question: {question}\nLet's think step by step. {model_config['fuzzy_separator']}"
+            return f"Question: {question}\nLet's think step by step."
         else:
             print(f"ERROR: model {self.model_name} missing CoT separator config")
             exit(1)
@@ -188,7 +188,7 @@ class Model:
         full_response = self.tokenizer.decode(logits[0], skip_special_tokens=True)
         raw_output = full_response
 
-        (cot, prediction) = self.do_split(logits, question)
+        (cot, prediction) = self.do_split(logits, full_response, prompt)
 
         return ModelResponse(
             question=question,
