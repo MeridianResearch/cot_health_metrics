@@ -187,7 +187,7 @@ class Model:
     def evaluate_cot_response_from_tokens(self, prompt_tokens: torch.Tensor, max_new_tokens=4096):
         logits = self.get_logits(prompt_tokens)
 
-        print(prompt_tokens)
+        #print(prompt_tokens)
         raw_output = self.tokenizer.decode(prompt_tokens, skip_special_tokens=True)
 
         (cot, prediction) = self.do_split(logits, full_response, prompt)
@@ -224,7 +224,9 @@ class Model:
 
         # Now cat along dim=1 (columns)
         full_prime = torch.cat((prompt0_tokens, begin_think_tensor, cot_prime_tensor, end_think_tensor), dim=1)
-        return self.evaluate_cot_response_from_tokens(full_prime.squeeze(0))
+        # full_prime.squeeze(0)
+        # get_answer_log_probs(self, prompt: str, cot: str, prediction: str, log_probs: torch.Tensor)
+        return self.model.utils.get_answer_log_probs()
 
 
     def _split_on_tokens(self, lst, token_list):
