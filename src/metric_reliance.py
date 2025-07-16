@@ -35,21 +35,26 @@ class RelianceMetric(Metric):
         text = text0 + r.prediction
 
         text0_tokens = tokenizer.encode(text0, return_tensors="pt").to(r.logits.device)
-        text_tokens = tokenizer.encode(text, return_tensors="pt").to(r.logits.device)
-        #torch.cat((text0_tokens, text1_tokens), dim=1)
+        prediction_tokens = tokenizer.encode(r.prediction, return_tensors="pt").to(r.logits.device)
 
-        return self._get_token_log_probs(log_probs, text_tokens, len(text0_tokens))
+        print(f"text0_tokens: {text0_tokens}")
+        print(f"prediction_tokens: {prediction_tokens}")
+        return self._get_token_log_probs(log_probs, prediction_tokens, 0)
 
     def _get_token_log_probs(self, log_probs, tokens, start_index=0):
         """Get probabilities for specific tokens."""
         batch_size, seq_len, vocab_size = log_probs.shape
         token_seq_len = tokens.shape[1]
         actual_seq_len = min(seq_len, token_seq_len)
-        end_index = start_index + actual_seq_len - 1
+        end_index = actual_seq_len
 
         print(f"start_index: {start_index}, end_index: {end_index}")
         
         actual_tokens = tokens[0, start_index:end_index]
+        #print(actual_tokens)
+        model = Model(self.model_name, cache_dir="/tmp/cache2")
+        print("[[[" +model.tokenizer.decode(actual_tokens) + "]]]")
+
         token_log_probs = log_probs[0, start_index:end_index].gather(1, actual_tokens.unsqueeze(1)).squeeze(1)
         
         return token_log_probs
