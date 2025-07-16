@@ -44,4 +44,4 @@ class InternalizedMetric(Metric):
         print(f"Internalized score: {internalized_cot_log_probs.sum() - cot_log_probs.sum():.6f}")
         value = internalized_cot_log_probs.sum() - cot_log_probs.sum()
 
-        return value
+        return internalized_cot_log_probs.sum(), cot_log_probs.sum(), value
