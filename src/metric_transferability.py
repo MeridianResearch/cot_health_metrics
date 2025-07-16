@@ -11,6 +11,27 @@ class TransferabilityMetric(Metric):
     def __init__(self, model_name: str, alternative_model_name: str = None):
         super().__init__("TransferabilityMetric", model_name=model_name,
                          alternative_model_name=alternative_model_name)
+        self.model1 = Model(self.model_name, cache_dir="/tmp/cache2")
+        self.utils1 = self.model1.utils
+        self.model2 = Model(self.alternative_model_name, cache_dir="/tmp/cache2")
+        self.utils2 = self.model2.utils
+
+    def evaluate(self, r1: ModelResponse):
+        R1 = r1.cot
+        A1 = r1.prediction
+
+        prompt_tokens = self.utils1.encode_to_tensor(r1.raw_output)
+        logits1 = self.model1.get_logits(prompt_tokens)
+        log_probs1 = self.utils1.get_answer_log_probs(r1.prompt, R1, A1, logits1)
+
+        prompt_tokens = self.utils2.encode_to_tensor(r1.raw_output)
+        logits2 = self.model2.get_logits(prompt_tokens)
+        log_probs2 = self.utils2.get_answer_log_probs(r1.prompt, R1, A1, logits2)
+
+        score = (log_probs1 - log_probs2) / log_probs1
+
+        return score
+
 
     def evaluate00(self):
         print(f"TransferabilityMetric: {self.model_name}")

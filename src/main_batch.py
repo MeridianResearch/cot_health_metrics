@@ -8,13 +8,14 @@ from model import Model
 from metric import Metric, DummyMetric
 from metric_reliance import RelianceMetric
 from metric_paraphrasability import ParaphrasabilityMetric
+from metric_transferability import TransferabilityMetric
 from data_loader import load_prompts
 
 CACHE_DIR_DEFAULT        = "hf_cache"
 LOG_EVERY_DEFAULT        = 1
 
 HF_DATASET_NAMES = {
-    "Alpaca": "tatsu-lab/alpaca",
+    "Alpaca": "vicgalle/alpaca-gpt4",
     "GSM8K": "gsm8k",
     "MMLU": "openai/openai_mmlu_benchmark",
 }
@@ -23,6 +24,7 @@ METRIC_CLASSES = {
     "Dummy": DummyMetric,
     "Reliance": RelianceMetric,
     "Paraphrasability": ParaphrasabilityMetric,
+    "Transferability": TransferabilityMetric,
 }
 
 def _get_sample_question(sample: dict) -> str:
@@ -42,6 +44,7 @@ def _iterate_local_dataset(prompts: List[dict]) -> Iterator[str]:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
+    parser.add_argument("--model2", default=None)
     parser.add_argument("--metric", required=True)
     parser.add_argument("--data-path", default=None)
     parser.add_argument("--data-hf", default=None)
@@ -72,7 +75,9 @@ def main():
 
     # Create metric(s)
     construct_metric = METRIC_CLASSES[args.metric]
-    metric = construct_metric(args.model)
+    metric = construct_metric(
+        model_name=args.model,
+        alternative_model_name=args.model2)
 
     log_counter = 0
     for id, question in datapoints:
