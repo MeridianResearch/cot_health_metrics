@@ -121,6 +121,7 @@ def main():
             log_counter += 1
             print(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}")
             f.write(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}\n")
+            f.flush()
 
 if __name__ == "__main__":
     main()

@@ -345,7 +345,7 @@ class Model:
                 pieces = full_response.split(model_config["fuzzy_separator"])
             else:
                 print(f"ERROR: model {self.model_name} did not generate chain of thought separator {model_config['fuzzy_separator']}")
-                print(f"Response: {full_response}")
+                # print(f"Response: {full_response}")
                 exit(1)
             cot = pieces[0][len(prompt):].strip()
             prediction = pieces[1].strip()
