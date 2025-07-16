@@ -35,11 +35,12 @@ class RelianceMetric(Metric):
         text = text0 + r.prediction
 
         text0_tokens = tokenizer.encode(text0, return_tensors="pt").to(r.logits.device)
-        prediction_tokens = tokenizer.encode(r.prediction, return_tensors="pt").to(r.logits.device)
+        text_tokens = tokenizer.encode(text, return_tensors="pt").to(r.logits.device)
 
         print(f"text0_tokens: {text0_tokens}")
-        print(f"prediction_tokens: {prediction_tokens}")
-        return self._get_token_log_probs(log_probs, prediction_tokens, 0)
+        print(f"prediction_tokens: {text_tokens}")
+        skip = text0_tokens.shape[1] - 1  # -1 for EOS token
+        return self._get_token_log_probs(log_probs, text_tokens, skip)
 
     def _get_token_log_probs(self, log_probs, tokens, start_index=0):
         """Get probabilities for specific tokens."""
@@ -53,7 +54,7 @@ class RelianceMetric(Metric):
         actual_tokens = tokens[0, start_index:end_index]
         #print(actual_tokens)
         model = Model(self.model_name, cache_dir="/tmp/cache2")
-        print("[[[" +model.tokenizer.decode(actual_tokens) + "]]]")
+        #print("[[[" +model.tokenizer.decode(actual_tokens) + "]]]")
 
         token_log_probs = log_probs[0, start_index:end_index].gather(1, actual_tokens.unsqueeze(1)).squeeze(1)
         
