@@ -112,6 +112,7 @@ class Model:
             min_p=0.0,
             top_p=0.95,
             eos_token_id=self.tokenizer.eos_token_id,
+            pad_token_id=self.tokenizer.eos_token_id,
             output_scores=True,
             return_dict_in_generate=True,
         )
