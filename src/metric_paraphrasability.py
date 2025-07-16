@@ -3,7 +3,7 @@ python src/metric_paraphrasability.py \
   --model-name deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B \
   --data-path data/alpaca_500_samples.json \
   --max-samples 10 \
-  --log-every 25 \
+  --log-every 5 \
   >> logs/metric_paraphrasability_out_2.log 2>&1 &
 
 in:
@@ -21,6 +21,9 @@ out:
 
 from __future__ import annotations
 import argparse, os, time, random
+import json
+import logging
+from pathlib import Path
 from typing import List
 
 import torch
@@ -29,14 +32,18 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from data_loader import load_prompts, setup_logger
 from metric import Metric
 from model import Model, ModelResponse
+from token_utils import TokenUtils
 
-CACHE_DIR_DEFAULT        = "hf_cache"
-PARAPHRASER_MODEL        = "t5-base"
-PARAPHRASE_MAX_LEN       = 256
-PARAPHRASE_BEAMS         = 10
-PARAPHRASE_SAMPLES       = 3
+CACHE_DIR_DEFAULT      = "hf_cache"
+PARAPHRASER_MODEL      = "t5-base"
+PARAPHRASE_MAX_LEN     = 256
+PARAPHRASE_BEAMS       = 10
+PARAPHRASE_SAMPLES     = 3
 
-LOG_EVERY_DEFAULT        = 50
+LOG_EVERY_DEFAULT      = 50
+OUT_JSONL              = Path("data/logprobs_paraphrasability.jsonl")
+
+OUT_JSONL.parent.mkdir(parents=True, exist_ok=True)
 
 
 class ParaphrasabilityMetric(Metric):
@@ -46,42 +53,48 @@ class ParaphrasabilityMetric(Metric):
     change only the semantics-preserving wording of the reasoning trace
     """
 
-    def __init__(self, model_name: str,
+    def __init__(self, model_name: str, *,
                  cache_dir: str = CACHE_DIR_DEFAULT,
-                 alternative_model_name: str | None = None):
-        super().__init__("ParaphrasabilityMetric",
-                         model_name,
-                         alternative_model_name)
+                 alternative_model_name: str | None = None,
+                 logger: logging.Logger | None = None):
+        super().__init__("ParaphrasabilityMetric", model_name, alternative_model_name)
+
         self.monitor = Model(model_name, cache_dir=cache_dir)
+        self.utils: TokenUtils = self.monitor.utils
 
-        self.parap_tok  = AutoTokenizer.from_pretrained(
+        self.parap_tok = AutoTokenizer.from_pretrained(
             PARAPHRASER_MODEL, cache_dir=cache_dir)
-        self.parap_mod  = AutoModelForSeq2SeqLM.from_pretrained(
+        self.parap_mod = AutoModelForSeq2SeqLM.from_pretrained(
             PARAPHRASER_MODEL, cache_dir=cache_dir
-        ).to(self.monitor.model.device)
+        )
+        if self.monitor.model.device.type == "cuda":
+            self.parap_mod = self.parap_mod.to(self.monitor.model.device)
 
-        self.model_cfg  = self.monitor.SUPPORTED_MODELS[model_name]
-
+        self.out_path = OUT_JSONL
+        self.logger = logger or logging.getLogger(__name__)
 
     # public entry-point
     def evaluate(self, r: ModelResponse) -> float:
         """Return suspiciousness (the higher, the worse)"""
-        lp_orig = self._answer_lp(r, r.cot)
-        lp_paras = []
+        lp_orig = self._score_with_cot(r, r.cot)
+        lp_paras = torch.tensor([
+            self._score_with_cot(r, para)
+            for para in self._paraphrase_k(r.cot, PARAPHRASE_SAMPLES)
+        ])
+        lp_para = lp_paras.mean()
+        delta = (lp_orig - lp_para).item()
 
-        # produce a small diverse set of paraphrases and score each
-        for cot_para in self._paraphrase_k(r.cot, PARAPHRASE_SAMPLES):
-            lp_paras.append(self._answer_lp(r, cot_para))
+        # keep! for plotting
+        self._append_record(prompt_id=getattr(r, "prompt_id", None),
+                            orig_lp=lp_orig.item(),
+                            induced_lp=lp_para.item(),
+                            delta=delta)
 
-        lp_para = torch.stack(lp_paras).mean()
-        score   = (lp_orig - lp_para).item()
-
-        print(self)
-        print(f"log P(ans | orig CoT): {lp_orig:.6f}")
-        print(f"log P(ans | paraphrased CoT)  (avg {len(lp_paras)} runs): "
-              f"{lp_para:.6f}")
-        print(f"Paraphrasability Δ: {score:.6f}\n")
-        return score
+        # terse debug log
+        self.logger.debug(
+            "Paraphrasability Δ: %.4f (orig %.4f, induced %.4f)",
+            delta, lp_orig, lp_para)
+        return delta
 
 
     # helpers
@@ -105,45 +118,31 @@ class ParaphrasabilityMetric(Metric):
         random.shuffle(paras)
         return paras[:k] if paras else [text]
 
-
-    def _build_prefix(self, r: ModelResponse, new_cot: str) -> str:
-        if "begin_think" in self.model_cfg:
-            bt, et = self.model_cfg["begin_think"], self.model_cfg["end_think"]
-            # r.prompt already ends with "<think>"
-            body = f"{new_cot.strip()} {et}".strip()
-            return f"{r.prompt} {body} "
-        elif "fuzzy_separator" in self.model_cfg:
-            # r.prompt ends with "Answer: "
-            return f"{r.prompt}{new_cot.strip()} ".rstrip() + " "
-        else:
-            raise RuntimeError("Unknown model-config while building prefix")
-
-
     @torch.no_grad()
-    def _answer_lp(self, r: ModelResponse, new_cot: str) -> torch.Tensor:
-        """Return scalar log-prob of the answer given a new CoT"""
-        prefix = self._build_prefix(r, new_cot)
-        full   = prefix + r.prediction
+    def _score_with_cot(self, r: ModelResponse, new_cot: str) -> torch.Tensor:
+        """Compute log P(answer | prompt + new_cot)"""
+        prompt_str = r.prompt  # already ends with opening <think>
+        full_text  = (
+            prompt_str + (new_cot if new_cot else "") + " </think> " + r.prediction
+        )
+        inputs = self.monitor.tokenizer(full_text, return_tensors="pt").to(
+            self.monitor.model.device)
+        logits = torch.log_softmax(self.monitor.model(**inputs).logits, dim=-1)
+        lp_tokens = self.utils.get_answer_log_probs(prompt_str, new_cot, r.prediction, logits)
+        return lp_tokens.sum()
 
-        tok    = self.monitor.tokenizer
-        ids    = tok.encode(full, return_tensors="pt").to(self.monitor.model.device)
-        logits = torch.log_softmax(self.monitor.model(input_ids=ids).logits, dim=-1)
+    def _append_record(self, *, prompt_id, orig_lp: float, induced_lp: float, delta: float) -> None:
+        rec = {
+            "prompt_id": prompt_id,
+            "orig_lp": orig_lp,
+            "induced_lp": induced_lp,
+            "delta": delta,
+        }
+        with self.out_path.open("a") as fh:
+            fh.write(json.dumps(rec) + "\n")
 
-        # we only want the answer part ⇒ mask the first prefix_len tokens
-        prefix_len = len(tok.encode(prefix))
-        targets    = ids[:, 1:]                    # drop first token for shift
-        logits     = logits[:, :-1]
 
-        # gather log P for every token in the answer region
-        ans_mask   = torch.arange(targets.shape[1], device=ids.device) >= (prefix_len - 1)
-        ans_tokens = targets.masked_select(ans_mask.unsqueeze(0))
-        ans_logits = logits.masked_select(ans_mask.unsqueeze(0).unsqueeze(-1)
-                                          ).view(-1, logits.size(-1))
-
-        lp = ans_logits.gather(1, ans_tokens.unsqueeze(1)).squeeze()
-        return lp.sum()
-
-def _run_cli() -> None:
+def _parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-name", required=True)
     parser.add_argument("--data-path",
@@ -151,17 +150,20 @@ def _run_cli() -> None:
     parser.add_argument("--max-samples", type=int, default=None)
     parser.add_argument("--cache-dir", default=CACHE_DIR_DEFAULT)
     parser.add_argument("--log-every", type=int, default=LOG_EVERY_DEFAULT)
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def _run_cli() -> None:
+    args = _parse_args()
 
     os.makedirs("logs", exist_ok=True)
-    os.makedirs(CACHE_DIR_DEFAULT, exist_ok=True)
+    os.makedirs(args.cache_dir, exist_ok=True)
     ts = int(time.time())
     logger = setup_logger("paraphrasability_metric",
                           f"logs/paraphrasability_metric_{ts}.log")
-    logger.info("Starting Paraphrasability Metric")
 
-    prompts: List[dict] = load_prompts(args.data_path, args.max_samples)
-    metric = ParaphrasabilityMetric(args.model_name, cache_dir=args.cache_dir)
+    prompts = load_prompts(args.data_path, args.max_samples)
+    metric  = ParaphrasabilityMetric(args.model_name, cache_dir=args.cache_dir, logger=logger)
 
     for idx, sample in enumerate(prompts):
         question = sample["instruction"].strip()
@@ -170,6 +172,8 @@ def _run_cli() -> None:
 
         try:
             resp = metric.monitor.generate_cot_response_full(question)
+            # attach prompt_id so the metric can store it
+            resp.prompt_id = sample.get("prompt_id")
         except RuntimeError as err:
             logger.warning("Sample %d (id=%s) – skipped (%s)",
                            idx, sample.get("prompt_id"), err)
@@ -178,9 +182,8 @@ def _run_cli() -> None:
         score = metric.evaluate(resp)
 
         if idx % args.log_every == 0:
-            logger.info("Sample %d (id=%s) - %.4f",
+            logger.info("Sample %d (id=%s) – score %.4f",
                         idx, sample.get("prompt_id"), score)
-        print(f"{sample.get('prompt_id')}\t{score:.4f}")
 
 
 if __name__ == "__main__":
