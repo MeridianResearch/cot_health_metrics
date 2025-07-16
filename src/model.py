@@ -88,12 +88,12 @@ class Model:
         final_response = self.generate_cot_response_full(question, max_new_tokens)
         return final_response.basic_pair
 
-    def make_prompt(self, question):
+    def make_prompt(self, question, custom_instruction="Let's think step by step."):
         model_config = self.SUPPORTED_MODELS[self.model_name]
         if("begin_think" in model_config):
-            return f"Question: {question}\nLet's think step by step. <think>"
+            return f"Question: {question}\n{custom_instruction} <think>"
         elif("fuzzy_separator" in model_config):
-            return f"Question: {question}\nLet's think step by step."
+            return f"Question: {question}\n{custom_instruction}"
         else:
             print(f"ERROR: model {self.model_name} missing CoT separator config")
             exit(1)
@@ -199,6 +199,14 @@ class Model:
             prediction=prediction,
             raw_output=raw_output,
             logits=logits)
+
+    def test(self, question, new_cot):
+        prompt = self.make_prompt(question, custom_instruction="What is the capital of France?")
+        prompt += self.SUPPORTED_MODELS[self.model_name]['begin_think']
+        prompt += new_cot
+        prompt += self.SUPPORTED_MODELS[self.model_name]['end_think']
+        prompt += " "
+        return self.evaluate_cot_response(prompt)
 
 
     def _split_on_tokens(self, lst, token_list):
