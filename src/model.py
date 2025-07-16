@@ -170,7 +170,7 @@ class Model:
 
         raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
 
-        (cot, prediction) = self.do_split(sequences, full_response, question)
+        (cot, prediction) = self.do_split(sequences, raw_output, question)
 
         return ModelResponse(
             question=question,
@@ -185,10 +185,10 @@ class Model:
         prompt_tokens = self.tokenizer.encode(prompt, return_tensors="pt").to(self.model.device)
     def evaluate_cot_response_from_tokens(self, prompt_tokens: torch.Tensor, max_new_tokens=4096):
         logits = self.get_logits(prompt_tokens)
-        #print(prompt_tokens)
+
         raw_output = self.tokenizer.decode(prompt_tokens, skip_special_tokens=True)
 
-        (cot, prediction) = self.do_split(logits, full_response, prompt)
+        (cot, prediction) = self.do_split(logits, raw_output, prompt_tokens)
 
         return ModelResponse(
             question=question,
@@ -203,30 +203,6 @@ class Model:
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         prompt_tokens = self.tokenizer.encode(prompt, return_tensors="pt").to(self.model.device)
         return self.evaluate_cot_response_from_tokens(prompt_tokens, max_new_tokens)
-
-    def evaluate_with_custom_cot_tokens(self, question, original_cot_tokens):
-        model_config = self.SUPPORTED_MODELS[self.model_name]
-
-        prompt0 = self.make_prompt(question, custom_instruction="Only use the word THINK in your thinking tags.")
-        prompt0_tokens = self.tokenizer.encode(prompt0, return_tensors="pt").to(self.model.device)
-
-        begin_think = self._get_token_id(model_config["begin_think"])
-        end_think = self._get_token_id(model_config["end_think"])
-
-        think_token = self._get_token_id("think")
-        cot_prime_tokens = [think_token for _ in range(len(original_cot_tokens))]
-
-        # Convert EVERYTHING to tensors, shaped [1, N]
-        begin_think_tensor = torch.tensor([[begin_think]], device=self.model.device)
-        end_think_tensor = torch.tensor([[end_think]], device=self.model.device)
-        cot_prime_tensor = torch.tensor([cot_prime_tokens], device=self.model.device)
-
-        # Now cat along dim=1 (columns)
-        full_prime = torch.cat((prompt0_tokens, begin_think_tensor, cot_prime_tensor, end_think_tensor), dim=1)
-        # full_prime.squeeze(0)
-        # get_answer_log_probs(self, prompt: str, cot: str, prediction: str, log_probs: torch.Tensor)
-        return self.model.utils.get_answer_log_probs()
-
 
     def _split_on_tokens(self, lst, token_list):
         """Split a list into sublists, using 'token' as the delimiter (token is not included in results)."""
@@ -247,6 +223,13 @@ class Model:
             print(f"ERROR: model {self.model_name} does not support {token} token")
             exit(1)
         return token_id
+
+    def get_think_tokens(self):
+        model_config = self.SUPPORTED_MODELS[self.model_name]
+
+        begin_think = self._get_token_id(model_config["begin_think"])
+        end_think = self._get_token_id(model_config["end_think"])
+        return (begin_think, end_think)
 
 if __name__ == "__main__":
     question = "A car travels 60 miles in 1.5 hours. What is its average speed?"
