@@ -2,8 +2,8 @@ from datasets import load_dataset
 import numpy as np
 import plotly.graph_objs as go
 datasets_to_use = {
-    "GSM8K": load_dataset("gsm8k", "main", split="train"),
-    "alpaca_gpt":load_dataset("vicgalle/alpaca-gpt4")
+#    "GSM8K": load_dataset("gsm8k", "main", split="train"),
+#    "alpaca_gpt":load_dataset("vicgalle/alpaca-gpt4")
 }
 from enum import Enum
 class SupportedModel(Enum):
