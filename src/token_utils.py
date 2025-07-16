@@ -18,7 +18,9 @@ class TokenUtils:
         return string.encode('unicode_escape').decode()
 
     def get_answer_log_probs(self, prompt: str, cot: str, prediction: str, log_probs: torch.Tensor):
-        """ Note: prompt should end with a <think> token if required.
+        """ Get log probs for just the answer (prediction), given prompt+cot+prediction.
+        
+            Note: prompt should end with a <think> token if required.
         """
         if cot == "":
             text0 = prompt + "</think> "
@@ -33,7 +35,7 @@ class TokenUtils:
         return self.get_token_log_probs(log_probs, text_tokens, skip_count)
 
     def get_token_log_probs(self, log_probs, tokens, start_index=0):        
-        """Get probabilities for specific tokens."""
+        """Get probabilities for tokens from [start_index,end)."""
         batch_size, seq_len, vocab_size = log_probs.shape
         end_index = min(seq_len, tokens.shape[1])
 
