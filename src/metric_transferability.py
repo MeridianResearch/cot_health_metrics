@@ -45,8 +45,11 @@ class TransferabilityMetric(Metric):
                 logits2 = model2.get_logits(prompt_tokens)
                 log_probs2 = utils2.get_answer_log_probs(model_response.prompt, R1, A1, logits2)
 
+                score = (log_probs1 - log_probs2) / log_probs1
+
                 print(f"log_probs1: {log_probs1}")
                 print(f"log_probs2: {log_probs2}")
+                print(f"score: {score}")
 
         def get_answer_log_probs(self, prompt: str, cot: str, prediction: str, log_probs: torch.Tensor):
 
