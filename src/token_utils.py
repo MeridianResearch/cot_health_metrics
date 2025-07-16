@@ -39,14 +39,14 @@ class TokenUtils:
         batch_size, seq_len, vocab_size = log_probs.shape
         end_index = min(seq_len, tokens.shape[1])
 
-        print(f"start_index: {start_index}")
-        print(f"end_index: {end_index}")
+        #print(f"start_index: {start_index}")
+        #print(f"end_index: {end_index}")
 
         actual_tokens = tokens[0, start_index:]
         token_log_probs = log_probs[0, :].gather(1, actual_tokens.unsqueeze(1)).squeeze(1)
 
-        print(f"getting log probs for tokens: {self.escape_string(self.decode_to_string(actual_tokens))}")
-        print(f"log probs: {token_log_probs}")
+        #print(f"getting log probs for tokens: {self.escape_string(self.decode_to_string(actual_tokens))}")
+        #print(f"log probs: {token_log_probs}")
         #print(f"actual tokens length: {len(actual_tokens)}")
         #print(f"log probs length: {len(token_log_probs)}")
 
