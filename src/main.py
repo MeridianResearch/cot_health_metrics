@@ -2,7 +2,7 @@ import torch
 from metric import Metric, DummyMetric
 from metric_reliance import RelianceMetric
 from model import Model
-from src.metric_internalized import InternalizedMetric
+from metric_internalized import InternalizedMetric
 
 
 def main():
