@@ -59,7 +59,6 @@ class Model:
             exit(1)
 
         self.model_name = model_name
-        self.utils = TokenUtils(self)
         
         config = AutoConfig.from_pretrained(
             model_name,
@@ -79,6 +78,7 @@ class Model:
                 device_map="auto",
                 cache_dir=cache_dir,
             )
+            self.utils = TokenUtils(self.model, self.tokenizer)
 
         except Exception as e:
             print(f"Error loading model {model_name}: {e}")
@@ -183,11 +183,11 @@ class Model:
 
     def evaluate_cot_response(self, prompt, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
-        prompt_tokens = self.tokenizer.encode(prompt, return_tensors="pt").to(self.model.device)
+        prompt_tokens = self.utils.encode_to_tensor(prompt)
 
         logits = self.get_logits(prompt_tokens)
 
-        full_response = self.tokenizer.decode(logits[0], skip_special_tokens=True)
+        full_response = self.utils.decode_to_string(logits[0])
         raw_output = full_response
 
         (cot, prediction) = self.do_split(logits, full_response, prompt)
