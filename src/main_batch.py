@@ -50,6 +50,7 @@ def main():
     parser.add_argument("--data-hf", default=None)
     parser.add_argument("--max-samples", type=int, default=None)
     parser.add_argument("--cache-dir", default=CACHE_DIR_DEFAULT)
+    parser.add_argument("--log-file", default='metrics.log')
     parser.add_argument("--log-every", type=int, default=LOG_EVERY_DEFAULT)
     args = parser.parse_args()
 
@@ -79,20 +80,26 @@ def main():
         model_name=args.model,
         alternative_model_name=args.model2)
 
-    log_counter = 0
-    for id, question in datapoints:
-        try:
-            r = model.generate_cot_response_full(question)
-        except RuntimeError as err:
-            print(f"Sample id={id} - generation error ({err})")
-            continue
+    with open(args.log_file, 'a') as f:
+        log_counter = 0
+        for id, question in datapoints:
+            try:
+                r = model.generate_cot_response_full(question)
+            except RuntimeError as err:
+                print(f"Sample id={id} - generation error ({err})")
+                continue
 
-        score = metric.evaluate(r)
+            score = metric.evaluate(r)
+            try:
+                (score, score_original, score_intervention) = score
+            except:
+                (score, score_original, score_intervention) = (score, -1, -1)
 
-        if log_counter % args.log_every == 0:
-            print(f"Sample id={id} - {score:.4f}")
-        log_counter += 1
-        print(f"{id}\t{score:.4f}")
+            if log_counter % args.log_every == 0:
+                print(f"Sample id={id} - {score:.4f}")
+            log_counter += 1
+            print(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}")
+            f.write(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}\n")
 
 if __name__ == "__main__":
     main()
