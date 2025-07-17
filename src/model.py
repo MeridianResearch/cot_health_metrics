@@ -6,6 +6,7 @@ from token_utils import TokenUtils
 
 @dataclass
 class ModelResponse:
+    question_id: Optional[str] = None
     question: str
     prompt: str
     cot: str
@@ -85,11 +86,11 @@ class Model:
             print(f"Error loading model {model_name}: {e}")
             raise
 
-    def generate_cot_response(self, question, max_new_tokens=4096):
-        final_response = self.generate_cot_response_full(question, max_new_tokens)
+    def generate_cot_response(self, question_id, question, max_new_tokens=4096):
+        final_response = self.generate_cot_response_full(question_id, question, max_new_tokens)
         return final_response.basic_pair
 
-    def make_prompt(self, question, custom_instruction="Let's think step by step."):
+    def make_prompt(self, question_id, question, custom_instruction="Let's think step by step."):
         model_config = self.SUPPORTED_MODELS[self.model_name]
         if("begin_think" in model_config):
             return f"Question: {question}\n{custom_instruction} <think>"
@@ -99,7 +100,7 @@ class Model:
             print(f"ERROR: model {self.model_name} missing CoT separator config")
             exit(1)
 
-    def do_generate(self, prompt, max_new_tokens=4096):
+    def do_generate(self, question_id, prompt, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         model_config = self.SUPPORTED_MODELS[self.model_name]
 
@@ -163,10 +164,10 @@ class Model:
 
         return (cot, prediction)
 
-    def generate_cot_response_full(self, question, max_new_tokens=4096):
+    def generate_cot_response_full(self, question_id, question, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         prompt = self.make_prompt(question)
-        output = self.do_generate(prompt, max_new_tokens)
+        output = self.do_generate(question_id, prompt, max_new_tokens)
         sequences = output.sequences
         logits = self.get_log_probs(sequences)
 
@@ -175,6 +176,7 @@ class Model:
         (cot, prediction) = self.do_split(sequences, raw_output, question)
 
         return ModelResponse(
+            question_id=question_id,
             question=question,
             prompt=prompt,
             cot=cot,
@@ -182,12 +184,12 @@ class Model:
             raw_output=raw_output,
             logits=logits)
 
-    def evaluate_cot_response(self, prompt, max_new_tokens=4096):
+    def evaluate_cot_response(self, question_id, prompt, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         prompt_tokens = self.utils.encode_to_tensor(prompt)
-        return self.evaluate_cot_response_from_tokens(prompt_tokens, max_new_tokens)
+        return self.evaluate_cot_response_from_tokens(question_id, prompt_tokens, max_new_tokens)
 
-    def evaluate_cot_response_from_tokens(self, prompt_tokens: torch.Tensor, max_new_tokens=4096):
+    def evaluate_cot_response_from_tokens(self, question_id, prompt_tokens: torch.Tensor, max_new_tokens=4096):
         logits = self.get_log_probs(prompt_tokens)
 
         raw_output = self.tokenizer.decode(prompt_tokens, skip_special_tokens=True)
@@ -195,18 +197,13 @@ class Model:
         (cot, prediction) = self.do_split(logits, raw_output, prompt_tokens)
 
         return ModelResponse(
+            question_id=question_id,
             question=question,
             prompt=prompt_tokens,
             cot=cot,
             prediction=prediction,
             raw_output=raw_output,
             logits=logits)
-
-
-    def evaluate_cot_response(self, prompt: str, max_new_tokens=4096):
-        """Generate a response using Chain-of-Thought (CoT) prompting."""
-        prompt_tokens = self.tokenizer.encode(prompt, return_tensors="pt").to(self.model.device)
-        return self.evaluate_cot_response_from_tokens(prompt_tokens, max_new_tokens)
 
     def _split_on_tokens(self, lst, token_list):
         """Split a list into sublists, using 'token' as the delimiter (token is not included in results)."""
@@ -240,7 +237,7 @@ if __name__ == "__main__":
     print("Prompt: " + question.encode('unicode_escape').decode())
 
     model = Model("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", cache_dir="/tmp/cache2")
-    (cot, answer) = model.generate_cot_response(question)
+    (cot, answer) = model.generate_cot_response(0, question)
     print("\n")
     print("CoT: " + cot.encode('unicode_escape').decode())
     print("\n")

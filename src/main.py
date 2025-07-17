@@ -24,7 +24,7 @@ def main():
     question = "A car travels 60 miles in 1.5 hours. What is its average speed?"
     # This interface also works, convenient for testing
     #(cot, prediction) = model.generate_cot_response(question)
-    r = model.generate_cot_response_full(question)
+    r = model.generate_cot_response_full(0, question)
     print(r)
 
     metric: Metric = DummyMetric("DummyModel")
