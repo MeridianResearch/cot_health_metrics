@@ -7,6 +7,16 @@ python src/metric_paraphrasability.py \
   --dump-examples data/cot_paraphrase_examples.jsonl \
   >> logs/metric_paraphrasability_out.log 2>&1 &
 
+python src/main_batch.py \
+  --model deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B \
+  --metric Paraphrasability \
+  --data-path data/alpaca_500_samples.json \
+  --max-samples 10 \
+  --log-every 5 \
+  --cache-dir hf_cache \
+  --log-file logs/paraphrasability_batch.tsv
+
+
 in:
 --model-name   - the HF model we want to probe (must be in 'Model.SUPPORTED_MODELS')
 --data-path  - JSON file with the prompt objects - alpaca shape

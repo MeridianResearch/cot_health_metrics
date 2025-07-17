@@ -112,11 +112,11 @@ def main():
                 print(f"Sample id={id} - generation error ({err})")
                 continue
 
-            try:
-                score = metric.evaluate(r)
-            except RuntimeError as err:
-                print(f"Sample id={id} - metric evaluation error ({err})")
-                continue
+            #try:
+            score = metric.evaluate(r)
+            #except RuntimeError as err:
+                #print(f"Sample id={id} - metric evaluation error ({err})")
+                #continue
 
             try:
                 (score, score_original, score_intervention) = score
