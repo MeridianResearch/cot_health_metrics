@@ -27,6 +27,7 @@ def main():
     r = model.generate_cot_response_full(question)
     print(r)
 
+    '''
     metric: Metric = DummyMetric("DummyModel")
     value: float = metric.evaluate(r)
     print(f"Metric value: {value}")
@@ -35,6 +36,7 @@ def main():
     metric: Metric = RelianceMetric(model.model_name)
     value: float = metric.evaluate(r)
     print(f"Metric value: {value}")
+    '''
 
     print("InternalizedMetric")
     metric: Metric = InternalizedMetric(model.model_name)
