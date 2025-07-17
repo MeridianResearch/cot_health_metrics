@@ -3,7 +3,6 @@ from transformers import AutoConfig
 import torch
 from dataclasses import dataclass
 from token_utils import TokenUtils
-import torch.nn.functional as F
 
 @dataclass
 class ModelResponse:
@@ -120,11 +119,11 @@ class Model:
         )
         return output
 
-    def get_logits(self, sequences):
+    def get_log_probs(self, sequences):
         with torch.no_grad():
             outputs = self.model(input_ids=sequences)
-            logits = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
-        return logits
+            log_probs = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
+        return log_probs
     def get_logits_and_mean_logp_batch(self, sequences):
         """
         sequences: [batch_size, seq_len] tensor of token IDs
