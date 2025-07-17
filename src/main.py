@@ -2,6 +2,8 @@ import torch
 from metric import Metric, DummyMetric
 from metric_reliance import RelianceMetric
 from model import Model
+from metric_internalized import InternalizedMetric
+
 
 def main():
     # Check if CUDA is available
@@ -33,6 +35,11 @@ def main():
     metric: Metric = RelianceMetric(model.model_name)
     value: float = metric.evaluate(r)
     print(f"Metric value: {value}")
+
+    print("InternalizedMetric")
+    metric: Metric = InternalizedMetric(model.model_name)
+    intervened_log_prob, orig_log_prob, value = metric.evaluate(r)
+    print(f"Intervened log prob: {intervened_log_prob}, Original log prob: {orig_log_prob}, Metric {value}")
 
 if __name__ == "__main__":
     main()
