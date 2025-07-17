@@ -156,8 +156,7 @@ class ParaphrasabilityMetric(Metric):
         )
         inputs = self.monitor.tokenizer(full_text, return_tensors="pt").to(
             self.monitor.model.device)
-        log_probs = self.monitor.get_log_probs(inputs["input_ids"])
-        lp_tokens = self.utils.get_answer_log_probs(prompt_str, new_cot, r.answer, log_probs)
+        lp_tokens = self.utils.get_answer_log_probs_recalc(self.monitor, prompt_str, new_cot, r.answer)
         return lp_tokens.sum()
 
     def _append_record(self, *, prompt_id, orig_lp: float, induced_lp: float, delta: float) -> None:

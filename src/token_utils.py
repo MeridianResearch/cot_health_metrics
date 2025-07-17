@@ -36,22 +36,25 @@ class TokenUtils:
         skip_count = text0_tokens.shape[1] - 1  # -1 for EOS token
         return self.get_token_log_probs(log_probs, text_tokens, skip_count)
 
-    def get_answer_log_probs(self, prompt: str, cot: str, prediction: str, log_probs: torch.Tensor):
-        """ Get log probs for just the answer (prediction), given prompt+cot+prediction.
-        
-            Note: prompt should end with a <think> token if required.
-        """
-        if cot == "":
-            text0 = prompt + "</think> "
-        else:
-            text0 = prompt + cot + " </think> "
-        text = text0 + prediction
+    #def get_answer_log_probs(self, prompt: str, cot: str, prediction: str, logits: torch.Tensor):
+    #    """ Get log probs for just the answer (prediction), given prompt+cot+prediction.
+    #    
+    #        Note: prompt should end with a <think> token if required.
+    #    """
+    #    if cot == "":
+    #        text0 = prompt + "</think> "
+    #    else:
+    #        text0 = prompt + cot + " </think> "
+    #    text = text0 + prediction
 
-        text0_tokens = self.encode_to_tensor(text0)
-        text_tokens = self.encode_to_tensor(text)
+    #    text0_tokens = self.encode_to_tensor(text0)
+    #    text_tokens = self.encode_to_tensor(text)
 
-        skip_count = text0_tokens.shape[1] - 1  # -1 for EOS token
-        return self.get_token_log_probs(log_probs, text_tokens, skip_count)
+    #    #log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
+    #    log_probs = logits
+
+    #    skip_count = text0_tokens.shape[1] - 1  # -1 for EOS token
+    #    return self.get_token_log_probs(log_probs, text_tokens, skip_count)
 
     def get_token_log_probs(self, log_probs, tokens, start_index=0):
         """Get probabilities for tokens from [start_index,end)."""
