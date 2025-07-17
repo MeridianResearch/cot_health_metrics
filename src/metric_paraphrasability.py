@@ -14,7 +14,8 @@ python src/main_batch.py \
   --max-samples 10 \
   --log-every 5 \
   --cache-dir hf_cache \
-  --log-file logs/paraphrasability_batch.tsv
+  --log-file logs/paraphrasability_batch.tsv \
+  >> logs/mainbatched.log 2>&1 &
 
 
 in:
@@ -52,7 +53,7 @@ PARAPHRASE_BEAMS         = 10
 PARAPHRASE_SAMPLES       = 3
 
 LOG_EVERY_DEFAULT        = 50
-OUT_JSONL                = Path("data/logprobs_paraphrasability.jsonl")
+OUT_JSONL                = Path("data/logprobs/paraphrasability.jsonl")
 
 OUT_JSONL.parent.mkdir(parents=True, exist_ok=True)
 
@@ -122,7 +123,7 @@ class ParaphrasabilityMetric(Metric):
         self.logger.debug(
             "Paraphrasability Δ: %.4f (orig %.4f, induced %.4f)",
             delta, lp_orig, lp_para)
-        return delta
+        return delta, lp_orig, lp_para
 
 
     # helpers
@@ -213,16 +214,19 @@ def _run_cli() -> None:
             resp = metric.monitor.generate_cot_response_full(question)
             # attach prompt_id so the metric can store it
             resp.prompt_id = sample.get("prompt_id")
+            resp.prompt_id = sample.get("prompt_id", sample.get("id", idx))
         except RuntimeError as err:
             logger.warning("Sample %d (id=%s) – skipped (%s)",
                            idx, sample.get("prompt_id"), err)
             continue
 
-        score = metric.evaluate(resp)
+        scores = metric.evaluate(resp)
 
         if idx % args.log_every == 0:
-            logger.info("Sample %d (id=%s) – score %.4f",
-                        idx, sample.get("prompt_id"), score)
+            logger.info(
+                "Sample %d (id=%s) – Δ %.4f | orig_lp %.4f | para_lp %.4f",
+                idx, sample.get("prompt_id"), scores[0], scores[1], scores[2]
+            )
 
 
 if __name__ == "__main__":
