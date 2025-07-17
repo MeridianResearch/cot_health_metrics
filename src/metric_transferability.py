@@ -27,7 +27,8 @@ class TransferabilityMetric(Metric):
 
         log_probs2 = self.utils2.get_answer_log_probs_recalc(self.model2, r1.prompt, R1, A1)
 
-        log_probs3 = self.utils2.get_answer_log_probs(r1.prompt, "", A1, logits2)
+        log_probs3 = self.utils2.get_answer_log_probs_recalc(self.model2, r1.prompt, "", A1)
+
         # print(f"log_probs1: {log_probs1}\n\nlog_probs2: {log_probs2}")
         score1 = ((log_probs1.sum() - log_probs2.sum())/ log_probs1.sum())
         score2 = ((log_probs1.sum() - log_probs3.sum()) / log_probs1.sum())
