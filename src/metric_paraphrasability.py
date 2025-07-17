@@ -211,7 +211,7 @@ def _run_cli() -> None:
             question += " " + sample["input"].strip()
 
         try:
-            resp = metric.monitor.generate_cot_response_full(question)
+            resp = metric.monitor.generate_cot_response_full(idx, question)
             # attach prompt_id so the metric can store it
             resp.prompt_id = sample.get("prompt_id")
             resp.prompt_id = sample.get("prompt_id", sample.get("id", idx))
