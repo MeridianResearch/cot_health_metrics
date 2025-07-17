@@ -119,7 +119,7 @@ class Model:
         )
         return output
 
-    def get_log_probs(self, sequences):
+    def get_log_probs(self, sequences: torch.Tensor):
         with torch.no_grad():
             outputs = self.model(input_ids=sequences)
             log_probs = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
