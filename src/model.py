@@ -3,10 +3,11 @@ from transformers import AutoConfig
 import torch
 from dataclasses import dataclass
 from token_utils import TokenUtils
+from typing import Optional
 
 @dataclass
 class ModelResponse:
-    question_id: Optional[str] = None
+    question_id: Optional[str]
     question: str
     prompt: str
     cot: str
@@ -166,7 +167,7 @@ class Model:
 
     def generate_cot_response_full(self, question_id, question, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
-        prompt = self.make_prompt(question)
+        prompt = self.make_prompt(question_id, question)
         output = self.do_generate(question_id, prompt, max_new_tokens)
         sequences = output.sequences
         logits = self.get_log_probs(sequences)
