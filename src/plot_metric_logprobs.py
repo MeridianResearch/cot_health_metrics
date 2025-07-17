@@ -33,6 +33,7 @@ import json
 import logging
 import os
 import time
+import math
 from pathlib import Path
 from typing import List, Tuple
 
@@ -90,8 +91,14 @@ class LogProbVisualizer:
                     continue
                 try:
                     obj = json.loads(line)
-                    orig_vals.append(float(obj["orig_lp"]))
-                    ind_vals.append(float(obj["induced_lp"]))
+                    o = float(obj["orig_lp"])
+                    i = float(obj["induced_lp"])
+                    # skip infinities or NaNs
+                    if not (math.isfinite(o) and math.isfinite(i)):
+                        self.logger.warning("Skipping non‑finite lp at line %d: orig=%s, induced=%s", ln, o, i)
+                        continue
+                    orig_vals.append(o)
+                    ind_vals.append(i)
                 except Exception as err:
                     self.logger.warning("Skipping malformed line %d - %s", ln, err)
 
