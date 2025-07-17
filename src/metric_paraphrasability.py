@@ -28,20 +28,21 @@ from typing import List
 
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from pathlib import Path
 
 from data_loader import load_prompts, setup_logger
 from metric import Metric
 from model import Model, ModelResponse
 from token_utils import TokenUtils
 
-CACHE_DIR_DEFAULT      = "hf_cache"
-PARAPHRASER_MODEL      = "t5-base"
-PARAPHRASE_MAX_LEN     = 256
-PARAPHRASE_BEAMS       = 10
-PARAPHRASE_SAMPLES     = 3
+CACHE_DIR_DEFAULT        = "hf_cache"
+PARAPHRASER_MODEL        = "t5-base"
+PARAPHRASE_MAX_LEN       = 256
+PARAPHRASE_BEAMS         = 10
+PARAPHRASE_SAMPLES       = 3
 
-LOG_EVERY_DEFAULT      = 50
-OUT_JSONL              = Path("data/logprobs_paraphrasability.jsonl")
+LOG_EVERY_DEFAULT        = 50
+OUT_JSONL                = Path("data/logprobs_paraphrasability.jsonl")
 
 OUT_JSONL.parent.mkdir(parents=True, exist_ok=True)
 
@@ -57,7 +58,9 @@ class ParaphrasabilityMetric(Metric):
                  cache_dir: str = CACHE_DIR_DEFAULT,
                  alternative_model_name: str | None = None,
                  logger: logging.Logger | None = None):
-        super().__init__("ParaphrasabilityMetric", model_name, alternative_model_name)
+        super().__init__("ParaphrasabilityMetric",
+                         model_name,
+                         alternative_model_name)
 
         self.monitor = Model(model_name, cache_dir=cache_dir)
         self.utils: TokenUtils = self.monitor.utils
@@ -90,7 +93,6 @@ class ParaphrasabilityMetric(Metric):
                             induced_lp=lp_para.item(),
                             delta=delta)
 
-        # terse debug log
         self.logger.debug(
             "Paraphrasability Δ: %.4f (orig %.4f, induced %.4f)",
             delta, lp_orig, lp_para)
@@ -150,6 +152,12 @@ def _parse_args():
     parser.add_argument("--max-samples", type=int, default=None)
     parser.add_argument("--cache-dir", default=CACHE_DIR_DEFAULT)
     parser.add_argument("--log-every", type=int, default=LOG_EVERY_DEFAULT)
+    parser.add_argument(
+      "--dump-examples",
+      type=str,
+      default=None,
+      help="(optional) path to JSONL file where we’ll write CoT ↔ paraphrase examples"
+    )
     return parser.parse_args()
 
 
@@ -163,7 +171,13 @@ def _run_cli() -> None:
                           f"logs/paraphrasability_metric_{ts}.log")
 
     prompts = load_prompts(args.data_path, args.max_samples)
-    metric  = ParaphrasabilityMetric(args.model_name, cache_dir=args.cache_dir, logger=logger)
+    #metric  = ParaphrasabilityMetric(args.model_name, cache_dir=args.cache_dir, logger=logger)
+    metric = ParaphrasabilityMetric(
+        args.model_name,
+        cache_dir=args.cache_dir,
+        logger=logger,
+        examples_path=args.dump_examples
+    )
 
     for idx, sample in enumerate(prompts):
         question = sample["instruction"].strip()
