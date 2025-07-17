@@ -38,8 +38,8 @@ def main():
 
     print("InternalizedMetric")
     metric: Metric = InternalizedMetric(model.model_name)
-    intervened_log_prob, orig_log_prob, value = metric.evaluate(r)
-    print(f"Intervened log prob: {intervened_log_prob}, Original log prob: {orig_log_prob}, Metric {value}")
+    score, score_original, score_intervention = metric.evaluate(r)
+    print(f"score: {score}, score original: {score_original}, score intervention {score_intervention}")
 
 if __name__ == "__main__":
     main()
