@@ -7,6 +7,7 @@ import json
 import pandas as pd
 from token_utils import TokenUtils
 from pathlib import Path
+import os
 class TransferabilityMetric(Metric):
     def __init__(self, model_name: str, alternative_model_name: str = None):
         super().__init__("TransferabilityMetric", model_name=model_name,
@@ -36,6 +37,7 @@ class TransferabilityMetric(Metric):
         score2 = ((log_probs1.sum() - log_probs3.sum()) / log_probs1.sum())
         output_path = Path("output/output_logprobs.jsonl")
         result={"score1":float(score1),"score2":float(score2), "logprobsM1A1":float(log_probs1.mean()), "logprobsM2_QR1A1":float(log_probs2.mean()),"logprobsM2_QA1":float(log_probs3.mean())}
+        os.makedirs("output", exist_ok=True)
         with output_path.open("a") as f:
             f.write(json.dumps(result) + "\n")
         return (score1,log_probs1.mean(),log_probs2.mean())
