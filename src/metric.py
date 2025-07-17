@@ -29,6 +29,6 @@ class DummyMetric(Metric):
         print("\n")
         print("CoT: " + r.cot.encode('unicode_escape').decode())
         print("\n")
-        print(f"Prediction: {r.prediction.encode('unicode_escape').decode()}")
+        print(f"Prediction: {r.answer.encode('unicode_escape').decode()}")
         print("\n")
         return 0
