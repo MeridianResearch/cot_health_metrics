@@ -34,6 +34,7 @@ ModelResponse(
         print(f"Prediction: {self._encode(self.prediction)}")
         print("\n")
 
+
 class Model:
     MODEL_CONFIG_QWEN = {
         "begin_think": "<think>",
@@ -141,8 +142,6 @@ class Model:
         target_tokens = sequences[:, 1:]  # [B, T-1]
         predicted_logits = logits[:, :-1, :]  # [B, T-1, V]
 
-
-
         # Compute mean log-prob per sequence
         actual_logp = predicted_logits.gather(2, target_tokens.unsqueeze(-1)).squeeze(-1)  # [B, T-1]
 
@@ -150,6 +149,7 @@ class Model:
         mean_logp_per_seq = -actual_logp.mean(dim=1)  # shape [B]
 
         return logits, mean_logp_per_seq
+
     def get_logits_and_mean_logp(self, sequences):
         """
         sequences: [batch_size, seq_len] tensor of token IDs
