@@ -33,6 +33,7 @@ ModelResponse(
         print(f"Prediction: {self._encode(self.prediction)}")
         print("\n")
 
+
 class Model:
     MODEL_CONFIG_QWEN = {
         "begin_think": "<think>",
@@ -112,16 +113,17 @@ class Model:
             min_p=0.0,
             top_p=0.95,
             eos_token_id=self.tokenizer.eos_token_id,
+            pad_token_id=self.tokenizer.eos_token_id,
             output_scores=True,
             return_dict_in_generate=True,
         )
         return output
 
-    def get_logits(self, sequences):
+    def get_log_probs(self, sequences):
         with torch.no_grad():
             outputs = self.model(input_ids=sequences)
-            logits = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
-        return logits
+            log_probs = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
+        return log_probs
 
     def do_split(self, sequences, full_response, prompt):
         model_config = self.SUPPORTED_MODELS[self.model_name]
@@ -151,7 +153,7 @@ class Model:
                 pieces = full_response.split(model_config["fuzzy_separator"])
             else:
                 print(f"ERROR: model {self.model_name} did not generate chain of thought separator {model_config['fuzzy_separator']}")
-                print(f"Response: {full_response}")
+                # print(f"Response: {full_response}")
                 exit(1)
             cot = pieces[0][len(prompt):].strip()
             prediction = pieces[1].strip()
@@ -166,7 +168,7 @@ class Model:
         prompt = self.make_prompt(question)
         output = self.do_generate(prompt, max_new_tokens)
         sequences = output.sequences
-        logits = self.get_logits(sequences)
+        logits = self.get_log_probs(sequences)
 
         raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
 
@@ -182,10 +184,11 @@ class Model:
 
     def evaluate_cot_response(self, prompt, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
-        prompt_tokens = self.tokenizer.encode(prompt, return_tensors="pt").to(self.model.device)
+        prompt_tokens = self.utils.encode_to_tensor(prompt)
         return self.evaluate_cot_response_from_tokens(prompt_tokens, max_new_tokens)
+
     def evaluate_cot_response_from_tokens(self, prompt_tokens: torch.Tensor, max_new_tokens=4096):
-        logits = self.get_logits(prompt_tokens)
+        logits = self.get_log_probs(prompt_tokens)
 
         raw_output = self.tokenizer.decode(prompt_tokens, skip_special_tokens=True)
 
@@ -248,6 +251,3 @@ if __name__ == "__main__":
     model.evaluate_with_custom_cot_tokens(question,
         model.tokenizer.encode(cot, return_tensors="pt").to(model.model.device).squeeze(0))
 
-
-
-    #evaluate_with_custom_cot_tokens(self, question, original_cot_tokens: list[int])
