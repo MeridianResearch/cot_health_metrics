@@ -42,8 +42,13 @@ class TokenUtils:
         print(f"start_index: {start_index}")
         print(f"end_index: {end_index}")
 
-        actual_tokens = tokens[0, start_index:]
-        token_log_probs = log_probs[0, :].gather(1, actual_tokens.unsqueeze(1)).squeeze(1)
+        # Ensure start_index is valid (>= 0)
+        if start_index == 0 or end_index == 0:
+            raise ValueError("start_index is 0, maybe there is no CoT?")
+
+        # go back one index in logits to get next token probability for each token
+        actual_tokens = tokens[0, start_index:end_index]
+        token_log_probs = logits[0, start_index-1:end_index-1].gather(1, actual_tokens.unsqueeze(-1)).squeeze(-1)
 
         print(f"getting log probs for tokens: {self.escape_string(self.decode_to_string(actual_tokens))}")
         print(f"log probs: {token_log_probs}")
