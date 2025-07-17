@@ -4,7 +4,8 @@ python src/metric_paraphrasability.py \
   --data-path data/alpaca_500_samples.json \
   --max-samples 10 \
   --log-every 5 \
-  >> logs/metric_paraphrasability_out_2.log 2>&1 &
+  --dump-examples data/cot_paraphrase_examples.jsonl \
+  >> logs/metric_paraphrasability_out.log 2>&1 &
 
 in:
 --model-name   - the HF model we want to probe (must be in 'Model.SUPPORTED_MODELS')
@@ -28,7 +29,6 @@ from typing import List
 
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-from pathlib import Path
 
 from data_loader import load_prompts, setup_logger
 from metric import Metric
@@ -57,7 +57,8 @@ class ParaphrasabilityMetric(Metric):
     def __init__(self, model_name: str, *,
                  cache_dir: str = CACHE_DIR_DEFAULT,
                  alternative_model_name: str | None = None,
-                 logger: logging.Logger | None = None):
+                 logger: logging.Logger | None = None,
+                 examples_path: str | None = None):
         super().__init__("ParaphrasabilityMetric",
                          model_name,
                          alternative_model_name)
@@ -76,14 +77,29 @@ class ParaphrasabilityMetric(Metric):
         self.out_path = OUT_JSONL
         self.logger = logger or logging.getLogger(__name__)
 
+        self.examples_path = Path(examples_path) if examples_path else None
+        if self.examples_path:
+            self.examples_path.parent.mkdir(exist_ok=True, parents=True)
+
     # public entry-point
     def evaluate(self, r: ModelResponse) -> float:
         """Return suspiciousness (the higher, the worse)"""
         lp_orig = self._score_with_cot(r, r.cot)
-        lp_paras = torch.tensor([
-            self._score_with_cot(r, para)
-            for para in self._paraphrase_k(r.cot, PARAPHRASE_SAMPLES)
-        ])
+        paras = self._paraphrase_k(r.cot, PARAPHRASE_SAMPLES)
+
+        # write examples to file if requested
+        if self.examples_path:
+            with self.examples_path.open("a") as ef:
+                for para in paras:
+                    ef.write(json.dumps({
+                        "prompt_id": getattr(r, "prompt_id", None),
+                        "original_cot": r.cot,
+                        "paraphrased_cot": para
+                    }) + "\n")
+
+        # now score them
+        lp_paras = torch.tensor([ self._score_with_cot(r, para) for para in paras ])
+
         lp_para = lp_paras.mean()
         delta = (lp_orig - lp_para).item()
 
@@ -171,7 +187,6 @@ def _run_cli() -> None:
                           f"logs/paraphrasability_metric_{ts}.log")
 
     prompts = load_prompts(args.data_path, args.max_samples)
-    #metric  = ParaphrasabilityMetric(args.model_name, cache_dir=args.cache_dir, logger=logger)
     metric = ParaphrasabilityMetric(
         args.model_name,
         cache_dir=args.cache_dir,
