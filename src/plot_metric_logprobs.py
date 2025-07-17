@@ -4,9 +4,9 @@ python src/plot_metric_logprobs.py \
 
 custom location / override defaults:
 python src/plot_metric_logprobs.py \
-    --metric-name reliance \
-    --input-path data/something/reliance_logprobs.jsonl \
-    --out-dir data/plots/reliance \
+    --metric-name paraphrasability \
+    --input-path data/logprobs/paraphrasability.jsonl \
+    --out-dir data/plots/paraphrasability \
     --bins 40
 
 needs:
