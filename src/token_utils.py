@@ -31,12 +31,12 @@ class TokenUtils:
         text0_tokens = self.encode_to_tensor(text0)
         text_tokens = self.encode_to_tensor(text)
 
-        log_probs = model.get_logits(text_tokens)
+        log_probs = model.get_log_probs(text_tokens)
 
         skip_count = text0_tokens.shape[1] - 1  # -1 for EOS token
         return self.get_token_log_probs(log_probs, text_tokens, skip_count)
 
-    def get_answer_log_probs(self, prompt: str, cot: str, prediction: str, logits: torch.Tensor):
+    def get_answer_log_probs(self, prompt: str, cot: str, prediction: str, log_probs: torch.Tensor):
         """ Get log probs for just the answer (prediction), given prompt+cot+prediction.
         
             Note: prompt should end with a <think> token if required.
@@ -51,11 +51,11 @@ class TokenUtils:
         text_tokens = self.encode_to_tensor(text)
 
         skip_count = text0_tokens.shape[1] - 1  # -1 for EOS token
-        return self.get_token_log_probs(logits, text_tokens, skip_count)
+        return self.get_token_log_probs(log_probs, text_tokens, skip_count)
 
-    def get_token_log_probs(self, logits, tokens, start_index=0):        
+    def get_token_log_probs(self, log_probs, tokens, start_index=0):
         """Get probabilities for tokens from [start_index,end)."""
-        batch_size, seq_len, vocab_size = logits.shape
+        batch_size, seq_len, vocab_size = log_probs.shape
         end_index = min(seq_len, tokens.shape[1])
 
         #print(f"start_index: {start_index}")
@@ -67,7 +67,7 @@ class TokenUtils:
 
         # go back one index in logits to get next token probability for each token
         actual_tokens = tokens[0, start_index:end_index]
-        token_log_probs = logits[0, start_index-1:end_index-1].gather(1, actual_tokens.unsqueeze(-1)).squeeze(-1)
+        token_log_probs = log_probs[0, start_index-1:end_index-1].gather(1, actual_tokens.unsqueeze(-1)).squeeze(-1)
 
         # print(f"getting log probs for tokens: {self.escape_string(self.decode_to_string(actual_tokens))}")
         # print(f"log probs: {token_log_probs}")
