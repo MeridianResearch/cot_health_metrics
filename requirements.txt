@@ -3,3 +3,5 @@ numpy
 transformers
 accelerate
 datasets
+plotly
+seaborn
