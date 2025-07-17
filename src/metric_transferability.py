@@ -22,13 +22,9 @@ class TransferabilityMetric(Metric):
         A1 = r1.answer
         # print(r1)
 
-        prompt_tokens = self.utils1.encode_to_tensor(r1.raw_output)
-        logits1 = self.model1.get_log_probs(prompt_tokens)
-        log_probs1 = self.utils1.get_answer_log_probs(r1.prompt, R1, A1, logits1)
+        log_probs1 = self.utils1.get_answer_log_probs_recalc(self.model1, r1.prompt, R1, A1)
 
-        prompt_tokens = self.utils2.encode_to_tensor(r1.raw_output)
-        logits2 = self.model2.get_log_probs(prompt_tokens)
-        log_probs2 = self.utils2.get_answer_log_probs(r1.prompt, R1, A1, logits2)
+        log_probs2 = self.utils2.get_answer_log_probs_recalc(self.model2, r1.prompt, R1, A1)
 
         # print(f"log_probs1: {log_probs1}\n\nlog_probs2: {log_probs2}")
         score = ((log_probs1.sum() - log_probs2.sum()) / (log_probs1.sum()))

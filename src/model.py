@@ -19,7 +19,6 @@ class ModelResponse:
     cot: str
     answer: str
     raw_output: str
-    logits: torch.Tensor
 
     def __post_init__(self):
         self.basic_pair = (self.cot, self.answer)
@@ -185,7 +184,6 @@ class Model:
         prompt = self.make_prompt(question_id, question)
         output = self.do_generate(question_id, prompt, max_new_tokens)
         sequences = output.sequences
-        logits = self.get_log_probs(sequences)
 
         raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
 
@@ -197,8 +195,7 @@ class Model:
             prompt=prompt,
             cot=cot,
             answer=answer,
-            raw_output=raw_output,
-            logits=logits)
+            raw_output=raw_output)
 
     def evaluate_cot_response(self, question_id, prompt, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
@@ -206,11 +203,11 @@ class Model:
         return self.evaluate_cot_response_from_tokens(question_id, prompt_tokens, max_new_tokens)
 
     def evaluate_cot_response_from_tokens(self, question_id, prompt_tokens: torch.Tensor, max_new_tokens=4096):
-        logits = self.get_log_probs(prompt_tokens)
+        log_probs = self.get_log_probs(prompt_tokens)
 
         raw_output = self.tokenizer.decode(prompt_tokens, skip_special_tokens=True)
 
-        (question, cot, answer) = self.do_split(raw_output)
+        (question, cot, answer) = self.do_split(log_probs, raw_output, prompt_tokens)
 
         return ModelResponse(
             question_id=question_id,
@@ -218,8 +215,7 @@ class Model:
             prompt=prompt_tokens,
             cot=cot,
             answer=answer,
-            raw_output=raw_output,
-            logits=logits)
+            raw_output=raw_output)
 
     def _split_on_tokens(self, lst, token_list):
         """Split a list into sublists, using 'token' as the delimiter (token is not included in results)."""
