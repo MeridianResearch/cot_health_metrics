@@ -88,12 +88,12 @@ class Model:
         final_response = self.generate_cot_response_full(question, max_new_tokens)
         return final_response.basic_pair
 
-    def make_prompt(self, question):
+    def make_prompt(self, question, custom_instruction="Let's think step by step."):
         model_config = self.SUPPORTED_MODELS[self.model_name]
         if("begin_think" in model_config):
-            return f"Question: {question}\nLet's think step by step. <think>"
+            return f"Question: {question}\n{custom_instruction} <think>"
         elif("fuzzy_separator" in model_config):
-            return f"Question: {question}\nLet's think step by step."
+            return f"Question: {question}\n{custom_instruction}"
         else:
             print(f"ERROR: model {self.model_name} missing CoT separator config")
             exit(1)
@@ -168,10 +168,9 @@ class Model:
         sequences = output.sequences
         logits = self.get_logits(sequences)
 
-        full_response = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
-        raw_output = full_response
+        raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
 
-        (cot, prediction) = self.do_split(sequences, full_response, question)
+        (cot, prediction) = self.do_split(sequences, raw_output, question)
 
         return ModelResponse(
             question=question,
@@ -183,23 +182,28 @@ class Model:
 
     def evaluate_cot_response(self, prompt, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
-        prompt_tokens = self.utils.encode_to_tensor(prompt)
-
+        prompt_tokens = self.tokenizer.encode(prompt, return_tensors="pt").to(self.model.device)
+        return self.evaluate_cot_response_from_tokens(prompt_tokens, max_new_tokens)
+    def evaluate_cot_response_from_tokens(self, prompt_tokens: torch.Tensor, max_new_tokens=4096):
         logits = self.get_logits(prompt_tokens)
 
-        full_response = self.utils.decode_to_string(logits[0])
-        raw_output = full_response
+        raw_output = self.tokenizer.decode(prompt_tokens, skip_special_tokens=True)
 
-        (cot, prediction) = self.do_split(logits, full_response, prompt)
+        (cot, prediction) = self.do_split(logits, raw_output, prompt_tokens)
 
         return ModelResponse(
             question=question,
-            prompt=prompt,
+            prompt=prompt_tokens,
             cot=cot,
             prediction=prediction,
             raw_output=raw_output,
             logits=logits)
 
+
+    def evaluate_cot_response(self, prompt: str, max_new_tokens=4096):
+        """Generate a response using Chain-of-Thought (CoT) prompting."""
+        prompt_tokens = self.tokenizer.encode(prompt, return_tensors="pt").to(self.model.device)
+        return self.evaluate_cot_response_from_tokens(prompt_tokens, max_new_tokens)
 
     def _split_on_tokens(self, lst, token_list):
         """Split a list into sublists, using 'token' as the delimiter (token is not included in results)."""
@@ -221,13 +225,29 @@ class Model:
             exit(1)
         return token_id
 
+    def get_think_tokens(self):
+        model_config = self.SUPPORTED_MODELS[self.model_name]
+
+        begin_think = self._get_token_id(model_config["begin_think"])
+        end_think = self._get_token_id(model_config["end_think"])
+        return (begin_think, end_think)
+
 if __name__ == "__main__":
     question = "A car travels 60 miles in 1.5 hours. What is its average speed?"
     print("Prompt: " + question.encode('unicode_escape').decode())
 
-    model = Model("Qwen/Qwen3-0.6B", cache_dir="/tmp/cache2")
+    model = Model("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", cache_dir="/tmp/cache2")
     (cot, answer) = model.generate_cot_response(question)
     print("\n")
     print("CoT: " + cot.encode('unicode_escape').decode())
     print("\n")
     print("Answer: " + answer.encode('unicode_escape').decode())
+    print("\n")
+    print("Evaluate replacing CoT with thinking TOKENS:")
+    print("\n")
+    model.evaluate_with_custom_cot_tokens(question,
+        model.tokenizer.encode(cot, return_tensors="pt").to(model.model.device).squeeze(0))
+
+
+
+    #evaluate_with_custom_cot_tokens(self, question, original_cot_tokens: list[int])
