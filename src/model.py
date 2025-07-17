@@ -220,7 +220,7 @@ class Model:
         prompt = self.make_prompt(question)
         output = self.do_generate(prompt, max_new_tokens)
         sequences = output.sequences
-        logits = self.get_logits(sequences)
+        logits = self.get_log_probs(sequences)
 
         full_response = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
         raw_output = full_response
@@ -239,7 +239,7 @@ class Model:
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         prompt_tokens = self.utils.encode_to_tensor(prompt)
 
-        logits = self.get_logits(prompt_tokens)
+        logits = self.get_log_probs(prompt_tokens)
 
         full_response = self.utils.decode_to_string(logits[0])
         raw_output = full_response
