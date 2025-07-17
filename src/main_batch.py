@@ -107,7 +107,8 @@ def main():
                 continue
 
             try:
-                r = model.generate_cot_response_full(question)
+                r = model.generate_cot_response_full(id, question)
+                r.prompt_id = id
             except RuntimeError as err:
                 print(f"Sample id={id} - generation error ({err})")
                 continue
