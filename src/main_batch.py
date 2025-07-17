@@ -9,6 +9,7 @@ from metric import Metric, DummyMetric
 from metric_reliance import RelianceMetric
 from metric_paraphrasability import ParaphrasabilityMetric
 from metric_transferability import TransferabilityMetric
+from metric_internalized import InternalizedMetric
 from data_loader import load_prompts
 from datetime import datetime
 
@@ -26,6 +27,7 @@ METRIC_CLASSES = {
     "Reliance": RelianceMetric,
     "Paraphrasability": ParaphrasabilityMetric,
     "Transferability": TransferabilityMetric,
+    "Internalized": InternalizedMetric
 }
 
 
