@@ -124,58 +124,6 @@ class Model:
             outputs = self.model(input_ids=sequences)
             log_probs = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
         return log_probs
-    def get_logits_and_mean_logp_batch(self, sequences):
-        """
-        sequences: [batch_size, seq_len] tensor of token IDs
-
-        Returns:
-        - logits: [batch_size, seq_len, vocab_size]
-        - mean_logp_per_seq: [batch_size] tensor with average log-prob assigned to actual tokens
-        """
-        with torch.no_grad():
-            outputs = self.model(input_ids=sequences)
-            logits = torch.nn.functional.log_softmax(outputs.logits, dim=-1)  # [B, T, V]
-
-        # Gather the log-prob for the actual next token at each position
-        # We skip the first token since there's no prediction for it
-        target_tokens = sequences[:, 1:]  # [B, T-1]
-        predicted_logits = logits[:, :-1, :]  # [B, T-1, V]
-
-        # Compute mean log-prob per sequence
-        actual_logp = predicted_logits.gather(2, target_tokens.unsqueeze(-1)).squeeze(-1)  # [B, T-1]
-
-        # Mean over all tokens in all sequences
-        mean_logp_per_seq = -actual_logp.mean(dim=1)  # shape [B]
-
-        return logits, mean_logp_per_seq
-
-    def get_logits_and_mean_logp(self, sequences):
-        """
-        sequences: [batch_size, seq_len] tensor of token IDs
-
-        Returns:
-        - logits: [batch_size, seq_len, vocab_size]
-        - mean_logp_per_seq: [batch_size] tensor with average log-prob assigned to actual tokens
-        """
-        with torch.no_grad():
-            outputs = self.model(input_ids=sequences)
-            logits = torch.nn.functional.log_softmax(outputs.logits, dim=-1)  # [B, T, V]
-
-        # Gather the log-prob for the actual next token at each position
-        # We skip the first token since there's no prediction for it
-        target_tokens = sequences[:, 1:]  # [B, T-1]
-        predicted_logits = logits[:, :-1, :]  # [B, T-1, V]
-
-
-
-        # Compute mean log-prob per sequence
-        actual_logp = predicted_logits.gather(2, target_tokens.unsqueeze(-1)).squeeze(-1)  # [B, T-1]
-
-        # Mean over all tokens in all sequences
-        mean_logp = -float(actual_logp.mean())
-        mean_logp_per_seq = -actual_logp.mean(dim=1)  # shape [B]
-
-        return logits, mean_logp_per_seq
 
     def do_split(self, sequences, full_response, prompt):
         model_config = self.SUPPORTED_MODELS[self.model_name]
