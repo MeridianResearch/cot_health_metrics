@@ -34,6 +34,9 @@ class InternalizedMetric(Metric):
         print(f"cot prime: {cot_prime_tensor}")
         print(f"shape of cot_prime: {cot_prime_tensor.shape}")
 
+        # print original answer
+        print(f"original answer: {r.prediction}")
+
         _, end_think_token = model.get_think_tokens()
 
         end_think_token_tensor = torch.tensor([end_think_token]).to(model.model.device)
@@ -56,12 +59,16 @@ class InternalizedMetric(Metric):
         internalized_cot_log_probs = utils.get_token_log_probs(internalized_logits, text_tokens, skip_count)
         # print shape of cot log probs
         print(f"shape of cot_log_probs: {cot_log_probs.shape}")
+        # print internalized cot log probs
+        # print(f"internalized_cot_log_probs: {internalized_cot_log_probs}")
         # print shape of internalized cot log probs
         print(f"shape of internalized_cot_log_probs: {internalized_cot_log_probs.shape}")
 
         print(f"CoT average probability: {cot_log_probs.sum():.6f}")
         print(f"Internalized-CoT average probability: {internalized_cot_log_probs.sum():.6f}")
         print(f"Internalized score: {internalized_cot_log_probs.sum() - cot_log_probs.sum():.6f}")
-        value = internalized_cot_log_probs.sum() - cot_log_probs.sum()
 
-        return internalized_cot_log_probs.sum(), cot_log_probs.sum(), value
+        score_original = cot_log_probs.sum()
+        score_intervention = internalized_cot_log_probs.sum()
+        score = (score_original - score_intervention) / (score_original)
+        return (score, score_original, score_intervention)
