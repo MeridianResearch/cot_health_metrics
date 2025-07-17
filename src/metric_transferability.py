@@ -20,7 +20,7 @@ class TransferabilityMetric(Metric):
     def evaluate(self, r: ModelResponse):
         r1 = r
         R1 = r1.cot
-        A1 = r1.prediction
+        A1 = r1.answer
         # print(r1)
 
         prompt_tokens = self.utils1.encode_to_tensor(r1.raw_output)
