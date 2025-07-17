@@ -11,7 +11,6 @@ class ModelResponse:
     cot: str
     prediction: str
     raw_output: str
-    logits: torch.Tensor
 
     def __post_init__(self):
         self.basic_pair = (self.cot, self.prediction)
@@ -168,7 +167,6 @@ class Model:
         prompt = self.make_prompt(question)
         output = self.do_generate(prompt, max_new_tokens)
         sequences = output.sequences
-        logits = self.get_log_probs(sequences)
 
         raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
 
@@ -179,8 +177,7 @@ class Model:
             prompt=prompt,
             cot=cot,
             prediction=prediction,
-            raw_output=raw_output,
-            logits=logits)
+            raw_output=raw_output)
 
     def evaluate_cot_response(self, prompt, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
@@ -188,19 +185,18 @@ class Model:
         return self.evaluate_cot_response_from_tokens(prompt_tokens, max_new_tokens)
 
     def evaluate_cot_response_from_tokens(self, prompt_tokens: torch.Tensor, max_new_tokens=4096):
-        logits = self.get_log_probs(prompt_tokens)
+        log_probs = self.get_log_probs(prompt_tokens)
 
         raw_output = self.tokenizer.decode(prompt_tokens, skip_special_tokens=True)
 
-        (cot, prediction) = self.do_split(logits, raw_output, prompt_tokens)
+        (cot, prediction) = self.do_split(log_probs, raw_output, prompt_tokens)
 
         return ModelResponse(
             question=question,
             prompt=prompt_tokens,
             cot=cot,
             prediction=prediction,
-            raw_output=raw_output,
-            logits=logits)
+            raw_output=raw_output)
 
 
     def evaluate_cot_response(self, prompt: str, max_new_tokens=4096):

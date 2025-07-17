@@ -145,8 +145,7 @@ class ParaphrasabilityMetric(Metric):
         )
         inputs = self.monitor.tokenizer(full_text, return_tensors="pt").to(
             self.monitor.model.device)
-        logits = torch.log_softmax(self.monitor.model(**inputs).logits, dim=-1)
-        lp_tokens = self.utils.get_answer_log_probs(prompt_str, new_cot, r.prediction, logits)
+        lp_tokens = self.utils.get_answer_log_probs_recalc(self.monitor, prompt_str, new_cot, r.prediction)
         return lp_tokens.sum()
 
     def _append_record(self, *, prompt_id, orig_lp: float, induced_lp: float, delta: float) -> None:

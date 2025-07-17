@@ -21,7 +21,7 @@ class InternalizedMetric(Metric):
         cot_prime_tensor = torch.tensor(cot_prime_tokens, device=cot_tokens.device)
         prediction_tokens = self.utils.encode_to_tensor(r.prediction).squeeze(0).to(self.model.model.device)
 
-        cot_log_probs = self.utils.get_answer_log_probs(r.prompt, r.cot, r.prediction, r.logits)
+        cot_log_probs = self.utils.get_answer_log_probs_recalc(self.model, r.prompt, r.cot, r.prediction)
         #print(f"prompt: {r.prompt}")
         #print(f"question: {r.question}")
         #print(f"question prime: {question_prime}")
