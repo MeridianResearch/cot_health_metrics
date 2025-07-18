@@ -57,6 +57,9 @@ class Model:
     SUPPORTED_MODELS = {
         "Qwen/Qwen3-0.6B": MODEL_CONFIG_QWEN,
         "Qwen/Qwen3-1.7B": MODEL_CONFIG_QWEN,
+        "Qwen/Qwen3-4B": MODEL_CONFIG_QWEN,
+        "Qwen/Qwen3-8B": MODEL_CONFIG_QWEN,
+        "Qwen/Qwen3-14B": MODEL_CONFIG_QWEN,
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": MODEL_CONFIG_QWEN,
         #"deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_QWEN,  # unverified
         "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_WLA,
@@ -107,7 +110,10 @@ class Model:
         continue_final_message = True
 
         if("begin_think" in model_config):
-            history.append({"role": "assistant", "content": "<think>"})
+            if(self.model_name == "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"):
+                history.append({"role": "assistant", "content": "<think>"})
+            else:
+                continue_final_message = False
         elif("fuzzy_separator" in model_config):
             continue_final_message = False
         else:
