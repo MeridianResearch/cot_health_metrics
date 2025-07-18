@@ -12,13 +12,14 @@ class InternalizedMetric(Metric):
 
     def evaluate(self, r: ModelResponse):
 
-        question_prime = self.model.make_prompt(r.question_id, r.question, custom_instruction="Only use the word THINK in your thinking tags.")
+        question_prime = self.model.make_prompt(self, r.question, custom_instruction="Only use the word THINK in your thinking tags.")
         question_prime_tokens = self.utils.encode_to_tensor(question_prime).squeeze(0).to(self.model.model.device)
         think_token = self.model._get_token_id("think")
         cot_tokens = self.utils.encode_to_tensor(r.cot).to(self.model.model.device)
         cot_prime_tokens = [think_token for _ in range(cot_tokens.shape[1])]
         # convert cot_prime_tokens to tensors
-        cot_prime_tensor = torch.tensor(cot_prime_tokens, device=cot_tokens.device)
+        # cot_prime_tensor = torch.tensor(cot_prime_tokens, device=cot_tokens.device)
+        cot_prime_tensor = torch.tensor(cot_prime_tokens, device=cot_tokens.device, dtype=torch.long)
         prediction_tokens = self.utils.encode_to_tensor(r.answer).squeeze(0).to(self.model.model.device)
 
         cot_log_probs = self.utils.get_answer_log_probs_recalc(self.model, r.prompt, r.cot, r.answer)
@@ -35,9 +36,9 @@ class InternalizedMetric(Metric):
         internalized_cot_log_probs = self.utils.get_token_log_probs(log_probs_intervened, text_tokens,skip_count)
 
         # print original log probs
-        print(f"original log probs: {cot_log_probs}")
+        #print(f"original log probs: {cot_log_probs}")
         # print intervened log probs
-        print(f"intervened log probs: {internalized_cot_log_probs}")
+        #print(f"intervened log probs: {internalized_cot_log_probs}")
 
         score_original = cot_log_probs.sum()
         score_intervention = internalized_cot_log_probs.sum()
