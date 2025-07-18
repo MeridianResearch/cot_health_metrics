@@ -13,6 +13,11 @@ python src/plot_metric_logprobs.py \
     --out-dir data/plots/transferability_2 \
     --bins 40
 
+python src/plot_metric_logprobs.py \
+    --metric-name paraphrasability \
+    --input-path "data/logprobs/json/GSM8K-2025-07-18_06_56_34-Paraphrasability_corrected.jsonl" \
+    --out-dir data/plots/paraphrasability
+
 needs:
 - a JSON-lines file with  at least three float fields:
     {"orig_lp": -3.5021, "induced_lp": -3.4879, "delta": 0.024}
@@ -30,6 +35,7 @@ outputs:
   - <out-dir>/<metric-name>_orig_logprobs_hist.png
   - <out-dir>/<metric-name>_induced_logprobs_hist.png
 """
+
 
 from __future__ import annotations
 
@@ -155,11 +161,11 @@ class LogProbVisualizer:
             f"mean(score): {np.mean(score):.4f}\n"
         )
         plt.gca().text(
-            0.03, 0.97, textstr,  # x=0.03 (left), y=0.97 (top)
+            0.03, 0.97, textstr,
             transform=plt.gca().transAxes,
             fontsize=10,
             verticalalignment='top',
-            horizontalalignment='left',  # <-- left aligns for upper left
+            horizontalalignment='left',
             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.45)
         )
 
@@ -168,8 +174,6 @@ class LogProbVisualizer:
         self.logger.debug("Saved combined plot → %s", fname)
 
 
-    # plot_combined plots 1. the distribution of original log prob, 2. intervend log prob, 3. mean of log prob of original
-    # and intervened, 4. mean difference test p value
     def _plot_combined(self,
                        orig_vals: List[float],
                        ind_vals: List[float],
@@ -178,39 +182,60 @@ class LogProbVisualizer:
         import numpy as np
         from scipy.stats import mannwhitneyu
         import matplotlib.pyplot as plt
+        import matplotlib.patches as mpatches
+
+        n = min(len(orig_vals), len(ind_vals))
+        orig_vals = orig_vals[:n]
+        ind_vals  = ind_vals[:n]
+
+        all_vals = np.concatenate([orig_vals, ind_vals])
+        minv, maxv = all_vals.min(), all_vals.max()
+        bins = np.linspace(minv, maxv, self.bins + 1)
 
         plt.figure(figsize=(6.4, 4.8))
-        plt.hist(orig_vals, bins=self.bins, alpha=0.5, label="orig_lp")
-        plt.hist(ind_vals, bins=self.bins, alpha=0.5, label="induced_lp")
+        plt.hist(orig_vals, bins=bins,     alpha=0.5, color='C0')
+        plt.hist(ind_vals,  bins=bins,     alpha=0.5, color='C1')
         plt.title(title)
         plt.xlabel("log-probability")
         plt.ylabel("frequency")
-        plt.legend()
-        plt.tight_layout()
 
         # Calculate stats
         mean_orig = np.mean(orig_vals)
         mean_ind = np.mean(ind_vals)
+        median_orig = np.median(orig_vals)
+        median_ind = np.median(ind_vals)
         stat, pval = mannwhitneyu(orig_vals, ind_vals, alternative="two-sided")
+        pval_str = "<0.05" if pval < 0.05 else f"{pval:.3f}"
 
-        # Format p-value
-        if pval < 0.05:
-            pval_str = "<0.05"
-        else:
-            pval_str = f"{pval:.3f}"
+        plt.axvline(mean_orig, color='C0', linestyle=':', linewidth=1, alpha=0.3)
+        plt.axvline(mean_ind, color='C1', linestyle=':', linewidth=1, alpha=0.3)
 
-        # Annotate on plot
+        plt.axvline(median_orig, color='C0', linestyle='--', linewidth=2)
+        plt.axvline(median_ind, color='C1', linestyle='--', linewidth=2)
+
+        # custom legend with counts and colors
+        orig_patch = mpatches.Patch(color='C0', label=f"orig (n={len(orig_vals)})")
+        ind_patch  = mpatches.Patch(color='C1', label=f"ind  (n={len(ind_vals)})")
+        plt.legend(handles=[orig_patch, ind_patch],
+                   loc="upper left",
+                   bbox_to_anchor=(0.05, 0.75),
+                   borderaxespad=0.0)
+
+        plt.tight_layout()
+
         textstr = (
-            f"mean(orig): {mean_orig:.4f}\n"
-            f"mean(ind): {mean_ind:.4f}\n"
+            f"mean(orig):   {mean_orig:.4f}\n"
+            f"median(orig): {median_orig:.4f}\n"
+            f"mean(ind):    {mean_ind:.4f}\n"
+            f"median(ind):  {median_ind:.4f}\n"
             f"M-W p={pval_str}"
         )
         plt.gca().text(
-            0.03, 0.97, textstr,  # x=0.03 (left), y=0.97 (top)
+            0.03, 0.97, textstr,
             transform=plt.gca().transAxes,
             fontsize=10,
             verticalalignment='top',
-            horizontalalignment='left',  # <-- left aligns for upper left
+            horizontalalignment='left',
             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.45)
         )
 

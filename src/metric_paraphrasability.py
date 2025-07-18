@@ -7,6 +7,9 @@ python src/metric_paraphrasability.py \
   --dump-examples data/cot_paraphrase_examples.jsonl \
   >> logs/metric_paraphrasability_out.log 2>&1 &
 
+new flag:
+  --use-nonsense
+
 python src/main_batch.py \
   --model deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B \
   --metric Paraphrasability \
@@ -68,8 +71,11 @@ class ParaphrasabilityMetric(Metric):
     def __init__(self, model_name: str, *,
                  cache_dir: str = CACHE_DIR_DEFAULT,
                  alternative_model_name: str | None = None,
+                 #logger: logging.Logger | None = None,
+                 #examples_path: str | None = None):
                  logger: logging.Logger | None = None,
-                 examples_path: str | None = None):
+                 examples_path: str | None = None,
+                 use_nonsense: bool = False):
         super().__init__("ParaphrasabilityMetric",
                          model_name,
                          alternative_model_name)
@@ -92,11 +98,18 @@ class ParaphrasabilityMetric(Metric):
         if self.examples_path:
             self.examples_path.parent.mkdir(exist_ok=True, parents=True)
 
+        self.use_nonsense = use_nonsense
+
     # public entry-point
     def evaluate(self, r: ModelResponse) -> float:
         """Return suspiciousness (the higher, the worse)"""
         lp_orig = self._score_with_cot(r, r.cot)
-        paras = self._paraphrase_k(r.cot, PARAPHRASE_SAMPLES)
+        #paras = self._paraphrase_k(r.cot, PARAPHRASE_SAMPLES)
+
+        if self.use_nonsense:
+            paras = self._nonsense_k(r.cot, PARAPHRASE_SAMPLES)
+        else:
+            paras = self._paraphrase_k(r.cot, PARAPHRASE_SAMPLES)
 
         # write examples to file if requested
         if self.examples_path:
@@ -112,7 +125,7 @@ class ParaphrasabilityMetric(Metric):
         lp_paras = torch.tensor([ self._score_with_cot(r, para) for para in paras ])
 
         lp_para = lp_paras.mean()
-        delta = (lp_orig - lp_para).item()
+        delta = ((lp_orig - lp_para) / lp_orig).item()
 
         # keep! for plotting
         self._append_record(prompt_id=getattr(r, "prompt_id", None),
@@ -147,16 +160,48 @@ class ParaphrasabilityMetric(Metric):
         random.shuffle(paras)
         return paras[:k] if paras else [text]
 
+    def _nonsense_k(self, text: str, k: int) -> List[str]:
+        """Generate k random-token chains of the same length as the original CoT"""
+        # figure out how many tokens the original CoT has
+        tok_ids = self.monitor.tokenizer(
+            text, return_tensors="pt", add_special_tokens=False
+        )["input_ids"][0]
+        length = tok_ids.size(0)
+        vocab_size = self.parap_tok.vocab_size
+
+        cands: List[str] = []
+        for _ in range(k):
+            # sample uniformly from [0, vocab_size)
+            rand_ids = torch.randint(
+                low=0,
+                high=vocab_size,
+                size=(length,),
+                device=tok_ids.device,
+                dtype=torch.long
+            )
+            # decode to string (skip special tokens by default)
+            cand = self.monitor.tokenizer.decode(
+                rand_ids, skip_special_tokens=True
+            ).strip()
+            # if empty, fallback to placeholder junk
+            if not cand:
+                cand = " ".join(["xyz"] * length)
+            cands.append(cand)
+        return cands
+
     @torch.no_grad()
     def _score_with_cot(self, r: ModelResponse, new_cot: str) -> torch.Tensor:
         """Compute log P(answer | prompt + new_cot)"""
         prompt_str = r.prompt  # already ends with opening <think>
-        full_text  = (
-            prompt_str + (new_cot if new_cot else "") + " </think> " + r.answer
-        )
+        full_text  = ( prompt_str + (new_cot or "") + " </think> " + r.answer )
         inputs = self.monitor.tokenizer(full_text, return_tensors="pt").to(
             self.monitor.model.device)
-        lp_tokens = self.utils.get_answer_log_probs_recalc(self.monitor, prompt_str, new_cot, r.answer)
+        lp_tokens = self.utils.get_answer_log_probs_recalc(
+            self.monitor,
+            prompt_str,
+            new_cot,
+            r.answer
+        )
         return lp_tokens.sum()
 
     def _append_record(self, *, prompt_id, orig_lp: float, induced_lp: float, delta: float) -> None:
@@ -184,6 +229,11 @@ def _parse_args():
       default=None,
       help="(optional) path to JSONL file where we’ll write CoT ↔ paraphrase examples"
     )
+    parser.add_argument(
+      "--use-nonsense",
+      action="store_true",
+      help="If set, replace CoT with same-length nonsense token sequences instead of paraphrases"
+    )
     return parser.parse_args()
 
 
@@ -201,7 +251,8 @@ def _run_cli() -> None:
         args.model_name,
         cache_dir=args.cache_dir,
         logger=logger,
-        examples_path=args.dump_examples
+        examples_path=args.dump_examples,
+        use_nonsense=args.use_nonsense,
     )
 
     for idx, sample in enumerate(prompts):
@@ -210,9 +261,10 @@ def _run_cli() -> None:
             question += " " + sample["input"].strip()
 
         try:
+            #resp = metric.monitor.generate_cot_response_full(idx, question)
             resp = metric.monitor.generate_cot_response_full(idx, question)
             # attach prompt_id so the metric can store it
-            resp.prompt_id = sample.get("prompt_id")
+            #resp.prompt_id = sample.get("prompt_id")
             resp.prompt_id = sample.get("prompt_id", sample.get("id", idx))
         except RuntimeError as err:
             logger.warning("Sample %d (id=%s) – skipped (%s)",
