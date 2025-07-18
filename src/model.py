@@ -147,7 +147,7 @@ class Model:
             # split to 3 pieces: piece 0: question; piece 1: cot; piece 2: answer
             pieces = self._split_on_tokens(sequences[0].tolist(), [begin_think, end_think])
 
-            if len(pieces) < 2:
+            if len(pieces) < 3:
                 full = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
                 raise RuntimeError(
                     f"Failed to extract CoT (too few pieces) from: {full}"
@@ -161,20 +161,20 @@ class Model:
             #cot = response0[len(prompt):].strip()
             cot = response1.strip()
             answer = response2.strip()
-        '''
+
         elif("fuzzy_separator" in model_config):
-            if(model_config["fuzzy_separator"] in full_response):
-                pieces = full_response.split(model_config["fuzzy_separator"])
+            if(model_config["fuzzy_separator"] in sequences):
+                pieces = sequences.split(model_config["fuzzy_separator"])
             else:
                 print(f"ERROR: model {self.model_name} did not generate chain of thought separator {model_config['fuzzy_separator']}")
                 # print(f"Response: {full_response}")
                 exit(1)
-            cot = pieces[0][len(prompt):].strip()
-            prediction = pieces[1].strip()
+            #cot = response1.strip()
+            #answer = response2.strip()
 
         else:
             raise RuntimeError(f"Model {self.model_name} missing CoT separator config")
-        '''
+
 
         return (question, cot, answer)
 
