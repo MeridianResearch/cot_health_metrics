@@ -135,9 +135,8 @@ class LogProbVisualizer:
         return orig_vals, ind_vals, extra_vals
 
     def _plot_hist(self, values: List[float], title: str, fname: Path) -> None:
-        alpha = 0.5
         plt.figure(figsize=(6.4, 4.8))
-        plt.hist(values, bins=self.bins, alpha=alpha)
+        plt.hist(values, bins=self.bins)
         plt.title(title)
         plt.xlabel("log-probability")
         plt.ylabel("frequency")
