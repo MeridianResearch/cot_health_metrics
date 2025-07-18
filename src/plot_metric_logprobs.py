@@ -38,6 +38,9 @@ import logging
 import os
 import time
 import math
+import numpy as np
+import scipy
+from scipy.stats import mannwhitneyu
 from pathlib import Path
 from typing import List, Tuple
 
@@ -124,25 +127,46 @@ class LogProbVisualizer:
         plt.close()
         self.logger.debug("Saved plot → %s", fname)
 
+    # plot_combined plots 1. the distribution of original log prob, 2. intervend log prob, 3. mean of log prob of original
+    # and intervened, 4. mean difference test p value
     def _plot_combined(self,
                        orig_vals: List[float],
                        ind_vals: List[float],
                        title: str,
                        fname: Path) -> None:
+        import numpy as np
+        from scipy.stats import mannwhitneyu
+        import matplotlib.pyplot as plt
+
         plt.figure(figsize=(6.4, 4.8))
-        plt.hist(orig_vals,
-                 bins=self.bins,
-                 alpha=0.5,
-                 label="orig_lp")           # semi‑opaque
-        plt.hist(ind_vals,
-                 bins=self.bins,
-                 alpha=0.5,
-                 label="induced_lp")
+        plt.hist(orig_vals, bins=self.bins, alpha=0.5, label="orig_lp")
+        plt.hist(ind_vals, bins=self.bins, alpha=0.5, label="induced_lp")
         plt.title(title)
         plt.xlabel("log-probability")
         plt.ylabel("frequency")
         plt.legend()
         plt.tight_layout()
+
+        # Calculate stats
+        mean_orig = np.mean(orig_vals)
+        mean_ind = np.mean(ind_vals)
+        stat, pval = mannwhitneyu(orig_vals, ind_vals, alternative="two-sided")
+
+        # Annotate on plot
+        textstr = (
+            f"mean(orig): {mean_orig:.4f}\n"
+            f"mean(ind): {mean_ind:.4f}\n"
+            f"M-W p={pval:.2g}"
+        )
+        plt.gca().text(
+            0.97, 0.97, textstr,
+            transform=plt.gca().transAxes,
+            fontsize=10,
+            verticalalignment='top',
+            horizontalalignment='right',
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.45)
+        )
+
         plt.savefig(fname)
         plt.close()
         self.logger.debug("Saved combined plot → %s", fname)
@@ -151,8 +175,8 @@ class LogProbVisualizer:
 def _parse_args():
     p = argparse.ArgumentParser(description="Plot histograms of original vs induced answer log-probs for any CoT-health metric")
     p.add_argument("--metric-name", required=True, help="Name of the metric (used for plot titles & default paths)")
-    p.add_argument("--input-path", type=str, default=None,
-                   help="Path to JSONL with 'orig_lp' & 'induced_lp' per line. Defaults to data/logprobs_<metric>.jsonl")
+    p.add_argument("--input-path", type=str, default="data/logprobs/GSM8K-Reliance.jsonl",
+                   help="Path to JSONL with 'orig_lp' & 'induced_lp' per line. Defaults to data/logprobs/logprobs_<metric>.jsonl")
     p.add_argument("--out-dir", type=str, default=str(DEFAULT_OUT_DIR),
                    help="Directory to store the PNG plots")
     p.add_argument("--bins", type=int, default=DEFAULT_BINS, help="Number of histogram bins")
