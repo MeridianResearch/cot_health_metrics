@@ -26,162 +26,82 @@ def get_datetime_str():
     print(datetime_str)
     return datetime_str
 
+#!/usr/bin/env python3
+import os
+import json
+import glob
+import argparse
+import numpy as np
+import matplotlib.pyplot as plt
 
-
-
-# def plot_logprobs_histograms(
-#     jsonl_path: str,
-#     out_dir: str = "plots",
-#     bins: int = 50,
-#     prefix: str = "metric",
-#     focus_percentile_range: tuple = (2, 98)
-# ):
-#     """
-#     Loads float fields from a JSONL file and plots a histogram for each,
-#     with auto-focusing on dense value regions.
-# 
-#     Args:
-#         jsonl_path: path to JSONL file
-#         out_dir: directory to save plots
-#         bins: number of histogram bins
-#         prefix: file prefix for each plot
-#         focus_percentile_range: (low, high) percentiles to zoom in (default 2–98)
-#     """
-#     jsonl_path = Path(jsonl_path)
-#     out_dir = Path(out_dir)
-#     out_dir.mkdir(parents=True, exist_ok=True)
-# 
-#     all_data: List[dict] = []
-# 
-#     # === Load float values
-#     with jsonl_path.open() as f:
-#         for ln, line in enumerate(f, 1):
-#             if not line.strip():
-#                 continue
-#             try:
-#                 obj = json.loads(line)
-#                 float_fields = {
-#                     k: float(v) for k, v in obj.items()
-#                     if isinstance(v, (int, float)) and math.isfinite(float(v))
-#                 }
-#                 if float_fields:
-#                     all_data.append(float_fields)
-#             except Exception as e:
-#                 print(f"[WARN] Skipping line {ln}: {e}")
-# 
-#     if not all_data:
-#         raise ValueError("No valid float data found.")
-# 
-#     float_keys = set().union(*[d.keys() for d in all_data])
-# 
-#     for key in float_keys:
-#         values = [d[key] for d in all_data if key in d]
-#         if not values:
-#             continue
-# 
-#         values_np = np.array(values)
-# 
-#         # === Focus window: percentile range
-#         p_low, p_high = np.percentile(values_np, focus_percentile_range)
-#         range_to_plot = values_np[(values_np >= p_low) & (values_np <= p_high)]
-# 
-#         if len(range_to_plot) < 5:
-#             print(f"[WARN] Too few points in focused range for {key}; using full range.")
-#             range_to_plot = values_np
-# 
-#         # === Plot
-#         plt.figure(figsize=(6.4, 4.8))
-#         plt.hist(range_to_plot, bins=bins, color="skyblue", edgecolor="black")
-#         plt.title(f"{prefix} - {key}")
-#         plt.xlabel("log-probability")
-#         plt.ylabel("frequency")
-#         plt.tight_layout()
-# 
-#         out_path = out_dir / f"{prefix}_{key}_logprobs_hist.png"
-#         plt.savefig(out_path)
-#         plt.close()
-#         print(f"[INFO] Saved plot → {out_path}")
-def plot_logprobs_histograms(
-    jsonl_path: str,
-    out_path: str = "plots/combined_logprobs.png",
-    bins: int = 50,
-    prefix: str = "Metric",
-    focus_percentile_range: tuple = (2, 98)
-):
+def plot_cot_effect(directory: str, target_m2: str):
     """
-    Plots histograms for all float keys in a JSONL file into a single figure.
-
-    Args:
-        jsonl_path: path to input .jsonl file
-        out_path: output PNG path for combined figure
-        bins: number of histogram bins
-        prefix: title prefix
-        focus_percentile_range: tuple of (low, high) percentiles for zoom
+    Scans JSONL files in `directory` named like
+      output_logprobs_{m1}_{target_m2}.jsonl
+    and plots the mean log-probability of M2 producing the correct
+    answer with vs. without chain-of-thought from each M1.
     """
-    jsonl_path = Path(jsonl_path)
-    out_path = Path(out_path)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
+    pattern = os.path.join(directory, f'output_logprobs_*_{target_m2}.jsonl')
+    files = sorted(glob.glob(pattern))
+    if not files:
+        raise FileNotFoundError(f"No files match pattern {pattern}")
 
-    all_data: List[dict] = []
+    m1_names = []
+    no_cot_means = []
+    with_cot_means = []
 
-    # === Load valid float fields
-    with jsonl_path.open() as f:
-        for ln, line in enumerate(f, 1):
-            if not line.strip():
-                continue
-            try:
-                obj = json.loads(line)
-                float_fields = {
-                    k: float(v) for k, v in obj.items()
-                    if isinstance(v, (int, float)) and math.isfinite(float(v))
-                }
-                if float_fields:
-                    all_data.append(float_fields)
-            except Exception as e:
-                print(f"[WARN] Skipping line {ln}: {e}")
+    # Parse each file
+    for filepath in files:
+        filename = os.path.basename(filepath)
+        m1 = filename.replace(f'output_logprobs_', '').replace(f'_{target_m2}.jsonl', '')
+        m1_names.append(m1)
 
-    if not all_data:
-        raise ValueError("No valid float data found.")
+        qa_vals = []
+        qr_vals = []
+        with open(filepath, 'r') as f:
+            for line in f:
+                data = json.loads(line)
+                qa_vals.append(data['logprobsM2_QA1_sum'])
+                qr_vals.append(data['logprobsM2_QR1A1_sum'])
 
-    float_keys = sorted(set().union(*[d.keys() for d in all_data]))
-    num_keys = len(float_keys)
+        no_cot_means.append(np.mean(qa_vals))
+        with_cot_means.append(np.mean(qr_vals))
 
-    # === Set up subplot grid
-    cols = min(3, num_keys)
-    rows = int(np.ceil(num_keys / cols))
-    fig, axes = plt.subplots(rows, cols, figsize=(6.5 * cols, 4.5 * rows))
-    if num_keys == 1:
-        axes = [axes]
-    else:
-        axes = axes.flatten()
+    # Plotting
+    x = np.arange(len(m1_names))
+    width = 0.35
 
-    for idx, key in enumerate(float_keys):
-        ax = axes[idx]
-        values = [d[key] for d in all_data if key in d]
-        values_np = np.array(values)
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.bar(x - width/2, no_cot_means, width, label='Without CoT')
+    ax.bar(x + width/2, with_cot_means, width, label='With CoT')
 
-        # === Focused range
-        p_low, p_high = np.percentile(values_np, focus_percentile_range)
-        focused = values_np[(values_np >= p_low) & (values_np <= p_high)]
-
-        if len(focused) < 5:
-            print(f"[WARN] Too few focused values for {key}; using full range.")
-            focused = values_np
-
-        ax.hist(focused, bins=bins, color="skyblue", edgecolor="black")
-        ax.set_title(f"{prefix} - {key}")
-        ax.set_xlabel("log-probability")
-        ax.set_ylabel("frequency")
-
-    # Hide unused subplots
-    for i in range(len(float_keys), len(axes)):
-        fig.delaxes(axes[i])
-
+    ax.set_xticks(x)
+    ax.set_xticklabels(m1_names, rotation=45, ha='right')
+    ax.set_ylabel('Average Mean Log Probability')
+    ax.set_title(f'{target_m2}: Answer Log Probs With vs. Without CoT')
+    ax.legend()
     plt.tight_layout()
-    plt.savefig(out_path)
-    plt.close()
-    print(f"[INFO] Saved combined histogram to {out_path}")
-output_dir="output/big_small/"
-# jsonl_path="/network/scratch/l/let/projects/cot/output/output_logprobs_DeepSeek-R1-Distill-Qwen-1.5B_Qwen3-1.7B.jsonl"
-jsonl_path="/network/scratch/l/let/projects/cot/output/output_logprobs_Qwen3-1.7B_DeepSeek-R1-Distill-Qwen-1.5B.jsonl"
+    plt.savefig("output/qwen06b/cot.png")
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Plot CoT effect for Qwen3-0.6B across different M1 models"
+    )
+    parser.add_argument(
+        "directory",
+        help="Path to folder containing the JSONL files"
+    )
+    parser.add_argument(
+        "--model2",
+        default="Qwen3-0.6B",
+        help="Target small model name (default: Qwen3-0.6B)"
+    )
+    args = parser.parse_args()
+    plot_cot_effect(args.directory, args.model2)
+
+if __name__ == "__main__":
+    main()
+
+
+
 # plot_logprobs_histograms(jsonl_path,output_dir)
