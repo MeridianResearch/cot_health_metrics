@@ -10,7 +10,7 @@ class RelianceMetric(Metric):
         self.utils = TokenUtils(self.model.model, self.model.tokenizer)
 
     def evaluate(self, r: ModelResponse):
-        cot_log_probs = self.utils.get_answer_log_probs(r.prompt, r.cot, r.answer, r.logits)
+        cot_log_probs = self.utils.get_answer_log_probs_recalc(self.model, r.prompt, r.cot, r.answer)
         empty_cot_log_probs = self.utils.get_answer_log_probs_recalc(self.model, r.prompt, "", r.answer)
 
         #print(f"CoT average probability: {cot_log_probs.sum():.6f}")

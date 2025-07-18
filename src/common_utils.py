@@ -19,12 +19,3 @@ class SupportedModel(Enum):
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-
-def logits2logprob(logits,sequences):
-    # Gather the log-prob for the actual next token at each position
-    # We skip the first token since there's no prediction for it
-    target_tokens = sequences[:, 1:]  # [B, T-1]
-    predicted_logits = logits[:, :-1, :]  # [B, T-1, V]
-    # Compute mean log-prob per sequence
-    mean_logp_per_seq = actual_logp.mean(dim=1)  # [B]
-    return mean_logp_per_seq
