@@ -14,15 +14,16 @@ python src/plot_metric_logprobs.py \
     --bins 40
 
 needs:
-- a JSON-lines file with  at least two float fields:
-    {"orig_lp": -3.5021, "induced_lp": -3.4879}
-    {"orig_lp": -1.7420, "induced_lp": -5.1093}
+- a JSON-lines file with  at least three float fields:
+    {"orig_lp": -3.5021, "induced_lp": -3.4879, "delta": 0.024}
+    {"orig_lp": -1.7420, "induced_lp": -5.1093, "delta": 0.024}
     ...
 
 where:
 - orig_lp - log-probability of the model's answer given the original CoT
 - induced_lp - log-probability of the same answer when the CoT has been
   perturbed by the metric (e.g. paraphrased, shuffled, blanked...)
+- delta - standardized score for other metrics, difference for paraphrased metric
 
 outputs:
 - Two PNG files:
@@ -38,6 +39,9 @@ import logging
 import os
 import time
 import math
+import numpy as np
+import scipy
+from scipy.stats import mannwhitneyu
 from pathlib import Path
 from typing import List, Tuple
 
@@ -73,30 +77,29 @@ class LogProbVisualizer:
     # public API
     def run(self) -> None:
         self.logger.info("Reading log-probabilities from %s", self.in_path)
-        orig, induced, extra = self._load_logprobs()
+        score, orig, induced = self._load_logprobs()
+
         self.logger.info("Loaded %d pairs", len(orig))
 
+        self._plot_score(score,
+                         title=f"{self.metric_name.title()} - score",
+                         fname=self.out_dir / f"{self.metric_name}_score_hist.png")
         self._plot_hist(orig,
                         title=f"{self.metric_name.title()} - Original logP",
                         fname=self.out_dir / f"{self.metric_name}_orig_logprobs_hist.png")
         self._plot_hist(induced,
                         title=f"{self.metric_name.title()} - Induced logP",
                         fname=self.out_dir / f"{self.metric_name}_induced_logprobs_hist.png")
-        self._plot_combined([orig, induced],
+        self._plot_combined(orig, induced,
                             title=f"{self.metric_name.title()} - Orig vs Induced logP",
                             fname=self.out_dir / f"{self.metric_name}_combined_logprobs_hist.png")
-        if len(extra) > 0:
-            self._plot_combined([orig, induced, extra],
-                            title=f"{self.metric_name.title()} - Extra logP",
-                            fname=self.out_dir / f"{self.metric_name}_extra_logprobs_hist.png")
-
         self.logger.info("Finished - plots written to %s", self.out_dir)
 
     # helpers
     def _load_logprobs(self) -> Tuple[List[float], List[float], List[float]]:
+        score_vals: List[float] = []
         orig_vals: List[float] = []
-        ind_vals: List[float]  = []
-        extra_vals: List[float] = []
+        ind_vals: List[float] = []
 
         with self.in_path.open() as f:
             for ln, line in enumerate(f, 1):
@@ -104,35 +107,22 @@ class LogProbVisualizer:
                     continue
                 try:
                     obj = json.loads(line)
-                    ob = []
-                    if "orig_lp" in obj and "induced_lp" in obj:
-                        ob.append(float(obj["orig_lp"]))
-                        ob.append(float(obj["induced_lp"]))
-                    elif "logprobsM1A1_sum" in obj and "logprobsM2_QR1A1_sum" in obj and "logprobsM2_QA1_sum" in obj:
-                        ob.append(float(obj["logprobsM1A1_sum"]))
-                        ob.append(float(obj["logprobsM2_QR1A1_sum"]))
-                        ob.append(float(obj["logprobsM2_QA1_sum"]))
-                    else:
-                        self.logger.warning("Skipping unknown line %d - %s", ln, line)
-                        continue
+                    s = float(obj["delta"])
+                    o = float(obj["orig_lp"])
+                    i = float(obj["induced_lp"])
                     # skip infinities or NaNs
-                    all_finite = True
-                    for o in ob:
-                        if not math.isfinite(o):
-                            all_finite = False
-                            break
-                    if not all_finite:
-                        self.logger.warning("Skipping non‑finite lp at line %d: orig=%s", ln, o)
+                    if not (math.isfinite(s) and math.isfinite(o) and math.isfinite(i)):
+                        self.logger.warning("Skipping non‑finite lp at line %d: orig=%s, induced=%s", ln, s, o, i)
                         continue
-                    orig_vals.append(ob[0])
-                    ind_vals.append(ob[1])
-                    if len(ob) >= 3: extra_vals.append(ob[2])
+                    score_vals.append(s)
+                    orig_vals.append(o)
+                    ind_vals.append(i)
                 except Exception as err:
                     self.logger.warning("Skipping malformed line %d - %s", ln, err)
 
-        if not orig_vals:
+        if not score_vals:
             raise RuntimeError(f"No data loaded from {self.in_path}")
-        return orig_vals, ind_vals, extra_vals
+        return score_vals, orig_vals, ind_vals
 
     def _plot_hist(self, values: List[float], title: str, fname: Path) -> None:
         plt.figure(figsize=(6.4, 4.8))
@@ -145,31 +135,85 @@ class LogProbVisualizer:
         plt.close()
         self.logger.debug("Saved plot → %s", fname)
 
-    def _plot_combined(self,
-                       vals: List[List[float]],
-                       title: str,
-                       fname: Path) -> None:
-        alpha = 0.5 if len(vals) < 3 else 0.3
+    # add histogram of score function with mean and std
+    # equation: score = (score_original - score_intervention) / (score_original)
+    def _plot_score(self,
+                    score: List[float],
+                    title: str,
+                    fname: str) -> None:
 
         plt.figure(figsize=(6.4, 4.8))
-        plt.hist(vals[0],
-                 bins=self.bins,
-                 alpha=alpha,
-                 label="orig_lp")           # semi‑opaque
-        plt.hist(vals[1],
-                 bins=self.bins,
-                 alpha=alpha,
-                 label="induced_lp")
-        if len(vals) >= 3:
-            plt.hist(vals[2],
-                    bins=self.bins,
-                    alpha=alpha,
-                    label="extra_lp")
+        plt.hist(score, bins=self.bins, alpha=0.5, label="score function")
         plt.title(title)
         plt.xlabel("log-probability")
         plt.ylabel("frequency")
         plt.legend()
         plt.tight_layout()
+
+        # Annotate on plot
+        textstr = (
+            f"mean(score): {np.mean(score):.4f}\n"
+        )
+        plt.gca().text(
+            0.03, 0.97, textstr,  # x=0.03 (left), y=0.97 (top)
+            transform=plt.gca().transAxes,
+            fontsize=10,
+            verticalalignment='top',
+            horizontalalignment='left',  # <-- left aligns for upper left
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.45)
+        )
+
+        plt.savefig(fname)
+        plt.close()
+        self.logger.debug("Saved combined plot → %s", fname)
+
+
+    # plot_combined plots 1. the distribution of original log prob, 2. intervend log prob, 3. mean of log prob of original
+    # and intervened, 4. mean difference test p value
+    def _plot_combined(self,
+                       orig_vals: List[float],
+                       ind_vals: List[float],
+                       title: str,
+                       fname: Path) -> None:
+        import numpy as np
+        from scipy.stats import mannwhitneyu
+        import matplotlib.pyplot as plt
+
+        plt.figure(figsize=(6.4, 4.8))
+        plt.hist(orig_vals, bins=self.bins, alpha=0.5, label="orig_lp")
+        plt.hist(ind_vals, bins=self.bins, alpha=0.5, label="induced_lp")
+        plt.title(title)
+        plt.xlabel("log-probability")
+        plt.ylabel("frequency")
+        plt.legend()
+        plt.tight_layout()
+
+        # Calculate stats
+        mean_orig = np.mean(orig_vals)
+        mean_ind = np.mean(ind_vals)
+        stat, pval = mannwhitneyu(orig_vals, ind_vals, alternative="two-sided")
+
+        # Format p-value
+        if pval < 0.05:
+            pval_str = "<0.05"
+        else:
+            pval_str = f"{pval:.3f}"
+
+        # Annotate on plot
+        textstr = (
+            f"mean(orig): {mean_orig:.4f}\n"
+            f"mean(ind): {mean_ind:.4f}\n"
+            f"M-W p={pval_str}"
+        )
+        plt.gca().text(
+            0.03, 0.97, textstr,  # x=0.03 (left), y=0.97 (top)
+            transform=plt.gca().transAxes,
+            fontsize=10,
+            verticalalignment='top',
+            horizontalalignment='left',  # <-- left aligns for upper left
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.45)
+        )
+
         plt.savefig(fname)
         plt.close()
         self.logger.debug("Saved combined plot → %s", fname)
@@ -178,8 +222,8 @@ class LogProbVisualizer:
 def _parse_args():
     p = argparse.ArgumentParser(description="Plot histograms of original vs induced answer log-probs for any CoT-health metric")
     p.add_argument("--metric-name", required=True, help="Name of the metric (used for plot titles & default paths)")
-    p.add_argument("--input-path", type=str, default=None,
-                   help="Path to JSONL with 'orig_lp' & 'induced_lp' per line. Defaults to data/logprobs_<metric>.jsonl")
+    p.add_argument("--input-path", type=str, default="data/logprobs/GSM8K-Reliance.jsonl",
+                   help="Path to JSONL with 'orig_lp' & 'induced_lp' per line. Defaults to data/logprobs/logprobs_<metric>.jsonl")
     p.add_argument("--out-dir", type=str, default=str(DEFAULT_OUT_DIR),
                    help="Directory to store the PNG plots")
     p.add_argument("--bins", type=int, default=DEFAULT_BINS, help="Number of histogram bins")
