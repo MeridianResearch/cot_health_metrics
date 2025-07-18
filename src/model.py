@@ -101,13 +101,24 @@ class Model:
 
     def make_prompt(self, question_id, question, custom_instruction="Let's think step by step."):
         model_config = self.SUPPORTED_MODELS[self.model_name]
+        history = [
+            {"role": "user", "content": f"Question: {question}\n{custom_instruction}"},
+        ]
+        continue_final_message = True
+
         if("begin_think" in model_config):
-            return f"Question: {question}\n{custom_instruction} <think>"
+            history.append({"role": "assistant", "content": "<think>"})
         elif("fuzzy_separator" in model_config):
-            return f"Question: {question}\n{custom_instruction}"
+            continue_final_message = False
         else:
             print(f"ERROR: model {self.model_name} missing CoT separator config")
             exit(1)
+
+        prompt = self.tokenizer.apply_chat_template(history,
+            tokenize=False,
+            add_generation_prompt=not continue_final_message,
+            continue_final_message=continue_final_message)
+        return prompt
 
     def do_generate(self, question_id, prompt, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
