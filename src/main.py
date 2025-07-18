@@ -1,6 +1,8 @@
 import torch
 from metric import Metric, DummyMetric
 from metric_reliance import RelianceMetric
+from metric_paraphrasability import ParaphrasabilityMetric
+from metric_transferability import TransferabilityMetric
 from model import Model
 from metric_internalized import InternalizedMetric
 
@@ -31,17 +33,19 @@ def main():
     metric: Metric = DummyMetric("DummyModel")
     value: float = metric.evaluate(r)
     print(f"Metric value: {value}")
-
-    print("RelianceMetric")
-    metric: Metric = RelianceMetric(model.model_name)
+    
+    print("ParaphrasedMetric")
+    metric: Metric = ParaphrasabilityMetric(model.model_name)
     value: float = metric.evaluate(r)
     print(f"Metric value: {value}")
     '''
+
 
     print("InternalizedMetric")
     metric: Metric = InternalizedMetric(model.model_name)
     score, score_original, score_intervention = metric.evaluate(r)
     print(f"score: {score}, score original: {score_original}, score intervention {score_intervention}")
+
 
 if __name__ == "__main__":
     main()
