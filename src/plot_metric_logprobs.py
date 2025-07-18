@@ -73,7 +73,7 @@ class LogProbVisualizer:
     # public API
     def run(self) -> None:
         self.logger.info("Reading log-probabilities from %s", self.in_path)
-        orig, induced = self._load_logprobs()
+        orig, induced, extra = self._load_logprobs()
         self.logger.info("Loaded %d pairs", len(orig))
 
         self._plot_hist(orig,
@@ -82,15 +82,21 @@ class LogProbVisualizer:
         self._plot_hist(induced,
                         title=f"{self.metric_name.title()} - Induced logP",
                         fname=self.out_dir / f"{self.metric_name}_induced_logprobs_hist.png")
-        self._plot_combined(orig, induced,
+        self._plot_combined([orig, induced],
                             title=f"{self.metric_name.title()} - Orig vs Induced logP",
                             fname=self.out_dir / f"{self.metric_name}_combined_logprobs_hist.png")
+        if len(extra) > 0:
+            self._plot_combined([orig, induced, extra],
+                            title=f"{self.metric_name.title()} - Extra logP",
+                            fname=self.out_dir / f"{self.metric_name}_extra_logprobs_hist.png")
+
         self.logger.info("Finished - plots written to %s", self.out_dir)
 
     # helpers
-    def _load_logprobs(self) -> Tuple[List[float], List[float]]:
+    def _load_logprobs(self) -> Tuple[List[float], List[float], List[float]]:
         orig_vals: List[float] = []
         ind_vals: List[float]  = []
+        extra_vals: List[float] = []
 
         with self.in_path.open() as f:
             for ln, line in enumerate(f, 1):
@@ -98,24 +104,40 @@ class LogProbVisualizer:
                     continue
                 try:
                     obj = json.loads(line)
-                    o = float(obj["orig_lp"])
-                    i = float(obj["induced_lp"])
-                    # skip infinities or NaNs
-                    if not (math.isfinite(o) and math.isfinite(i)):
-                        self.logger.warning("Skipping non‑finite lp at line %d: orig=%s, induced=%s", ln, o, i)
+                    ob = []
+                    if "orig_lp" in obj and "induced_lp" in obj:
+                        ob.append(float(obj["orig_lp"]))
+                        ob.append(float(obj["induced_lp"]))
+                    elif "logprobsM1A1_sum" in obj and "logprobsM2_QR1A1_sum" in obj and "logprobsM2_QA1_sum" in obj:
+                        ob.append(float(obj["logprobsM1A1_sum"]))
+                        ob.append(float(obj["logprobsM2_QR1A1_sum"]))
+                        ob.append(float(obj["logprobsM2_QA1_sum"]))
+                    else:
+                        self.logger.warning("Skipping unknown line %d - %s", ln, line)
                         continue
-                    orig_vals.append(o)
-                    ind_vals.append(i)
+                    # skip infinities or NaNs
+                    all_finite = True
+                    for o in ob:
+                        if not math.isfinite(o):
+                            all_finite = False
+                            break
+                    if not all_finite:
+                        self.logger.warning("Skipping non‑finite lp at line %d: orig=%s", ln, o)
+                        continue
+                    orig_vals.append(ob[0])
+                    ind_vals.append(ob[1])
+                    if len(ob) >= 3: extra_vals.append(ob[2])
                 except Exception as err:
                     self.logger.warning("Skipping malformed line %d - %s", ln, err)
 
         if not orig_vals:
             raise RuntimeError(f"No data loaded from {self.in_path}")
-        return orig_vals, ind_vals
+        return orig_vals, ind_vals, extra_vals
 
     def _plot_hist(self, values: List[float], title: str, fname: Path) -> None:
+        alpha = 0.5
         plt.figure(figsize=(6.4, 4.8))
-        plt.hist(values, bins=self.bins)
+        plt.hist(values, bins=self.bins, alpha=alpha)
         plt.title(title)
         plt.xlabel("log-probability")
         plt.ylabel("frequency")
@@ -125,19 +147,25 @@ class LogProbVisualizer:
         self.logger.debug("Saved plot → %s", fname)
 
     def _plot_combined(self,
-                       orig_vals: List[float],
-                       ind_vals: List[float],
+                       vals: List[List[float]],
                        title: str,
                        fname: Path) -> None:
+        alpha = 0.5 if len(vals) < 3 else 0.3
+
         plt.figure(figsize=(6.4, 4.8))
-        plt.hist(orig_vals,
+        plt.hist(vals[0],
                  bins=self.bins,
-                 alpha=0.5,
+                 alpha=alpha,
                  label="orig_lp")           # semi‑opaque
-        plt.hist(ind_vals,
+        plt.hist(vals[1],
                  bins=self.bins,
-                 alpha=0.5,
+                 alpha=alpha,
                  label="induced_lp")
+        if len(vals) >= 3:
+            plt.hist(vals[2],
+                    bins=self.bins,
+                    alpha=alpha,
+                    label="extra_lp")
         plt.title(title)
         plt.xlabel("log-probability")
         plt.ylabel("frequency")
