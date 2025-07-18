@@ -1,0 +1,11 @@
+plotting on same
+significance test - paired t-test
+heavy and super light paraphrasing
+there can be semantic + syntactic paraphrasing !
+-> a paraphraser must well reduce syntactic paraphrase - but might struggle removing semantic paraphrase
+! move on to bigger model, where showing more exactly what wanted - e.g., 'remove all emotion', ' add this tone of voice', etc
+=> multiple different interventions with various paraphrasing
+! if this model is sensitive to it 
+! setting up the kind of steganography to use and the kind of paraphrasing the paraphraser should do  -> is the model particularly good at this
+
+

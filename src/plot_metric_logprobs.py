@@ -1,12 +1,23 @@
 """
+perl -ne '/(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ && print "{\"prompt_id\": $1, \"orig_lp\": \"$3\", \"induced_lp\": \"$4\", \"delta\": \"$2\"}\n"' inputlog > output.jsonl
+
+perl -ne '/(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ && print "{\"prompt_id\": $1, \"orig_lp\": \"$3\", \"induced_lp\": \"$4\", \"delta\": \"$2\"}\n"' "data/logprobs/GSM8K-2025-07-17 17_50_29-Reliance" > "data/logprobs/GSM8K-Reliance.jsonl"
+
 python src/plot_metric_logprobs.py \
     --metric-name paraphrasability
 
 custom location / override defaults:
 python src/plot_metric_logprobs.py \
     --metric-name paraphrasability \
-    --input-path data/logprobs/paraphrasability.jsonl \
+    --input-path data/logprobs/GSM8K-18_29_24-Paraphrasability.jsonl \
     --out-dir data/plots/paraphrasability \
+    --bins 40
+
+custom location / override defaults:
+python src/plot_metric_logprobs.py \
+    --metric-name transferability_2 \
+    --input-path data/logprobs/GSM8K-2025-07-17\ 19_00_21-Transferability.jsonl \
+    --out-dir data/plots/transferability_2 \
     --bins 40
 
 needs:
@@ -78,6 +89,9 @@ class LogProbVisualizer:
         self._plot_hist(induced,
                         title=f"{self.metric_name.title()} - Induced logP",
                         fname=self.out_dir / f"{self.metric_name}_induced_logprobs_hist.png")
+        self._plot_combined(orig, induced,
+                            title=f"{self.metric_name.title()} - Orig vs Induced logP",
+                            fname=self.out_dir / f"{self.metric_name}_combined_logprobs_hist.png")
         self.logger.info("Finished - plots written to %s", self.out_dir)
 
     # helpers
@@ -116,6 +130,29 @@ class LogProbVisualizer:
         plt.savefig(fname)
         plt.close()
         self.logger.debug("Saved plot → %s", fname)
+
+    def _plot_combined(self,
+                       orig_vals: List[float],
+                       ind_vals: List[float],
+                       title: str,
+                       fname: Path) -> None:
+        plt.figure(figsize=(6.4, 4.8))
+        plt.hist(orig_vals,
+                 bins=self.bins,
+                 alpha=0.5,
+                 label="orig_lp")           # semi‑opaque
+        plt.hist(ind_vals,
+                 bins=self.bins,
+                 alpha=0.5,
+                 label="induced_lp")
+        plt.title(title)
+        plt.xlabel("log-probability")
+        plt.ylabel("frequency")
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(fname)
+        plt.close()
+        self.logger.debug("Saved combined plot → %s", fname)
 
 # CLI
 def _parse_args():
