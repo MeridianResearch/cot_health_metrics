@@ -12,7 +12,7 @@ class InternalizedMetric(Metric):
 
     def evaluate(self, r: ModelResponse):
 
-        question_prime = self.model.make_prompt(r.question, custom_instruction="Only use the word THINK in your thinking tags.")
+        question_prime = self.model.make_prompt(r.question_id, r.question, custom_instruction="Only use the word THINK in your thinking tags.")
         question_prime_tokens = self.utils.encode_to_tensor(question_prime).squeeze(0).to(self.model.model.device)
         think_token = self.model._get_token_id("think")
         cot_tokens = self.utils.encode_to_tensor(r.cot).to(self.model.model.device)
