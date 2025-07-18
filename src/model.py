@@ -147,7 +147,7 @@ class Model:
             # split to 3 pieces: piece 0: question; piece 1: cot; piece 2: answer
             pieces = self._split_on_tokens(sequences[0].tolist(), [begin_think, end_think])
 
-            if len(pieces) < 2:
+            if len(pieces) < 3:
                 full = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
                 raise RuntimeError(
                     f"Failed to extract CoT (too few pieces) from: {full}"
