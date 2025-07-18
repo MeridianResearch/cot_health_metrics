@@ -30,9 +30,16 @@ class InternalizedMetric(Metric):
 
         end_think_token_tensor = torch.tensor([end_think_token]).to(self.model.model.device)
 
-        text0_tokens = torch.cat((question_prime_tokens, begin_think_token_tensor, cot_prime_tensor, end_think_token_tensor),
+        text0_tokens = torch.cat((question_prime_tokens, cot_prime_tensor, end_think_token_tensor),
                                 dim=0).unsqueeze(0)
-        text_tokens = torch.cat((question_prime_tokens, begin_think_token_tensor, cot_prime_tensor, end_think_token_tensor, answer_tokens), dim=0).unsqueeze(0)
+        # print begin tokens
+        print("begin token","end token:")
+        print(begin_think_token, end_think_token)
+        # print text0 tokens
+        print(f"text0_tokens: {text0_tokens}")
+        text_tokens = torch.cat((question_prime_tokens, cot_prime_tensor, end_think_token_tensor, answer_tokens), dim=0).unsqueeze(0)
+        # print text tokens
+        print(f"text_tokens: {text_tokens}")
         skip_count = text0_tokens.shape[1]
         log_probs_intervened = self.model.get_log_probs(text_tokens)
         internalized_cot_log_probs = self.utils.get_token_log_probs(log_probs_intervened, text_tokens,skip_count)
