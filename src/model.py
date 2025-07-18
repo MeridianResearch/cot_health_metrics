@@ -108,16 +108,19 @@ class Model:
 
         if("begin_think" in model_config):
             history.append({"role": "assistant", "content": "<think>"})
+
+            prompt = self.tokenizer.apply_chat_template(history,
+                tokenize=False,
+                add_generation_prompt=not continue_final_message,
+                continue_final_message=continue_final_message)
         elif("fuzzy_separator" in model_config):
             continue_final_message = False
+            self.tokenizer.chat_template
+            return history[0]["content"]
         else:
             print(f"ERROR: model {self.model_name} missing CoT separator config")
             exit(1)
 
-        prompt = self.tokenizer.apply_chat_template(history,
-            tokenize=False,
-            add_generation_prompt=not continue_final_message,
-            continue_final_message=continue_final_message)
         return prompt
 
     def do_generate(self, question_id, prompt, max_new_tokens=4096):
@@ -181,9 +184,17 @@ class Model:
                 print(f"ERROR: model {self.model_name} did not generate chain of thought separator {model_config['fuzzy_separator']}")
                 # print(f"Response: {full_response}")
                 exit(1)
-            #cot = response1.strip()
-            #answer = response2.strip()
 
+            full = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
+            prompt_end = "Let's think step by step."
+            s1 = full.split(prompt_end)
+            s2 = s1[1].split(model_config["fuzzy_separator"])
+
+            question = s1[0] + prompt_end
+            cot = s2[0]
+            answer = s2[1]
+
+            print(f"Q={question}, C={cot}, A={answer}")
         else:
             raise RuntimeError(f"Model {self.model_name} missing CoT separator config")
 

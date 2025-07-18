@@ -101,7 +101,14 @@ def get_datetime_str():
 #         plt.savefig(out_path)
 #         plt.close()
 #         print(f"[INFO] Saved plot → {out_path}")
-def plot_logprobs_histograms(
+import json
+import math
+from pathlib import Path
+from typing import List
+import matplotlib.pyplot as plt
+import numpy as np
+
+def plot_combined_logprobs_histogram(
     jsonl_path: str,
     out_path: str = "plots/combined_logprobs.png",
     bins: int = 50,
@@ -109,14 +116,14 @@ def plot_logprobs_histograms(
     focus_percentile_range: tuple = (2, 98)
 ):
     """
-    Plots histograms for all float keys in a JSONL file into a single figure.
+    Plots all float fields in a JSONL file in a single overlaid histogram.
 
     Args:
-        jsonl_path: path to input .jsonl file
-        out_path: output PNG path for combined figure
-        bins: number of histogram bins
-        prefix: title prefix
-        focus_percentile_range: tuple of (low, high) percentiles for zoom
+        jsonl_path: Path to input .jsonl file
+        out_path: Path to output .png file
+        bins: Number of histogram bins
+        prefix: Title prefix
+        focus_percentile_range: Tuple of (low, high) percentiles to zoom
     """
     jsonl_path = Path(jsonl_path)
     out_path = Path(out_path)
@@ -144,44 +151,41 @@ def plot_logprobs_histograms(
         raise ValueError("No valid float data found.")
 
     float_keys = sorted(set().union(*[d.keys() for d in all_data]))
-    num_keys = len(float_keys)
+    if not float_keys:
+        raise ValueError("No float-valued keys found.")
 
-    # === Set up subplot grid
-    cols = min(3, num_keys)
-    rows = int(np.ceil(num_keys / cols))
-    fig, axes = plt.subplots(rows, cols, figsize=(6.5 * cols, 4.5 * rows))
-    if num_keys == 1:
-        axes = [axes]
-    else:
-        axes = axes.flatten()
-
-    for idx, key in enumerate(float_keys):
-        ax = axes[idx]
-        values = [d[key] for d in all_data if key in d]
-        values_np = np.array(values)
-
-        # === Focused range
-        p_low, p_high = np.percentile(values_np, focus_percentile_range)
-        focused = values_np[(values_np >= p_low) & (values_np <= p_high)]
-
+    # === Extract focused values per key
+    values_by_key = {}
+    for key in float_keys:
+        raw = np.array([d[key] for d in all_data if key in d])
+        if len(raw) < 5:
+            print(f"[WARN] Too few values for {key}; skipping.")
+            continue
+        p_low, p_high = np.percentile(raw, focus_percentile_range)
+        focused = raw[(raw >= p_low) & (raw <= p_high)]
         if len(focused) < 5:
-            print(f"[WARN] Too few focused values for {key}; using full range.")
-            focused = values_np
+            print(f"[WARN] Focused range too narrow for {key}; using full range.")
+            focused = raw
+        values_by_key[key] = focused
 
-        ax.hist(focused, bins=bins, color="skyblue", edgecolor="black")
-        ax.set_title(f"{prefix} - {key}")
-        ax.set_xlabel("log-probability")
-        ax.set_ylabel("frequency")
+    if not values_by_key:
+        raise RuntimeError("No usable data after filtering.")
 
-    # Hide unused subplots
-    for i in range(len(float_keys), len(axes)):
-        fig.delaxes(axes[i])
+    # === Plot all in one histogram
+    plt.figure(figsize=(8, 6))
+    for key, vals in values_by_key.items():
+        plt.hist(vals, bins=bins, alpha=0.6, label=key, edgecolor="black", linewidth=0.3)
 
+    plt.title(f"{prefix} - Overlaid Log-Probability Histogram")
+    plt.xlabel("log-probability")
+    plt.ylabel("frequency")
+    plt.legend()
     plt.tight_layout()
     plt.savefig(out_path)
     plt.close()
-    print(f"[INFO] Saved combined histogram to {out_path}")
-output_dir="output/big_small/"
+    print(f"[INFO] Saved overlaid histogram → {out_path}")
+
+output_path="output/big_small/combined_logprobs.png"
 # jsonl_path="/network/scratch/l/let/projects/cot/output/output_logprobs_DeepSeek-R1-Distill-Qwen-1.5B_Qwen3-1.7B.jsonl"
-jsonl_path="/network/scratch/l/let/projects/cot/output/output_logprobs_Qwen3-1.7B_DeepSeek-R1-Distill-Qwen-1.5B.jsonl"
-# plot_logprobs_histograms(jsonl_path,output_dir)
+jsonl_path="/network/scratch/l/let/projects/cot/output/output_logprobs_Qwen3-1.7B_DeepSeek-R1-Distill-Qwen-1.5B.jsonl1"
+# plot_combined_logprobs_histogram(jsonl_path,output_path)
