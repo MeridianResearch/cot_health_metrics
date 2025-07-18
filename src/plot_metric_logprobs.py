@@ -14,15 +14,16 @@ python src/plot_metric_logprobs.py \
     --bins 40
 
 needs:
-- a JSON-lines file with  at least two float fields:
-    {"orig_lp": -3.5021, "induced_lp": -3.4879}
-    {"orig_lp": -1.7420, "induced_lp": -5.1093}
+- a JSON-lines file with  at least three float fields:
+    {"orig_lp": -3.5021, "induced_lp": -3.4879, "delta": 0.024}
+    {"orig_lp": -1.7420, "induced_lp": -5.1093, "delta": 0.024}
     ...
 
 where:
 - orig_lp - log-probability of the model's answer given the original CoT
 - induced_lp - log-probability of the same answer when the CoT has been
   perturbed by the metric (e.g. paraphrased, shuffled, blanked...)
+- delta - standardized score for other metrics, difference for paraphrased metric
 
 outputs:
 - Two PNG files:
@@ -76,9 +77,13 @@ class LogProbVisualizer:
     # public API
     def run(self) -> None:
         self.logger.info("Reading log-probabilities from %s", self.in_path)
-        orig, induced = self._load_logprobs()
+        score, orig, induced = self._load_logprobs()
+
         self.logger.info("Loaded %d pairs", len(orig))
 
+        self._plot_score(score,
+                         title=f"{self.metric_name.title()} - score",
+                         fname=self.out_dir / f"{self.metric_name}_score_hist.png")
         self._plot_hist(orig,
                         title=f"{self.metric_name.title()} - Original logP",
                         fname=self.out_dir / f"{self.metric_name}_orig_logprobs_hist.png")
@@ -91,9 +96,10 @@ class LogProbVisualizer:
         self.logger.info("Finished - plots written to %s", self.out_dir)
 
     # helpers
-    def _load_logprobs(self) -> Tuple[List[float], List[float]]:
+    def _load_logprobs(self) -> Tuple[List[float], List[float], List[float]]:
+        score_vals: List[float] = []
         orig_vals: List[float] = []
-        ind_vals: List[float]  = []
+        ind_vals: List[float] = []
 
         with self.in_path.open() as f:
             for ln, line in enumerate(f, 1):
@@ -101,20 +107,22 @@ class LogProbVisualizer:
                     continue
                 try:
                     obj = json.loads(line)
+                    s = float(obj["delta"])
                     o = float(obj["orig_lp"])
                     i = float(obj["induced_lp"])
                     # skip infinities or NaNs
-                    if not (math.isfinite(o) and math.isfinite(i)):
-                        self.logger.warning("Skipping non‑finite lp at line %d: orig=%s, induced=%s", ln, o, i)
+                    if not (math.isfinite(s) and math.isfinite(o) and math.isfinite(i)):
+                        self.logger.warning("Skipping non‑finite lp at line %d: orig=%s, induced=%s", ln, s, o, i)
                         continue
+                    score_vals.append(s)
                     orig_vals.append(o)
                     ind_vals.append(i)
                 except Exception as err:
                     self.logger.warning("Skipping malformed line %d - %s", ln, err)
 
-        if not orig_vals:
+        if not score_vals:
             raise RuntimeError(f"No data loaded from {self.in_path}")
-        return orig_vals, ind_vals
+        return score_vals, orig_vals, ind_vals
 
     def _plot_hist(self, values: List[float], title: str, fname: Path) -> None:
         plt.figure(figsize=(6.4, 4.8))
@@ -126,6 +134,39 @@ class LogProbVisualizer:
         plt.savefig(fname)
         plt.close()
         self.logger.debug("Saved plot → %s", fname)
+
+    # add histogram of score function with mean and std
+    # equation: score = (score_original - score_intervention) / (score_original)
+    def _plot_score(self,
+                    score: List[float],
+                    title: str,
+                    fname: str) -> None:
+
+        plt.figure(figsize=(6.4, 4.8))
+        plt.hist(score, bins=self.bins, alpha=0.5, label="score function")
+        plt.title(title)
+        plt.xlabel("log-probability")
+        plt.ylabel("frequency")
+        plt.legend()
+        plt.tight_layout()
+
+        # Annotate on plot
+        textstr = (
+            f"mean(score): {np.mean(score):.4f}\n"
+        )
+        plt.gca().text(
+            0.03, 0.97, textstr,  # x=0.03 (left), y=0.97 (top)
+            transform=plt.gca().transAxes,
+            fontsize=10,
+            verticalalignment='top',
+            horizontalalignment='left',  # <-- left aligns for upper left
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.45)
+        )
+
+        plt.savefig(fname)
+        plt.close()
+        self.logger.debug("Saved combined plot → %s", fname)
+
 
     # plot_combined plots 1. the distribution of original log prob, 2. intervend log prob, 3. mean of log prob of original
     # and intervened, 4. mean difference test p value
@@ -152,18 +193,24 @@ class LogProbVisualizer:
         mean_ind = np.mean(ind_vals)
         stat, pval = mannwhitneyu(orig_vals, ind_vals, alternative="two-sided")
 
+        # Format p-value
+        if pval < 0.05:
+            pval_str = "<0.05"
+        else:
+            pval_str = f"{pval:.3f}"
+
         # Annotate on plot
         textstr = (
             f"mean(orig): {mean_orig:.4f}\n"
             f"mean(ind): {mean_ind:.4f}\n"
-            f"M-W p={pval:.2g}"
+            f"M-W p={pval_str}"
         )
         plt.gca().text(
-            0.97, 0.97, textstr,
+            0.03, 0.97, textstr,  # x=0.03 (left), y=0.97 (top)
             transform=plt.gca().transAxes,
             fontsize=10,
             verticalalignment='top',
-            horizontalalignment='right',
+            horizontalalignment='left',  # <-- left aligns for upper left
             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.45)
         )
 
