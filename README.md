@@ -15,8 +15,9 @@ or
 ```
 ./test.sh
 ```
-Note: All supported Huggingface datasets are listed in `main_batch.py`, feel free to add to the list.
-We also support local datasets in data/, such as `alpaca_500_samples.json` (based on [Alpaca](https://huggingface.co/datasets/tatsu-lab/alpaca)).
+Note: All supported Huggingface datasets are listed in `src/main_batch.py`, feel free to add to the list.
+We also support local datasets in `data/`, such as `alpaca_500_samples.json` (based on [Alpaca](https://huggingface.co/datasets/tatsu-lab/alpaca)).
+Currently supported CoT models are listed in `src/model.py`.
 
 To generate graphs,
 ```
