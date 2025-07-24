@@ -10,6 +10,8 @@ class RelianceMetric(Metric):
         self.utils = TokenUtils(self.model.model, self.model.tokenizer)
 
     def evaluate(self, r: ModelResponse):
+        print(r)
+        exit(1)
         cot_log_probs = self.utils.get_answer_log_probs_recalc(self.model, r.prompt, r.cot, r.answer)
         empty_cot_log_probs = self.utils.get_answer_log_probs_recalc(self.model, r.prompt, "", r.answer)
 
