@@ -76,12 +76,13 @@ def main():
 
     # Load model
     model = Model(args.model, cache_dir=args.cache_dir)
+    model2 = Model(args.model2, cache_dir=args.cache_dir) if args.model2 else None
 
     # Create metric(s)
     metric = construct_metric(
         metric_name=args.metric,
         model=model,
-        alternative_model_name=args.model2)
+        alternative_model=model2)
 
     if args.log_file is None:
         file_name = dataset_name + "-" + _get_datetime_str() + "-" + args.metric

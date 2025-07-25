@@ -68,20 +68,20 @@ class ParaphrasabilityMetric(Metric):
     change only the semantics-preserving wording of the reasoning trace
     """
 
-    def __init__(self, model_name: str, *,
+    def __init__(self, model: Model, *,
                  cache_dir: str = CACHE_DIR_DEFAULT,
-                 alternative_model_name: str | None = None,
+                 alternative_model: Model | None = None,
                  #logger: logging.Logger | None = None,
                  #examples_path: str | None = None):
                  logger: logging.Logger | None = None,
                  examples_path: str | None = None,
                  use_nonsense: bool = False):
         super().__init__("ParaphrasabilityMetric",
-                         model_name,
-                         alternative_model_name)
+                         model=model,
+                         alternative_model=alternative_model)
 
-        self.monitor = Model(model_name, cache_dir=cache_dir)
-        self.utils: TokenUtils = self.monitor.utils
+        self.monitor = model
+        self.utils: TokenUtils = self.monitor.get_utils()
 
         self.parap_tok = AutoTokenizer.from_pretrained(
             PARAPHRASER_MODEL, cache_dir=cache_dir)
