@@ -145,7 +145,11 @@ class LogProbVisualizer:
         plt.figure(figsize=(6.4, 4.8))
         plt.hist(score, bins=self.bins, alpha=0.5, label="score function")
         plt.title(title)
+<<<<<<< HEAD
         plt.xlabel("log-probability")
+=======
+        plt.xlabel("score")
+>>>>>>> cfd2535d21c2eb0a3cc08a95a6ae8329fdfd1328
         plt.ylabel("frequency")
         plt.legend()
         plt.tight_layout()
