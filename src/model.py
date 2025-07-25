@@ -4,6 +4,7 @@ import torch
 from dataclasses import dataclass
 from token_utils import TokenUtils
 from typing import Optional
+from config import ModelConfig
 
 @dataclass
 class ModelResponse:
@@ -45,31 +46,9 @@ ModelResponse(
 
 
 class Model:
-    MODEL_CONFIG_QWEN = {
-        "begin_think": "<think>",
-        "end_think": "</think>",
-    }
-
-    MODEL_CONFIG_WLA = {
-        "fuzzy_separator": "Answer: ",
-    }
-
-    SUPPORTED_MODELS = {
-        "Qwen/Qwen3-0.6B": MODEL_CONFIG_QWEN,
-        "Qwen/Qwen3-1.7B": MODEL_CONFIG_QWEN,
-        "Qwen/Qwen3-4B": MODEL_CONFIG_QWEN,
-        "Qwen/Qwen3-8B": MODEL_CONFIG_QWEN,
-        "Qwen/Qwen3-14B": MODEL_CONFIG_QWEN,
-        "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": MODEL_CONFIG_QWEN,
-        #"deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_QWEN,  # unverified
-        "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_WLA,
-        "google/gemma-2-2b": MODEL_CONFIG_WLA,
-        #"microsoft/phi-2": MODEL_CONFIG_WLA,  # not very consistent
-    }
-
     def __init__(self, model_name: str, cache_dir="/tmp/cache"):
-        if model_name not in self.SUPPORTED_MODELS:
-            print(f"ERROR: model {model_name} is not in supported list {self.SUPPORTED_MODELS}")
+        if not ModelConfig.is_supported(model_name):
+            print(f"ERROR: model {model_name} is not in supported list {ModelConfig.SUPPORTED_MODELS}")
             exit(1)
 
         self.model_name = model_name
@@ -103,7 +82,7 @@ class Model:
         return final_response.basic_pair
 
     def make_prompt(self, question_id, question, custom_instruction="Let's think step by step."):
-        model_config = self.SUPPORTED_MODELS[self.model_name]
+        model_config = ModelConfig.get(self.model_name)
         history = [
             {"role": "user", "content": f"Question: {question}\n{custom_instruction}"},
         ]
@@ -128,7 +107,7 @@ class Model:
 
     def do_generate(self, question_id, prompt, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
-        model_config = self.SUPPORTED_MODELS[self.model_name]
+        model_config = ModelConfig.get(self.model_name)
 
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
         output = self.model.generate(
@@ -153,7 +132,7 @@ class Model:
         return log_probs
 
     def do_split(self, sequences):
-        model_config = self.SUPPORTED_MODELS[self.model_name]
+        model_config = ModelConfig.get(self.model_name)
 
         # should split the output into three parts: question, the chain of thought and the answer
         if("begin_think" in model_config):
@@ -255,7 +234,7 @@ class Model:
         return token_id
 
     def get_think_tokens(self):
-        model_config = self.SUPPORTED_MODELS[self.model_name]
+        model_config = ModelConfig.get(self.model_name)
 
         begin_think = self._get_token_id(model_config["begin_think"])
         end_think = self._get_token_id(model_config["end_think"])
