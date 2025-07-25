@@ -10,7 +10,7 @@ import os
 from typing import List, Iterator
 from datasets import Dataset
 
-from model import Model
+from model import CoTModel
 from all_metrics import construct_metric
 from data_loader import load_prompts
 from datetime import datetime
@@ -75,8 +75,8 @@ def main():
     #os.makedirs(args.cache_dir, exist_ok=True)
 
     # Load model
-    model = Model(args.model, cache_dir=args.cache_dir)
-    model2 = Model(args.model2, cache_dir=args.cache_dir) if args.model2 else None
+    model = CoTModel(args.model, cache_dir=args.cache_dir)
+    model2 = CoTModel(args.model2, cache_dir=args.cache_dir) if args.model2 else None
 
     # Create metric(s)
     metric = construct_metric(

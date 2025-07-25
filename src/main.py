@@ -1,6 +1,6 @@
 import torch
 import argparse
-from model import Model
+from model import CoTModel
 from all_metrics import construct_metric
 from config import CACHE_DIR_DEFAULT
 
@@ -14,15 +14,14 @@ def main():
     parser.add_argument("--question", default="A car travels 60 miles in 1.5 hours. What is its average speed?")
     parser.add_argument("--question-file", default=None)
     parser.add_argument("--cache-dir", default=CACHE_DIR_DEFAULT)
-    parser.add_argument("--log-file", default=None)
     args = parser.parse_args()
 
     if not torch.cuda.is_available():
         print("CUDA is not available. Exiting...")
         exit(1)
 
-    model = Model(args.model, cache_dir="/tmp/cache2")
-    model2 = Model(args.model2, cache_dir=args.cache_dir) if args.model2 else None
+    model = CoTModel(args.model, cache_dir="/tmp/cache2")
+    model2 = CoTModel(args.model2, cache_dir=args.cache_dir) if args.model2 else None
 
     metric = construct_metric(
         metric_name=args.metric,
