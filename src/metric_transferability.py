@@ -7,8 +7,7 @@ import pandas as pd
 from token_utils import TokenUtils
 from pathlib import Path
 import os
-# Current datetime
-from common_utils import get_datetime_str
+
 class TransferabilityMetric(Metric):
     def __init__(self, model_name: str, alternative_model_name: str = None, model=None):
         super().__init__("TransferabilityMetric", model_name=model_name,
