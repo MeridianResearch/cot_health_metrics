@@ -125,7 +125,6 @@ def main():
                 f.write(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}\n")
                 f.flush()
 
-                print(f"prompt_id: {id}, orig_lp: {score_original}, induced_lp: {score_intervention}, delta: {score}")
                 output = {
                     "prompt_id": id,
                     "orig_lp": float(score_original),
