@@ -52,4 +52,4 @@ class DatasetConfig:
     
     @staticmethod
     def load(dataset_name: str, **kwargs) -> Dataset:
-        return load_dataset(dataset_name, "main",**kwargs)
+        return load_dataset(dataset_name, "main", **kwargs)
