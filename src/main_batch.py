@@ -80,7 +80,6 @@ def main():
     # Create metric(s)
     metric = construct_metric(
         metric_name=args.metric,
-        model_name=args.model,
         model=model,
         alternative_model_name=args.model2)
 
@@ -102,15 +101,10 @@ def main():
                 continue
 
             try:
-                score = metric.evaluate(r)
+                (score, score_original, score_intervention) = metric.evaluate(r)
             except RuntimeError as err:
                 print(f"Sample id={id} - metric evaluation error ({err})")
                 continue
-
-            try:
-                (score, score_original, score_intervention) = score
-            except:
-                (score, score_original, score_intervention) = (score, -1, -1)
 
             if log_counter % args.log_every == 0:
                 print(f"Sample id={id} - {score:.4f}")

@@ -44,38 +44,72 @@ ModelResponse(
         print(f"Answer: {self._encode(self.answer)}")
         print("\n")
 
-
 class Model:
     def __init__(self, model_name: str, cache_dir="/tmp/cache"):
+        self.model_name = model_name
+        self.cache_dir = cache_dir
+
+    def get_utils(self):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def make_prompt(self, question_id, question, custom_instruction="Let's think step by step."):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def do_generate(self, question_id, prompt, max_new_tokens=4096):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def generate_cot_response(self, question_id, question, max_new_tokens=4096):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def evaluate_cot_response(self, question_id, prompt, max_new_tokens=4096):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def evaluate_cot_response_from_tokens(self, question_id, prompt_tokens: torch.Tensor, max_new_tokens=4096):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def get_log_probs(self, sequences: torch.Tensor):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def do_split(self, sequences):
+        raise NotImplementedError("Subclasses must implement this method")
+
+class CoTModel(Model):
+    def __init__(self, model_name: str, cache_dir="/tmp/cache"):
+        super().__init__(model_name, cache_dir)
+
         if not ModelConfig.is_supported(model_name):
             print(f"ERROR: model {model_name} is not in supported list {ModelConfig.SUPPORTED_MODELS}")
             exit(1)
 
-        self.model_name = model_name
-        
+        try:
+            (self.tokenizer, self.model) = self._load_model(model_name, cache_dir)
+            self.utils = TokenUtils(self.model, self.tokenizer)
+        except Exception as e:
+            print(f"Error loading model {model_name}: {e}")
+            raise
+
+    def _load_model(self, model_name, cache_dir):
         config = AutoConfig.from_pretrained(
             model_name,
             cache_dir=cache_dir,
             trust_remote_code=True,
         )
 
-        try:
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                model_name,
-                cache_dir=cache_dir,
-            )
-            self.model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                config=config,
-                torch_dtype=torch.float16,
-                device_map="auto",
-                cache_dir=cache_dir,
-            )
-            self.utils = TokenUtils(self.model, self.tokenizer)
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_name,
+            cache_dir=cache_dir,
+        )
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            config=config,
+            torch_dtype=torch.float16,
+            device_map="auto",
+            cache_dir=cache_dir,
+        )
+        return (tokenizer, model)
 
-        except Exception as e:
-            print(f"Error loading model {model_name}: {e}")
-            raise
+    def get_utils(self):
+        return self.utils
 
     def generate_cot_response(self, question_id, question, max_new_tokens=4096):
         final_response = self.generate_cot_response_full(question_id, question, max_new_tokens)

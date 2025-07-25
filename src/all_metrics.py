@@ -12,9 +12,8 @@ METRICS = {
     "Internalized": InternalizedMetric
 }
 
-def construct_metric(metric_name, model_name, alternative_model_name=None):
-    metric_class = METRICS[metric_name]
-    metric = metric_class(
-        model_name=model_name,
-        alternative_model_name=alternative_model_name)
-    return metric
+def construct_metric(metric_name, model_name, alternative_model_name):
+    construct_metric = METRICS[args.metric]
+    metric = construct_metric(
+        model_name=args.model,
+        alternative_model_name=args.model2)

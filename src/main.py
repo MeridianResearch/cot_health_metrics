@@ -21,7 +21,7 @@ def main():
         print("CUDA is not available. Exiting...")
         exit(1)
 
-    model = Model("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", cache_dir="/tmp/cache2")
+    model = Model(args.model, cache_dir="/tmp/cache2")
 
     metric = construct_metric(
         metric_name=args.metric,
@@ -37,17 +37,10 @@ def main():
     print(r)
 
     try:
-        score = metric.evaluate(r)
+        (score, score_original, score_intervention) = metric.evaluate(r)
     except RuntimeError as err:
         print(f"Sample id={id} - metric evaluation error ({err})")
         exit(1)
-
-    print(f"Metric value: {score}")
-
-    try:
-        (score, score_original, score_intervention) = score
-    except:
-        (score, score_original, score_intervention) = (score, -1, -1)
 
     print(f"Metric value: {score}, logprob original: {score_original}, logprob intervention {score_intervention}")
 
