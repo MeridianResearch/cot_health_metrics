@@ -25,7 +25,7 @@ import argparse
 import json
 import logging
 import time
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 # Settings
 LOG_EVERY = 50
@@ -40,7 +40,7 @@ def setup_logger(name: str, log_file: str, level: int = logging.INFO) -> logging
     logger.addHandler(fh)
     return logger
 
-def load_prompts(json_path: str, max_samples: int = None) -> List[Dict]:
+def load_prompts(json_path: str, max_samples: Optional[int] = None) -> List[Dict]:
     """Read the JSON file of prompts and return as a list of dicts"""
     with open(json_path, 'r') as f:
         data = json.load(f)
