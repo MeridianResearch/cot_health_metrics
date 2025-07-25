@@ -1,5 +1,8 @@
 from datasets import load_dataset, Dataset
 
+CACHE_DIR_DEFAULT       = "hf_cache"
+LOG_EVERY_DEFAULT       = 1
+
 class ModelConfig:
     MODEL_CONFIG_THINK_TOKENS = {
         "begin_think": "<think>",
@@ -48,4 +51,4 @@ class DatasetConfig:
     
     @staticmethod
     def load(dataset_name: str, **kwargs) -> Dataset:
-        return load_dataset(dataset_name, **kwargs)
+        return load_dataset(dataset_name, "main",**kwargs)

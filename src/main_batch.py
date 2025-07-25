@@ -7,18 +7,15 @@ python src/main_batch.py --model=Qwen/Qwen3-0.6B --metric=Paraphrasability --dat
 
 import argparse
 import os
-import time
 from typing import List, Iterator
-from datasets import load_dataset, Dataset
+from datasets import Dataset
 
 from model import Model
 from all_metrics import construct_metric
 from data_loader import load_prompts
 from datetime import datetime
-from config import DatasetConfig
+from config import DatasetConfig, CACHE_DIR_DEFAULT, LOG_EVERY_DEFAULT
 
-CACHE_DIR_DEFAULT        = "hf_cache"
-LOG_EVERY_DEFAULT        = 1
 
 # Current datetime
 now = datetime.now()
@@ -35,7 +32,7 @@ def _get_sample_question(sample: dict) -> str:
         question += " " + sample["input"].strip()
     return question
 
-def _iterate_dataset(dataset: Dataset) -> Iterator[str]:
+def _iterate_dataset(dataset: Dataset) -> Iterator[tuple[int, str]]:
     for i, d in enumerate(dataset):
         yield (i, d['question'])
 
