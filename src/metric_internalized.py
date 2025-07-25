@@ -4,11 +4,11 @@ from token_utils import TokenUtils
 import torch
 
 class InternalizedMetric(Metric):
-    def __init__(self, model_name: str, alternative_model_name: str = None):
-        super().__init__("InternalizedMetric", model_name=model_name,
-            alternative_model_name=alternative_model_name)
-        self.model = Model(self.model_name, cache_dir="/tmp/cache2")
-        self.utils = TokenUtils(self.model.model, self.model.tokenizer)
+    def __init__(self, model: Model, alternative_model: Model | None = None):
+        super().__init__("InternalizedMetric", model=model,
+            alternative_model=alternative_model)
+        self.model = model
+        self.utils = model.get_utils()
 
     def evaluate(self, r: ModelResponse):
 

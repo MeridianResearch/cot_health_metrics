@@ -22,11 +22,12 @@ def main():
         exit(1)
 
     model = Model(args.model, cache_dir="/tmp/cache2")
+    model2 = Model(args.model2, cache_dir=args.cache_dir) if args.model2 else None
 
     metric = construct_metric(
         metric_name=args.metric,
-        model_name=args.model,
-        alternative_model_name=args.model2)
+        model=model,
+        alternative_model=model2)
     
     question = args.question
     if args.question_file:
