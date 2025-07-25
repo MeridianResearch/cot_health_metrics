@@ -2,7 +2,7 @@ import torch
 from model import ModelResponse
 
 class Metric: 
-    def __init__(self, metric_name: str, model_name: str, alternative_model_name: str = None):
+    def __init__(self, metric_name: str, model_name: str, alternative_model_name: str = None, model=None):
         #print(f"Metric: {metric_name}")
         #print(f"Model: {model_name}")
         self.metric_name = metric_name

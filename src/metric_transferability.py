@@ -10,10 +10,10 @@ import os
 # Current datetime
 from common_utils import get_datetime_str
 class TransferabilityMetric(Metric):
-    def __init__(self, model_name: str, alternative_model_name: str = None):
+    def __init__(self, model_name: str, alternative_model_name: str = None, model=None):
         super().__init__("TransferabilityMetric", model_name=model_name,
                          alternative_model_name=alternative_model_name)
-        self.model1 = Model(self.model_name, cache_dir="/tmp/cache2")
+        self.model1 = model #Model(self.model_name, cache_dir="/tmp/cache2")
         self.utils1 = TokenUtils(self.model1.model, tokenizer=self.model1.tokenizer)
         self.model2 = Model(self.alternative_model_name, cache_dir="/tmp/cache2")
         self.utils2 = TokenUtils(self.model2.model, tokenizer=self.model2.tokenizer)

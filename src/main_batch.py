@@ -102,6 +102,7 @@ def main():
     construct_metric = METRIC_CLASSES[args.metric]
     metric = construct_metric(
         model_name=args.model,
+        model=model,
         alternative_model_name=args.model2)
     if args.log_file is None:
         file_name = dataset_name + "-" + _get_datetime_str() + "-" + args.metric
