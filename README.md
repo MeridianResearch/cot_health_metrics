@@ -15,13 +15,14 @@ or
 ```
 ./test.sh
 ```
-Note: All supported Huggingface datasets are listed in `src/main_batch.py`, feel free to add to the list.
+Output is printed to the console, and to log/jsonl files in `log/`.
+
+Note: All supported Huggingface datasets and CoT models are listed in `src/config.py`, feel free to add to the lists.
 We also support local datasets in `data/`, such as `alpaca_500_samples.json` (based on [Alpaca](https://huggingface.co/datasets/tatsu-lab/alpaca)).
-Currently supported CoT models are listed in `src/model.py`.
 
 To generate graphs,
 ```
-python src/plot_metric_logprobs.py --metric-name Transferability --input-path input.jsonl --out-dir output
+python src/plot_metric_logprobs.py --metric-name Transferability --input-path log/input.jsonl --out-dir output
 ```
 
 ## Development Plan
