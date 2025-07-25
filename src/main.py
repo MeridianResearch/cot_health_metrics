@@ -1,27 +1,25 @@
 import torch
-from metric import Metric, DummyMetric
-from metric_reliance import RelianceMetric
-from metric_paraphrasability import ParaphrasabilityMetric
-from metric_transferability import TransferabilityMetric
+import argparse
 from model import Model
-from metric_internalized import InternalizedMetric
-
+from all_metrics import construct_metric
+from config import CACHE_DIR_DEFAULT
 
 def main():
-    # Check if CUDA is available
-    cuda_available = torch.cuda.is_available()
-    print(f"CUDA Available: {cuda_available}")
-    
-    if not cuda_available:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", required=True)
+    parser.add_argument("--model2", default=None)
+    parser.add_argument("--metric", required=True)
+    parser.add_argument("--prompt")
+    parser.add_argument("--prompt-file")
+    parser.add_argument("--cache-dir", default=CACHE_DIR_DEFAULT)
+    parser.add_argument("--log-file", default=None)
+    args = parser.parse_args()
+
+    if not torch.cuda.is_available():
         print("CUDA is not available. Exiting...")
         exit(1)
 
-    #model = Model("Qwen/Qwen3-0.6B", cache_dir="/tmp/cache2")
     model = Model("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", cache_dir="/tmp/cache2")
-    #model = Model("deepcogito/cogito-v1-preview-llama-3B", cache_dir="/tmp/cache2")
-    #model = Model("Wladastic/Mini-Think-Base-1B", cache_dir="/tmp/cache2")
-    #model = Model("google/gemma-2-2b", cache_dir="/tmp/cache2")
-    #model = Model("microsoft/phi-2", cache_dir="/tmp/cache2")
 
     question = "A car travels 60 miles in 1.5 hours. What is its average speed?"
     # This interface also works, convenient for testing
