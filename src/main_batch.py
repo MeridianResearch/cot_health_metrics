@@ -12,31 +12,13 @@ from typing import List, Iterator
 from datasets import load_dataset, Dataset
 
 from model import Model
-from metric import Metric, DummyMetric
-from metric_reliance import RelianceMetric
-from metric_paraphrasability import ParaphrasabilityMetric
-from metric_transferability import TransferabilityMetric
-from metric_internalized import InternalizedMetric
+from all_metrics import construct_metric
 from data_loader import load_prompts
 from datetime import datetime
+from config import DatasetConfig
 
 CACHE_DIR_DEFAULT        = "hf_cache"
 LOG_EVERY_DEFAULT        = 1
-
-HF_DATASET_NAMES = {
-    "Alpaca": "vicgalle/alpaca-gpt4",
-    "GSM8K": "gsm8k",
-    "MMLU": "openai/openai_mmlu_benchmark",
-}
-
-METRIC_CLASSES = {
-    "Dummy": DummyMetric,
-    "Reliance": RelianceMetric,
-    "Paraphrasability": ParaphrasabilityMetric,
-    "Transferability": TransferabilityMetric,
-    "Internalized": InternalizedMetric
-}
-
 
 # Current datetime
 now = datetime.now()
@@ -80,9 +62,9 @@ def main():
     if args.data_hf:
         dataset_name = args.data_hf
         if args.max_samples:
-            dataset = load_dataset(HF_DATASET_NAMES[args.data_hf], "main", split=f"train[:{args.max_samples}]")
+            dataset = DatasetConfig.load(dataset_name, split=f"train[:{args.max_samples}]")
         else:
-            dataset = load_dataset(HF_DATASET_NAMES[args.data_hf], "main", split="train")
+            dataset = DatasetConfig.load(dataset_name, split="train")
 
         datapoints = _iterate_dataset(dataset)
     elif args.data_path:
@@ -99,11 +81,12 @@ def main():
     model = Model(args.model, cache_dir=args.cache_dir)
 
     # Create metric(s)
-    construct_metric = METRIC_CLASSES[args.metric]
     metric = construct_metric(
+        metric_name=args.metric,
         model_name=args.model,
         model=model,
         alternative_model_name=args.model2)
+
     if args.log_file is None:
         file_name = dataset_name + "-" + _get_datetime_str() + "-" + args.metric
     else:
