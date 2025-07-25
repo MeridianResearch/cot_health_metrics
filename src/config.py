@@ -1,6 +1,7 @@
 from datasets import load_dataset, Dataset
 
 CACHE_DIR_DEFAULT       = "hf_cache"
+LOG_DIRECTORY_DEFAULT   = "log"
 LOG_EVERY_DEFAULT       = 1
 
 class ModelConfig:

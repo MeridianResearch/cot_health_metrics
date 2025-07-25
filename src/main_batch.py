@@ -7,6 +7,7 @@ python src/main_batch.py --model=Qwen/Qwen3-0.6B --metric=Paraphrasability --dat
 
 import argparse
 import os
+import json
 from typing import List, Iterator
 from datasets import Dataset
 
@@ -14,7 +15,7 @@ from model import CoTModel
 from all_metrics import construct_metric
 from data_loader import load_prompts
 from datetime import datetime
-from config import DatasetConfig, CACHE_DIR_DEFAULT, LOG_EVERY_DEFAULT
+from config import DatasetConfig, CACHE_DIR_DEFAULT, LOG_EVERY_DEFAULT, LOG_DIRECTORY_DEFAULT
 
 
 # Current datetime
@@ -23,7 +24,7 @@ now = datetime.now()
 # Format as string
 
 def _get_datetime_str():
-    datetime_str = now.strftime("%Y-%m-%d %H:%M:%S")
+    datetime_str = now.strftime("%Y-%m-%d_%H:%M:%S")
     print(datetime_str)
     return datetime_str
 def _get_sample_question(sample: dict) -> str:
@@ -50,8 +51,10 @@ def main():
     parser.add_argument("--skip-samples", type=int, default=0)
     parser.add_argument("--max-samples", type=int, default=None)
     parser.add_argument("--cache-dir", default=CACHE_DIR_DEFAULT)
+    parser.add_argument("--log-dir", default=LOG_DIRECTORY_DEFAULT)
     parser.add_argument("--log-file", default=None)
     parser.add_argument("--log-every", type=int, default=LOG_EVERY_DEFAULT)
+    parser.add_argument("--log-verbose", type=bool, default=True)
     args = parser.parse_args()
 
     # Load dataset
@@ -72,7 +75,8 @@ def main():
     else:
         raise ValueError("Either --data-hf or --data-path must be provided")
 
-    #os.makedirs(args.cache_dir, exist_ok=True)
+    # Make cache dir
+    os.makedirs(args.cache_dir, exist_ok=True)
 
     # Load model
     model = CoTModel(args.model, cache_dir=args.cache_dir)
@@ -85,34 +89,50 @@ def main():
         alternative_model=model2)
 
     if args.log_file is None:
-        file_name = dataset_name + "-" + _get_datetime_str() + "-" + args.metric
+        log_file = args.log_dir + "/" + dataset_name + "_" + _get_datetime_str() + "_" + args.metric + ".log"
+        json_log_file = args.log_dir + "/" + dataset_name + "_" + _get_datetime_str() + "_" + args.metric + ".jsonl"
+        os.makedirs(args.log_dir, exist_ok=True)
     else:
-        file_name = args.log_file
-    with open(file_name, 'a') as f:
-        log_counter = 0
-        for i, (id, question) in enumerate(datapoints):
-            if i < args.skip_samples:
-                continue
+        log_file = args.log_file
+        json_log_file = log_file + ".jsonl"
 
-            try:
-                r = model.generate_cot_response_full(id, question)
-                r.prompt_id = id
-            except RuntimeError as err:
-                print(f"Sample id={id} - generation error ({err})")
-                continue
+    with open(log_file, 'a') as f:
+        with open(json_log_file, 'a') as f_json:
+            log_counter = 0
+            for i, (id, question) in enumerate(datapoints):
+                if i < args.skip_samples:
+                    continue
 
-            try:
-                (score, score_original, score_intervention) = metric.evaluate(r)
-            except RuntimeError as err:
-                print(f"Sample id={id} - metric evaluation error ({err})")
-                continue
+                try:
+                    r = model.generate_cot_response_full(id, question)
+                    r.prompt_id = id
+                except RuntimeError as err:
+                    print(f"Sample id={id} - generation error ({err})")
+                    continue
 
-            if log_counter % args.log_every == 0:
-                print(f"Sample id={id} - {score:.4f}")
-            log_counter += 1
-            print(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}")
-            f.write(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}\n")
-            f.flush()
+                try:
+                    (score, score_original, score_intervention) = metric.evaluate(r)
+                except RuntimeError as err:
+                    print(f"Sample id={id} - metric evaluation error ({err})")
+                    continue
+
+                if log_counter % args.log_every == 0:
+                    print(f"Sample id={id} - {score:.4f}")
+                log_counter += 1
+
+                print(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}")
+
+                f.write(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}\n")
+                f.flush()
+
+                print(f"prompt_id: {id}, orig_lp: {score_original}, induced_lp: {score_intervention}, delta: {score}")
+                f_json.write(json.dumps({
+                    "prompt_id": id,
+                    "orig_lp": float(score_original),
+                    "induced_lp": float(score_intervention),
+                    "delta": float(score),
+                }) + "\n")
+                f_json.flush()
 
 if __name__ == "__main__":
     main()
