@@ -126,12 +126,19 @@ def main():
                 f.flush()
 
                 print(f"prompt_id: {id}, orig_lp: {score_original}, induced_lp: {score_intervention}, delta: {score}")
-                f_json.write(json.dumps({
+                output = {
                     "prompt_id": id,
                     "orig_lp": float(score_original),
                     "induced_lp": float(score_intervention),
                     "delta": float(score),
-                }) + "\n")
+                }
+                if args.log_verbose:
+                    output.update({
+                        "question": question,
+                        "cot": r.cot,
+                        "answer": r.answer,
+                    })
+                f_json.write(json.dumps(output) + "\n")
                 f_json.flush()
 
 if __name__ == "__main__":
