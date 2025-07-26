@@ -4,7 +4,6 @@ import torch
 from dataclasses import dataclass
 from token_utils import TokenUtils
 from typing import Optional
-from config import ModelConfig
 
 @dataclass
 class ModelResponse:
@@ -44,111 +43,108 @@ ModelResponse(
         print(f"Answer: {self._encode(self.answer)}")
         print("\n")
 
+
 class Model:
+    MODEL_CONFIG_QWEN = {
+        "begin_think": "<think>",
+        "end_think": "</think>",
+    }
+
+    MODEL_CONFIG_WLA = {
+        "begin_think_fuzzy": "model",
+        "end_think_fuzzy": ["Answer: ", "Final Answer: ", "The answer is: ", "Solution: ", "return "],
+    }
+
+    SUPPORTED_MODELS = {
+        "Qwen/Qwen3-0.6B": MODEL_CONFIG_QWEN,
+        "Qwen/Qwen3-1.7B": MODEL_CONFIG_QWEN,
+        "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": MODEL_CONFIG_QWEN,
+        #"deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_QWEN,  # unverified
+        "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_WLA,
+        "google/gemma-2-2b": MODEL_CONFIG_WLA,
+        #"microsoft/phi-2": MODEL_CONFIG_WLA,  # not very consistent
+    }
+
     def __init__(self, model_name: str, cache_dir="/tmp/cache"):
-        self.model_name = model_name
-        self.cache_dir = cache_dir
-
-    def get_utils(self):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def make_prompt(self, question_id, question, custom_instruction="Let's think step by step."):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def do_generate(self, question_id, prompt, max_new_tokens=4096):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def generate_cot_response(self, question_id, question, max_new_tokens=4096):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def evaluate_cot_response(self, question_id, prompt, max_new_tokens=4096):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def evaluate_cot_response_from_tokens(self, question_id, prompt_tokens: torch.Tensor, max_new_tokens=4096):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def get_log_probs(self, sequences: torch.Tensor):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def do_split(self, sequences):
-        raise NotImplementedError("Subclasses must implement this method")
-
-class CoTModel(Model):
-    def __init__(self, model_name: str, cache_dir="/tmp/cache"):
-        super().__init__(model_name, cache_dir)
-
-        if not ModelConfig.is_supported(model_name):
-            print(f"ERROR: model {model_name} is not in supported list {ModelConfig.SUPPORTED_MODELS}")
+        if model_name not in self.SUPPORTED_MODELS:
+            print(f"ERROR: model {model_name} is not in supported list {self.SUPPORTED_MODELS}")
             exit(1)
 
-        try:
-            (self.tokenizer, self.model) = self._load_model(model_name, cache_dir)
-            self.utils = TokenUtils(self.model, self.tokenizer)
-        except Exception as e:
-            print(f"Error loading model {model_name}: {e}")
-            raise
-
-    def _load_model(self, model_name, cache_dir):
+        self.model_name = model_name
+        
         config = AutoConfig.from_pretrained(
             model_name,
             cache_dir=cache_dir,
             trust_remote_code=True,
         )
 
-        tokenizer = AutoTokenizer.from_pretrained(
-            model_name,
-            cache_dir=cache_dir,
-        )
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            config=config,
-            torch_dtype=torch.float16,
-            device_map="auto",
-            cache_dir=cache_dir,
-        )
-        return (tokenizer, model)
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                model_name,
+                cache_dir=cache_dir,
+            )
+            self.model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                config=config,
+                torch_dtype=torch.float16,
+                device_map="auto",
+                cache_dir=cache_dir,
+            )
+            self.utils = TokenUtils(self.model, self.tokenizer)
 
-    def get_utils(self):
-        return self.utils
+        except Exception as e:
+            print(f"Error loading model {model_name}: {e}")
+            raise
 
     def generate_cot_response(self, question_id, question, max_new_tokens=4096):
         final_response = self.generate_cot_response_full(question_id, question, max_new_tokens)
         return final_response.basic_pair
 
     def make_prompt(self, question_id, question, custom_instruction="Let's think step by step."):
-        model_config = ModelConfig.get(self.model_name)
+        model_config = self.SUPPORTED_MODELS[self.model_name]
         history = [
             {"role": "user", "content": f"Question: {question}\n{custom_instruction}"},
         ]
         continue_final_message = True
 
-        if("begin_think" in model_config):
-            if(self.model_name == "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"):
+        if any(key.startswith("begin_think") for key in model_config):
+            if (self.model_name == "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"):
                 history.append({"role": "assistant", "content": "<think>"})
+            elif (self.model_name == "Qwen/Qwen3-0.6B"):
+                history.append({"role": "system", "content": "<think>"})
+            elif (self.model_name == "google/gemma-2-2b"):
+                # For Gemma, don't add the think token to history, handle it in the template
+                continue_final_message = True
             else:
                 continue_final_message = False
-        elif("fuzzy_separator" in model_config):
-            continue_final_message = False
         else:
             print(f"ERROR: model {self.model_name} missing CoT separator config")
             exit(1)
 
-        prompt = self.tokenizer.apply_chat_template(history,
-            tokenize=False,
-            add_generation_prompt=not continue_final_message,
-            continue_final_message=continue_final_message)
-        return prompt
+        # Handle Gemma-2 specifically
+        if self.model_name == "google/gemma-2-2b":
+            # Create proper Gemma format manually since the model generates repetitive tokens
+            prompt = f"<start_of_turn>user\nQuestion: {question}\n{custom_instruction}<end_of_turn>\n<start_of_turn>model\n"
+            return prompt
+        else:
+            prompt = self.tokenizer.apply_chat_template(history,
+                                                        tokenize=False,
+                                                        add_generation_prompt=not continue_final_message,
+                                                        continue_final_message=continue_final_message)
+            return prompt
+
 
     def do_generate(self, question_id, prompt, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
-        model_config = ModelConfig.get(self.model_name)
+        model_config = self.SUPPORTED_MODELS[self.model_name]
 
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
         output = self.model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
             do_sample=True,
-            temperature=0.6,
+            repetition_penalty=1.2,
+            temperature=0.7,
             top_k=20,
             min_p=0.0,
             top_p=0.95,
@@ -166,7 +162,7 @@ class CoTModel(Model):
         return log_probs
 
     def do_split(self, sequences):
-        model_config = ModelConfig.get(self.model_name)
+        model_config = self.SUPPORTED_MODELS[self.model_name]
 
         # should split the output into three parts: question, the chain of thought and the answer
         if("begin_think" in model_config):
@@ -189,25 +185,60 @@ class CoTModel(Model):
             response2 = self.tokenizer.decode(pieces[2], skip_special_tokens=True)
 
             question = response0.strip()
-            #cot = response0[len(prompt):].strip()
             cot = response1.strip()
             answer = response2.strip()
 
-        elif("fuzzy_separator" in model_config):
-            if(model_config["fuzzy_separator"] in sequences):
-                pieces = sequences.split(model_config["fuzzy_separator"])
+        elif("begin_think_fuzzy" in model_config):
+            # Split before decoding
+            begin_think = self._get_token_id(model_config["begin_think_fuzzy"])
+            if (sequences[0][0] == begin_think):
+                sequences[0] = sequences[0][1:]
+            end_think = self._get_token_id(model_config["end_think_fuzzy"])
+            # Remove redundant tokens from the entire sequence first
+            cleaned_sequence = self._remove_redundant_tokens(sequences[0].tolist())
+
+            # split to 3 pieces: piece 0: question; piece 1: cot; piece 2: answer
+            pieces = self._split_on_tokens(cleaned_sequence, [begin_think, end_think])
+
+            if len(pieces) < 3:
+                response0 = self.tokenizer.decode(pieces[0], skip_special_tokens=True)
+                response1 = self.tokenizer.decode(pieces[1], skip_special_tokens=True)
+                question = response0.strip()
+                cot = answer = response1.strip()
             else:
-                print(f"ERROR: model {self.model_name} did not generate chain of thought separator {model_config['fuzzy_separator']}")
-                # print(f"Response: {full_response}")
-                exit(1)
-            #cot = response1.strip()
-            #answer = response2.strip()
+                response0 = self.tokenizer.decode(pieces[0], skip_special_tokens=True)
+                response1 = self.tokenizer.decode(pieces[1], skip_special_tokens=True)
+                response2 = self.tokenizer.decode(pieces[2], skip_special_tokens=True)
+
+                question = response0.strip()
+                cot = response1.strip()
+                answer = response2.strip()
 
         else:
             raise RuntimeError(f"Model {self.model_name} missing CoT separator config")
 
 
         return (question, cot, answer)
+
+    def _remove_redundant_tokens(self, token_list):
+        """Remove redundant tokens specifically for Gemma"""
+        cleaned_tokens = []
+        prev_token = None
+        consecutive_count = 0
+
+        for token in token_list:
+            # Skip excessive repetitions
+            if token == prev_token:
+                consecutive_count += 1
+                if consecutive_count > 2:  # Skip after 2 consecutive
+                    continue
+            else:
+                consecutive_count = 0
+
+            cleaned_tokens.append(token)
+            prev_token = token
+
+        return cleaned_tokens
 
     def generate_cot_response_full(self, question_id, question, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
@@ -268,25 +299,22 @@ class CoTModel(Model):
         return token_id
 
     def get_think_tokens(self):
-        model_config = ModelConfig.get(self.model_name)
+        model_config = self.SUPPORTED_MODELS[self.model_name]
 
         begin_think = self._get_token_id(model_config["begin_think"])
         end_think = self._get_token_id(model_config["end_think"])
         return (begin_think, end_think)
 
 if __name__ == "__main__":
-    question = "A car travels 60 miles in 1.5 hours. What is its average speed?"
+    question = "What is the meaning of life?"
     print("Prompt: " + question.encode('unicode_escape').decode())
 
-    model = Model("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", cache_dir="/tmp/cache2")
+    model = Model("google/gemma-2-2b", cache_dir="/tmp/cache2")
     (cot, answer) = model.generate_cot_response(0, question)
     print("\n")
     print("CoT: " + cot.encode('unicode_escape').decode())
     print("\n")
     print("Answer: " + answer.encode('unicode_escape').decode())
     print("\n")
-    print("Evaluate replacing CoT with thinking TOKENS:")
-    print("\n")
-    model.evaluate_with_custom_cot_tokens(question,
-        model.tokenizer.encode(cot, return_tensors="pt").to(model.model.device).squeeze(0))
-
+    #print("Test the make_prompt function:)
+    model.make_prompt(1, question)
