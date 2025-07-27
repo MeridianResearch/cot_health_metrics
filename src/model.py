@@ -4,6 +4,7 @@ import torch
 from dataclasses import dataclass
 from token_utils import TokenUtils
 from typing import Optional
+from config import ModelConfig
 
 @dataclass
 class ModelResponse:
