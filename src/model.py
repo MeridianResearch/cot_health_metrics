@@ -154,20 +154,18 @@ class CoTModel(Model):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         model_config = ModelConfig.get(self.model_name)
 
+        generate_kwargs = model_config.get("generate_kwargs")
+
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
         output = self.model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
             do_sample=True,
-            repetition_penalty=1.2,
-            temperature=0.7,
-            top_k=20,
-            min_p=0.0,
-            top_p=0.95,
             eos_token_id=self.tokenizer.eos_token_id,
             pad_token_id=self.tokenizer.eos_token_id,
             output_scores=True,
             return_dict_in_generate=True,
+            **generate_kwargs,
         )
         return output
 

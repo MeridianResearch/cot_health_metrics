@@ -8,9 +8,23 @@ class ModelConfig:
     MODEL_CONFIG_THINK_TOKENS = {
         "begin_think": "<think>",
         "end_think": "</think>",
+        "generate_kwargs": {
+            "repetition_penalty": 1.2,
+            "temperature": 0.7,
+            "top_k": 20,
+            "min_p": 0.0,
+            "top_p": 0.95,
+        },
     }
     MODEL_CONFIG_FUZZY_ANSWER = {
         "fuzzy_end_think_list": ["Answer: ", "Final Answer: ", "The answer is: ", "Solution: "],
+        "generate_kwargs": {
+            "repetition_penalty": 1.2,
+            "temperature": 0.7,
+            "top_k": 20,
+            "min_p": 0.0,
+            "top_p": 0.95,
+        },
     }
     DEFAULT_MODEL_CONFIG = MODEL_CONFIG_FUZZY_ANSWER
 
