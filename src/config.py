@@ -10,8 +10,7 @@ class ModelConfig:
         "end_think": "</think>",
     }
     MODEL_CONFIG_FUZZY_ANSWER = {
-        "begin_think_fuzzy": "model",
-        "end_think_fuzzy": ["Answer: ", "Final Answer: ", "The answer is: ", "Solution: ", "return "],
+        "fuzzy_end_think_list": ["Answer: ", "Final Answer: ", "The answer is: ", "Solution: "],
     }
     DEFAULT_MODEL_CONFIG = MODEL_CONFIG_FUZZY_ANSWER
 
