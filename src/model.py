@@ -120,18 +120,19 @@ class CoTModel(Model):
         history = [
             {"role": "user", "content": f"Question: {question}\n{custom_instruction}"},
         ]
-        continue_final_message = True
 
-        if any(key.startswith("begin_think") for key in model_config):
+        # This is the default, unless manually adding an assistant role section
+        continue_final_message = False
+
+        if "begin_think" in model_config:
             if (self.model_name == "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"):
                 history.append({"role": "assistant", "content": "<think>"})
-            elif (self.model_name == "Qwen/Qwen3-0.6B"):
-                history.append({"role": "system", "content": "<think>"})
-            elif (self.model_name == "google/gemma-2-2b"):
-                # For Gemma, don't add the think token to history, handle it in the template
                 continue_final_message = True
             else:
-                continue_final_message = False
+                pass  # default to making a new assistant role section
+        elif "fuzzy_end_think_list" in model_config:
+            # For Gemma, use default behavior
+            pass
         else:
             print(f"ERROR: model {self.model_name} missing CoT separator config")
             exit(1)
@@ -176,84 +177,94 @@ class CoTModel(Model):
             log_probs = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
         return log_probs
 
-    def do_split(self, sequences):
+    def do_split(self, sequences, prompt):
         model_config = ModelConfig.get(self.model_name)
 
         # should split the output into three parts: question, the chain of thought and the answer
         if("begin_think" in model_config):
-            # Split before decoding
-            begin_think = self._get_token_id(model_config["begin_think"])
-            if(sequences[0][0] == begin_think):
-                sequences[0] = sequences[0][1:]
-            end_think = self._get_token_id(model_config["end_think"])
-            # split to 3 pieces: piece 0: question; piece 1: cot; piece 2: answer
-            pieces = self._split_on_tokens(sequences[0].tolist(), [begin_think, end_think])
+            if True:
+                begin_think = model_config["begin_think"]
+                end_think = model_config["end_think"]
 
-            if len(pieces) < 3:
                 full = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
-                raise RuntimeError(
-                    f"Failed to extract CoT (too few pieces) from: {full}"
-                )
+                try:
+                    (question, cot_and_answer) = full.split(begin_think, 1)
+                    (cot, answer) = cot_and_answer.split(end_think, 1)
+                except ValueError:
+                    raise RuntimeError(
+                        f"Failed to extract CoT (no begin/end think token) from: {full}"
+                    )
 
-            response0 = self.tokenizer.decode(pieces[0], skip_special_tokens=True)
-            response1 = self.tokenizer.decode(pieces[1], skip_special_tokens=True)
-            response2 = self.tokenizer.decode(pieces[2], skip_special_tokens=True)
-
-            question = response0.strip()
-            cot = response1.strip()
-            answer = response2.strip()
-
-        elif("begin_think_fuzzy" in model_config):
-            # Split before decoding
-            begin_think = self._get_token_id(model_config["begin_think_fuzzy"])
-            if (sequences[0][0] == begin_think):
-                sequences[0] = sequences[0][1:]
-            end_think = self._get_token_id(model_config["end_think_fuzzy"])
-            # Remove redundant tokens from the entire sequence first
-            cleaned_sequence = self._remove_redundant_tokens(sequences[0].tolist())
-
-            # split to 3 pieces: piece 0: question; piece 1: cot; piece 2: answer
-            pieces = self._split_on_tokens(cleaned_sequence, [begin_think, end_think])
-
-            if len(pieces) < 3:
-                response0 = self.tokenizer.decode(pieces[0], skip_special_tokens=True)
-                response1 = self.tokenizer.decode(pieces[1], skip_special_tokens=True)
-                question = response0.strip()
-                cot = answer = response1.strip()
+                question = question.strip()
+                cot = cot.strip()
+                answer = answer.strip()
             else:
-                response0 = self.tokenizer.decode(pieces[0], skip_special_tokens=True)
-                response1 = self.tokenizer.decode(pieces[1], skip_special_tokens=True)
-                response2 = self.tokenizer.decode(pieces[2], skip_special_tokens=True)
+                # Split before decoding
+                begin_think = self._get_token_id(model_config["begin_think"])
+                end_think = self._get_token_id(model_config["end_think"])
+
+                # split to 3 pieces: piece 0: question; piece 1: cot; piece 2: answer
+                pieces0 = self._split_on_tokens(sequences[0].tolist(), [begin_think])
+                if len(pieces01) != 2:
+                    full = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
+                    raise RuntimeError(
+                        f"Failed to extract CoT (no begin think token {model_config['begin_think']}) from: {full}"
+                    )
+                pieces1 = self._split_on_tokens(pieces01.tolist(), [end_think])
+                if len(pieces23) != 2:
+                    full = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
+                    raise RuntimeError(
+                        f"Failed to extract CoT (no end think token {model_config['end_think']}) from: {full}"
+                    )
+
+                response0 = self.tokenizer.decode(pieces0[0], skip_special_tokens=True)
+                response1 = self.tokenizer.decode(pieces1[0], skip_special_tokens=True)
+                response2 = self.tokenizer.decode(pieces1[1], skip_special_tokens=True)
 
                 question = response0.strip()
                 cot = response1.strip()
                 answer = response2.strip()
 
+        elif("fuzzy_end_think_list" in model_config):
+            full = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
+
+            question = full[0:len(prompt)].strip()
+            cot_and_answer = full[:len(prompt)]
+
+            end_think_list = model_config["fuzzy_end_think_list"]
+            for end_think in end_think_list:
+                pieces = cot_and_answer.split(end_think, 1)
+                if len(pieces) == 2:
+                    cot = pieces[0].strip()
+                    answer = pieces[1].strip()
+                    break
+
+            raise RuntimeError(f"Model {self.model_name} did not generate known fuzzy split sequence in "
+                               + f"{model_config['end_think_fuzzy']}")
         else:
             raise RuntimeError(f"Model {self.model_name} missing CoT separator config")
 
-
         return (question, cot, answer)
 
-    def _remove_redundant_tokens(self, token_list):
-        """Remove redundant tokens specifically for Gemma"""
-        cleaned_tokens = []
-        prev_token = None
-        consecutive_count = 0
+    #def _remove_redundant_tokens(self, token_list):
+    #    """Remove redundant tokens specifically for Gemma"""
+    #    cleaned_tokens = []
+    #    prev_token = None
+    #    consecutive_count = 0
 
-        for token in token_list:
-            # Skip excessive repetitions
-            if token == prev_token:
-                consecutive_count += 1
-                if consecutive_count > 2:  # Skip after 2 consecutive
-                    continue
-            else:
-                consecutive_count = 0
+    #    for token in token_list:
+    #        # Skip excessive repetitions
+    #        if token == prev_token:
+    #            consecutive_count += 1
+    #            if consecutive_count > 2:  # Skip after 2 consecutive
+    #                continue
+    #        else:
+    #            consecutive_count = 0
 
-            cleaned_tokens.append(token)
-            prev_token = token
+    #        cleaned_tokens.append(token)
+    #        prev_token = token
 
-        return cleaned_tokens
+    #    return cleaned_tokens
 
     def generate_cot_response_full(self, question_id, question, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
@@ -263,7 +274,7 @@ class CoTModel(Model):
 
         raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
 
-        (question, cot, answer) = self.do_split(sequences)
+        (question, cot, answer) = self.do_split(sequences, prompt)
 
         return ModelResponse(
             question_id=question_id,
@@ -276,14 +287,11 @@ class CoTModel(Model):
     def evaluate_cot_response(self, question_id, prompt, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         prompt_tokens = self.utils.encode_to_tensor(prompt)
-        return self.evaluate_cot_response_from_tokens(question_id, prompt_tokens, max_new_tokens)
-
-    def evaluate_cot_response_from_tokens(self, question_id, prompt_tokens: torch.Tensor, max_new_tokens=4096):
         log_probs = self.get_log_probs(prompt_tokens)
 
         raw_output = self.tokenizer.decode(prompt_tokens, skip_special_tokens=True)
 
-        (question, cot, answer) = self.do_split(log_probs, raw_output, prompt_tokens)
+        (question, cot, answer) = self.do_split(log_probs, raw_output, prompt)
 
         return ModelResponse(
             question_id=question_id,
