@@ -240,14 +240,14 @@ class CoTModel(Model):
         prompt_tokens = self.utils.encode_to_tensor(prompt)
         log_probs = self.get_log_probs(prompt_tokens)
 
-        raw_output = self.tokenizer.decode(prompt_tokens, skip_special_tokens=True)
+        raw_output = self.tokenizer.decode(prompt_tokens[0], skip_special_tokens=True)
 
-        (question, cot, answer) = self.do_split(log_probs, raw_output, prompt)
+        (question, cot, answer) = self.do_split(prompt_tokens, prompt)
 
         return ModelResponse(
             question_id=question_id,
             question=question,
-            prompt=prompt_tokens,
+            prompt=prompt,
             cot=cot,
             answer=answer,
             raw_output=raw_output)
