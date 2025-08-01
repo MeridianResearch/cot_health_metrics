@@ -58,42 +58,8 @@ class TestDummyMetric:
         mock_response.cot = "Test reasoning"
         mock_response.answer = "Test answer"
         
-        # Should return 0 and print debug info
         result = metric.evaluate(mock_response)
-        assert result == 0
-
-
-# Fixtures for metric tests
-@pytest.fixture
-def mock_model():
-    """Fixture providing a mock model for metric testing"""
-    model = Mock()
-    model.model_name = "test_model"
-    return model
-
-
-@pytest.fixture
-def sample_model_response():
-    """Fixture providing a sample ModelResponse for metric testing"""
-    from model import ModelResponse
-    return ModelResponse(
-        question_id="test_001",
-        question="What is 2+2?",
-        prompt="Question: What is 2+2?\nLet's think step by step.\n<think>",
-        cot="Let me think about this step by step. 2+2 equals 4.",
-        answer="4",
-        raw_output="<think>Let me think about this step by step. 2+2 equals 4.</think>\nAnswer: 4"
-    )
-
-
-@pytest.mark.parametrize("metric_class,expected_score", [
-    (DummyMetric, 0),
-])
-def test_metric_scores(mock_model, sample_model_response, metric_class, expected_score):
-    """Test that metrics return expected scores"""
-    metric = metric_class(mock_model)
-    score = metric.evaluate(sample_model_response)
-    assert score == expected_score
+        assert result == (0, 0, 0)
 
 
 if __name__ == "__main__":
