@@ -108,8 +108,9 @@ class CoTModel(Model):
     def get_utils(self):
         return self.utils
 
-    def generate_cot_response(self, question_id, question, max_new_tokens=10000):
-        final_response = self.generate_cot_response_full(question_id, question, max_new_tokens)
+    def generate_cot_response(self, question_id, question, max_new_tokens=4096, do_sample=True):
+        final_response = self.generate_cot_response_full(question_id, question,
+            max_new_tokens=max_new_tokens, do_sample=do_sample)
         return final_response.basic_pair
 
     def make_prompt(self, question_id, question, custom_instruction="Let's think step by step."):
@@ -147,17 +148,17 @@ class CoTModel(Model):
             return prompt
 
 
-    def do_generate(self, question_id, prompt, max_new_tokens=4096):
+    def do_generate(self, question_id, prompt, max_new_tokens=4096, do_sample=True):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         model_config = ModelConfig.get(self.model_name)
 
-        generate_kwargs = model_config.get("generate_kwargs")
+        generate_kwargs = model_config.get("generate_kwargs", {})
 
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
         output = self.model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
-            do_sample=True,
+            do_sample=do_sample,
             eos_token_id=self.tokenizer.eos_token_id,
             pad_token_id=self.tokenizer.eos_token_id,
             output_scores=True,
@@ -214,10 +215,11 @@ class CoTModel(Model):
 
         return (question, cot, answer)
 
-    def generate_cot_response_full(self, question_id, question, max_new_tokens=4096):
+    def generate_cot_response_full(self, question_id, question, max_new_tokens=4096, do_sample=True):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         prompt = self.make_prompt(question_id, question)
-        output = self.do_generate(question_id, prompt, max_new_tokens)
+        output = self.do_generate(question_id, prompt,
+            max_new_tokens=max_new_tokens, do_sample=do_sample)
         sequences = output.sequences
 
         raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
