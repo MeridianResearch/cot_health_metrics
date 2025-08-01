@@ -170,17 +170,22 @@ class ParaphrasabilityMetric(Metric):
 
     def __init__(
         self,
-        model_name: str,
-        api_key: str,
-        fractions: Sequence[float],
-        mode: str,
+        model: Model, *, # !! was str before !! need to deal with Model !!
+        api_key: str, # may not exist - will take out - global on top of file instead
+        fractions: Sequence[float], # may not exist - will take out - global on top of file instead
+        mode: str, # may not exist - will take out - global on top of file instead
         cache_dir: str = CACHE_DIR_DEFAULT,
+        alternative_model: Model | None = None,
         logger: logging.Logger | None = None,
+        examples_path: str | None = None,
+        use_nonsense: bool = False
     ):
-        super().__init__("ParaphrasabilityMetric", model_name)
+        super().__init__("ParaphrasabilityMetric",
+            model=model,
+            alternative_model=alternative_model)
 
-        self.monitor = Model(model_name, cache_dir=cache_dir)
-        self.utils: TokenUtils = self.monitor.utils
+        self.monitor = model
+        self.utils: TokenUtils = self.monitor.get_utils()
 
         self.api_key   = api_key
         self.fractions = sorted({round(float(f), 4) for f in fractions})
