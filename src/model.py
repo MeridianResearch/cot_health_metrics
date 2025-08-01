@@ -64,9 +64,6 @@ class Model:
     def evaluate_cot_response(self, question_id, prompt, max_new_tokens=4096):
         raise NotImplementedError("Subclasses must implement this method")
 
-    def evaluate_cot_response_from_tokens(self, question_id, prompt_tokens: torch.Tensor, max_new_tokens=4096):
-        raise NotImplementedError("Subclasses must implement this method")
-
     def get_log_probs(self, sequences: torch.Tensor):
         raise NotImplementedError("Subclasses must implement this method")
 
@@ -225,7 +222,7 @@ class CoTModel(Model):
 
         raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
 
-        (question, cot, answer) = self.do_split(sequences, prompt)
+        (_, cot, answer) = self.do_split(sequences, prompt)
 
         return ModelResponse(
             question_id=question_id,
@@ -235,22 +232,19 @@ class CoTModel(Model):
             answer=answer,
             raw_output=raw_output)
 
-    def evaluate_cot_response(self, question_id, prompt, max_new_tokens=4096):
+    def evaluate_cot_response(self, question_id, prompt, response, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
-        prompt_tokens = self.utils.encode_to_tensor(prompt)
-        log_probs = self.get_log_probs(prompt_tokens)
+        response_tokens = self.utils.encode_to_tensor(response)
 
-        raw_output = self.tokenizer.decode(prompt_tokens[0], skip_special_tokens=True)
-
-        (question, cot, answer) = self.do_split(prompt_tokens, prompt)
+        (question, cot, answer) = self.do_split(response_tokens, prompt)
 
         return ModelResponse(
             question_id=question_id,
-            question=question,
+            question=question,  # NOTE: this question is not fully parsed, contains make_prompt stuff
             prompt=prompt,
             cot=cot,
             answer=answer,
-            raw_output=raw_output)
+            raw_output=response)
 
     def _split_on_tokens(self, lst, token_list):
         """Split a list into sublists, using 'token' as the delimiter (token is not included in results)."""
