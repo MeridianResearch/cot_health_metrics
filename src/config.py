@@ -9,8 +9,7 @@ class ModelConfig:
         "begin_think": "<think>",
         "end_think": "</think>",
         "generate_kwargs": {
-            "repetition_penalty": 1.2,
-            "temperature": 0.7,
+            "temperature": 0.6,
             "top_k": 20,
             "min_p": 0.0,
             "top_p": 0.95,
