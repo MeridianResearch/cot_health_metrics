@@ -31,4 +31,4 @@ class DummyMetric(Metric):
         print("\n")
         print(f"Prediction: {r.answer.encode('unicode_escape').decode()}")
         print("\n")
-        return 0
+        return (0, 0, 0)
