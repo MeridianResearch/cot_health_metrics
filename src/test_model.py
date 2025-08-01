@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import Mock, patch
 from model import Model, CoTModel, ModelResponse
 
+TEST_CACHE_DIR = "/tmp/cache-test"
+
 # Fixtures for common test data
 @pytest.fixture
 def sample_model_response():
@@ -21,9 +23,9 @@ class TestModel:
 
     def test_model_initialization(self):
         """Test Model initialization"""
-        model = Model("test_model", "/tmp/cache")
+        model = Model("test_model", TEST_CACHE_DIR)
         assert model.model_name == "test_model"
-        assert model.cache_dir == "/tmp/cache"
+        assert model.cache_dir == TEST_CACHE_DIR
 
     def test_make_prompt_not_implemented(self):
         """Test that make_prompt raises NotImplementedError"""
@@ -59,7 +61,7 @@ class TestCoTModel:
         """Test CoTModel initialization with unsupported model"""
         with pytest.raises(SystemExit):
             CoTModel("unsupported/model")
-    
+
     @patch('model.AutoConfig.from_pretrained')
     @patch('model.AutoTokenizer.from_pretrained')
     @patch('model.AutoModelForCausalLM.from_pretrained')
@@ -79,15 +81,71 @@ class TestCoTModel:
         mock_tokenizer_instance.apply_chat_template.assert_called_once()
         assert prompt is not None
 
-    def test_do_split(self):
-        """Test do_split method"""
-        model = CoTModel("Qwen/Qwen3-0.6B", cache_dir="/tmp/cache-test")
+class TestCoTModelReal:
+    def test_make_prompt_Qwen3_0_6B(self):
+        model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
+        prompt = model.make_prompt("test_001", "What is 2+2?")
+        assert prompt == "<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant\n"
 
-        prompt = "Question: What is 2+2?\nLet's think step by step.\n<think>" \
+    def test_make_prompt_DeepSeek_R1_Distill_Qwen_1_5B(self):
+        model = CoTModel("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", cache_dir=TEST_CACHE_DIR)
+        prompt = model.make_prompt("test_001", "What is 2+2?")
+        assert prompt == "<｜begin▁of▁sentence｜><｜User｜>Question: What is 2+2?\nLet's think step by step.<｜Assistant｜><think>"
+
+    def test_make_prompt_Gemma2_2B(self):
+        model = CoTModel("google/gemma-2-2b", cache_dir=TEST_CACHE_DIR)
+        prompt = model.make_prompt("test_001", "What is 2+2?")
+        assert prompt == "<start_of_turn>user\nQuestion: What is 2+2?\nLet's think step by step.<end_of_turn>\n<start_of_turn>model\n"
+
+    def test_tokenizer_decode_Qwen3_0_6B(self):
+        model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
+        response = "Question: What is 2+2?\nLet's think step by step.<think>" \
             + "Let me think about this step by step. 2+2 equals 4.</think>\nAnswer: 4"
-        response = model.evaluate_cot_response(1, prompt)
+        tokens = model.utils.encode_to_tensor(response)
+        output = model.utils.decode_to_string(tokens[0])
+        assert output == response
 
-        assert response.question == "Question: What is 2+2?\nLet's think step by step."
-        assert response.cot == "Let me think about this step by step. 2+2 equals 4."
-        assert response.answer == "Answer: 4"
-        assert response.raw_output == prompt
+    def test_tokenizer_decode_Gemma2_2B(self):
+        model = CoTModel("google/gemma-2-2b", cache_dir=TEST_CACHE_DIR)
+        response = "Question: What is 2+2?\nLet's think step by step.<think>" \
+            + "Let me think about this step by step. 2+2 equals 4.</think>\nAnswer: 4"
+        tokens = model.utils.encode_to_tensor(response)
+        output = model.utils.decode_to_string(tokens[0])
+        assert output == response
+
+    def test_do_split_Qwen3_0_6B_not_enough_pieces(self):
+        """Test do_split method"""
+        model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
+
+        prompt = "Question: What is 2+2?\nLet's think step by step.\n<think>"
+        response = prompt + "Let me think about this step by step..."
+        
+        with pytest.raises(RuntimeError):
+            model_response = model.evaluate_cot_response(1, prompt, response)
+
+    def test_do_split_Qwen3_0_6B(self):
+        """Test do_split method"""
+        model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
+
+        prompt = "Question: What is 2+2?\nLet's think step by step.\n<think>"
+        response = prompt + "Let me think about this step by step. 2+2 equals 4.</think>\nAnswer: 4"
+        model_response = model.evaluate_cot_response(1, prompt, response)
+
+        assert model_response.question == "Question: What is 2+2?\nLet's think step by step."
+        assert model_response.cot == "Let me think about this step by step. 2+2 equals 4."
+        assert model_response.answer == "Answer: 4"
+        assert model_response.raw_output == response
+
+    @pytest.mark.xfail(reason="Test is expected to fail due to model loading issues")
+    def test_do_split_Gemma2_2B(self):
+        """Test do_split method"""
+        model = CoTModel("google/gemma-2-2b", cache_dir=TEST_CACHE_DIR)
+
+        prompt = "Question: What is 2+2?\nLet's think step by step."
+        response = prompt #+ "Let me think about this step by step. 2+2 equals 4.</think>\nAnswer: 4"
+        model_response = model.evaluate_cot_response(1, prompt, response)
+
+        assert model_response.question == "<bos>Question: What is 2+2?\nLet's think step by step."
+        assert model_response.cot == "Let me think about this step by step. 2+2 equals 4."
+        assert model_response.answer == "4"
+        assert model_response.raw_output == response
