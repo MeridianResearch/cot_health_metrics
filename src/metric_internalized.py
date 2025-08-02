@@ -12,7 +12,7 @@ class InternalizedMetric(Metric):
         self.utils = model.get_utils()
         self.filler_token = filler_token
 
-    def evaluate(self, r: ModelResponse):
+    def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
         # Create custom instruction based on the filler token
         if self.filler_token.isalpha():
             # For word tokens like "think"
@@ -51,4 +51,7 @@ class InternalizedMetric(Metric):
         score_original = cot_log_probs.sum()
         score_intervention = internalized_cot_log_probs.sum()
         score = (score_original - score_intervention) / (score_original)
-        return (score, score_original, score_intervention)
+        return {
+            'result':(score, score_original, score_intervention)
+            'extra_results': [(s,s_o,s_i)]
+        }

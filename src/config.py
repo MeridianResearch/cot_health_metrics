@@ -69,12 +69,27 @@ class DatasetConfig:
         "MMLU": "openai/openai_mmlu_benchmark",
     }
 
+    HF_DATASET_COT_ANSWER_SPLIT = {
+        "GSM8K": lambda d: d["answer"].split("####"),
+    }
+
     @staticmethod
     def get(dataset_name: str) -> str:
         if dataset_name not in DatasetConfig.HF_DATASET_NAMES:
             return dataset_name
         return DatasetConfig.HF_DATASET_NAMES[dataset_name]
     
+    @staticmethod
+    def do_cot_answer_split(dataset_name: str, sample_data) -> tuple[str, str]:
+        if dataset_name not in DatasetConfig.HF_DATASET_COT_ANSWER_SPLIT:
+            return ('', '')
+        func = DatasetConfig.HF_DATASET_COT_ANSWER_SPLIT[dataset_name]
+        try:
+            return func(sample_data)
+        except Exception as e:
+            print(f"Error splitting cot and answer for sample \"{sample_data}\" in dataset {dataset_name}: {e}")
+            return ('', '')
+
     @staticmethod
     def load(dataset_name: str, **kwargs) -> Dataset:
         return load_dataset(dataset_name, "main", **kwargs)
