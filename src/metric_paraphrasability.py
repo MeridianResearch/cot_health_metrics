@@ -28,8 +28,13 @@ ENV_GEMINIKEY = os.getenv("GEMINI_API_KEY")
 # Where JSONL outputs go
 PARAPHRASE_DIR = Path("data/paraphrases")
 LOGPROB_DIR    = Path("data/logprobs")
-for p in (PARAPHRASE_DIR, LOGPROB_DIR):
-    p.mkdir(parents=True, exist_ok=True)
+
+def ensure_output_dirs() -> None:
+    for d in (PARAPHRASE_DIR, LOGPROB_DIR):
+        d.mkdir(parents=True, exist_ok=True)
+
+# at startup, make sure our output dirs exist
+ensure_output_dirs()
 
 # !optional! Gemini integration
 try:
