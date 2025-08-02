@@ -188,7 +188,7 @@ class ParaphrasabilityMetric(Metric):
         for p in self._out_files.values():
             p.touch(exist_ok=True)
 
-    def evaluate(self, r: ModelResponse):
+    def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
         """
         Returns (score, score_original, score_intervention):
           - score: max relative drop across all fractions
