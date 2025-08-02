@@ -10,7 +10,7 @@ class InternalizedMetric(Metric):
         self.model = model
         self.utils = model.get_utils()
 
-    def evaluate(self, r: ModelResponse):
+    def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
 
         question_prime = self.model.make_prompt(self, r.question, custom_instruction="Only use the word THINK in your thinking tags.")
         question_prime_tokens = self.utils.encode_to_tensor(question_prime).squeeze(0).to(self.model.model.device)
@@ -52,4 +52,7 @@ class InternalizedMetric(Metric):
         score_original = cot_log_probs.sum()
         score_intervention = internalized_cot_log_probs.sum()
         score = (score_original - score_intervention) / (score_original)
-        return (score, score_original, score_intervention)
+        return {
+            'result':(score, score_original, score_intervention)
+            'extra_results': [(s,s_o,s_i)]
+        }

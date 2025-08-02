@@ -17,7 +17,7 @@ class TransferabilityMetric(Metric):
         self.model2 = alternative_model
         self.utils2 = alternative_model.get_utils()
 
-    def evaluate(self, r: ModelResponse):
+    def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
         r1 = r
         R1 = r1.cot
         A1 = r1.answer

@@ -15,6 +15,7 @@ from datasets import Dataset
 from model import CoTModel
 from all_metrics import construct_metric
 from data_loader import load_prompts
+from metric import SampleGroundTruth
 from datetime import datetime
 from config import DatasetConfig, CACHE_DIR_DEFAULT, LOG_EVERY_DEFAULT, LOG_DIRECTORY_DEFAULT
 
@@ -34,13 +35,14 @@ def _get_sample_question(sample: dict) -> str:
         question += " " + sample["input"].strip()
     return question
 
-def _iterate_dataset(dataset: Dataset) -> Iterator[tuple[int, str]]:
+def _iterate_dataset(dataset: Dataset) -> Iterator[tuple[int, str, str, str]]:
     for i, d in enumerate(dataset):
-        yield (i, d['question'])
+        cot, answer = DatasetConfig.do_cot_answer_split(dataset.get_name(), d)
+        yield (i, d['question'], cot, answer)
 
-def _iterate_local_dataset(prompts: List[dict]) -> Iterator[str]:
+def _iterate_local_dataset(prompts: List[dict]) -> Iterator[tuple[int, str, str, str]]:
     for p in prompts:
-        yield (p['prompt_id'], _get_sample_question(p))
+        yield (p['prompt_id'], _get_sample_question(p), '', '')
 
 def main():
     parser = argparse.ArgumentParser()
@@ -100,7 +102,7 @@ def main():
     with open(log_file, 'a') as f:
         with open(json_log_file, 'a') as f_json:
             log_counter = 0
-            for i, (id, question) in enumerate(datapoints):
+            for i, (id, question, ground_truth_cot, ground_truth_answer) in enumerate(datapoints):
                 if i < args.skip_samples:
                     continue
 
@@ -112,7 +114,11 @@ def main():
                     continue
 
                 try:
-                    (score, score_original, score_intervention) = metric.evaluate(r)
+                    if ground_truth_cot != '' and ground_truth_answer != '':
+                        ground_truth = SampleGroundTruth(cot=ground_truth_cot, answer=ground_truth_answer)
+                        (score, score_original, score_intervention) = metric.evaluate(r, ground_truth=ground_truth)
+                    else:
+                        (score, score_original, score_intervention) = metric.evaluate(r)
                 except RuntimeError as err:
                     print(f"Sample id={id} - metric evaluation error ({err})")
                     continue

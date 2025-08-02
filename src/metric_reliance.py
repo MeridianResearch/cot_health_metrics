@@ -9,7 +9,7 @@ class RelianceMetric(Metric):
         self.model = model
         self.utils = model.get_utils()
 
-    def evaluate(self, r: ModelResponse):
+    def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
         cot_log_probs = self.utils.get_answer_log_probs_recalc(self.model, r.prompt, r.cot, r.answer)
         empty_cot_log_probs = self.utils.get_answer_log_probs_recalc(self.model, r.prompt, "", r.answer)
 
