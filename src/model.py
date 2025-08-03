@@ -114,38 +114,39 @@ class CoTModel(Model):
         return final_response.basic_pair
 
     def make_prompt(self, question_id, question, custom_instruction="Let's think step by step."):
+        # Handle Gemma-2 specifically
+        if self.model_name == "google/gemma-2-2b-it":
+            custom_instruction = custom_instruction + " Please write the string \"Answer: \" before the final answer."
+
         model_config = ModelConfig.get(self.model_name)
         history = [
             {"role": "user", "content": f"Question: {question}\n{custom_instruction}"},
         ]
 
-        # This is the default, unless manually adding an assistant role section
+        # Usually, one of these should be set to True
         continue_final_message = False
+        add_generation_prompt = False
 
         if "begin_think" in model_config:
             if (self.model_name == "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"):
                 history.append({"role": "assistant", "content": "<think>"})
                 continue_final_message = True
             else:
-                pass  # default to making a new assistant role section
+                # default to making a new assistant role section
+                add_generation_prompt = True
         elif "fuzzy_end_think_list" in model_config:
             # For Gemma, use default behavior
+            add_generation_prompt = True
             pass
         else:
             print(f"ERROR: model {self.model_name} missing CoT separator config")
             exit(1)
 
-        # Handle Gemma-2 specifically
-        if self.model_name == "google/gemma-2-2b":
-            # Create proper Gemma format manually since the model generates repetitive tokens
-            prompt = f"<start_of_turn>user\nQuestion: {question}\n{custom_instruction}<end_of_turn>\n<start_of_turn>model\n"
-            return prompt
-        else:
-            prompt = self.tokenizer.apply_chat_template(history,
-                                                        tokenize=False,
-                                                        add_generation_prompt=not continue_final_message,
-                                                        continue_final_message=continue_final_message)
-            return prompt
+        prompt = self.tokenizer.apply_chat_template(history,
+                                                    tokenize=False,
+                                                    add_generation_prompt=add_generation_prompt,
+                                                    continue_final_message=continue_final_message)
+        return prompt
 
 
     def do_generate(self, question_id, prompt, max_new_tokens=4096, do_sample=True):
@@ -181,7 +182,7 @@ class CoTModel(Model):
             begin_think = model_config["begin_think"]
             end_think = model_config["end_think"]
 
-            full = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
+            full = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
             try:
                 (question, cot_and_answer) = full.split(begin_think, 1)
                 (cot, answer) = cot_and_answer.split(end_think, 1)
@@ -195,9 +196,12 @@ class CoTModel(Model):
             answer = answer.strip()
 
         elif("fuzzy_end_think_list" in model_config):
+            input_tokens = self.tokenizer(prompt, return_tensors="pt")
             full = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
-            question = full[0:len(prompt)].strip()
-            cot_and_answer = full[len(prompt):]
+            question = self.tokenizer.decode(
+                sequences[0][:len(input_tokens.input_ids[0])], skip_special_tokens=True).strip()
+            cot_and_answer = self.tokenizer.decode(
+                sequences[0][len(input_tokens.input_ids[0]):], skip_special_tokens=True)
 
             end_think_list = model_config["fuzzy_end_think_list"]
             for end_think in end_think_list:
