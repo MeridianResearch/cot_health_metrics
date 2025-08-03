@@ -118,7 +118,7 @@ def handle_datapoints_batch(datapoints, batch_size, args, model, metric, f, f_js
         ground_truth_cots = []
         ground_truth_answers = []
 
-        print(f"batch: {batch}")
+        print(f"Running batch with {len(batch)} samples")
 
         for id, question, ground_truth_cot, ground_truth_answer in batch:
             question_ids.append(id)
