@@ -1,4 +1,4 @@
-from metric import Metric
+from metric import Metric, SampleGroundTruth
 from model import Model, ModelResponse
 from token_utils import TokenUtils
 import torch
@@ -54,5 +54,4 @@ class InternalizedMetric(Metric):
         score = (score_original - score_intervention) / (score_original)
         return {
             'result':(score, score_original, score_intervention)
-            'extra_results': [(s,s_o,s_i)]
         }
