@@ -122,9 +122,9 @@ class TestCoTModelReal:
         assert prompt == "<｜begin▁of▁sentence｜><｜User｜>Question: What is 2+2?\nLet's think step by step.<｜Assistant｜><think>"
 
     def test_make_prompt_Gemma2_2B(self):
-        model = CoTModel("google/gemma-2-2b", cache_dir=TEST_CACHE_DIR)
+        model = CoTModel("google/gemma-2-2b-it", cache_dir=TEST_CACHE_DIR)
         prompt = model.make_prompt("test_001", "What is 2+2?")
-        assert prompt == "<start_of_turn>user\nQuestion: What is 2+2?\nLet's think step by step.<end_of_turn>\n<start_of_turn>model\n"
+        assert prompt == "<bos><start_of_turn>user\nQuestion: What is 2+2?\nLet's think step by step. Please write the string \"Answer: \" before the final answer.<end_of_turn>\n<start_of_turn>model\n"
 
     def test_tokenizer_decode_Qwen3_0_6B(self):
         model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
@@ -135,7 +135,7 @@ class TestCoTModelReal:
         assert output == response
 
     def test_tokenizer_decode_Gemma2_2B(self):
-        model = CoTModel("google/gemma-2-2b", cache_dir=TEST_CACHE_DIR)
+        model = CoTModel("google/gemma-2-2b-it", cache_dir=TEST_CACHE_DIR)
         response = "Question: What is 2+2?\nLet's think step by step.<think>" \
             + "Let me think about this step by step. 2+2 equals 4.</think>\nAnswer: 4"
         tokens = model.utils.encode_to_tensor(response)
@@ -168,7 +168,7 @@ class TestCoTModelReal:
     @pytest.mark.xfail(reason="Test is expected to fail due to incomplete implementation")
     def test_do_split_Gemma2_2B(self):
         """Test do_split method"""
-        model = CoTModel("google/gemma-2-2b", cache_dir=TEST_CACHE_DIR)
+        model = CoTModel("google/gemma-2-2b-it", cache_dir=TEST_CACHE_DIR)
 
         prompt = "Question: What is 2+2?\nLet's think step by step."
         response = prompt #+ "Let me think about this step by step. 2+2 equals 4.</think>\nAnswer: 4"
@@ -225,5 +225,69 @@ Answer: 4.<|im_end|>"""
         assert model_response.question == question
         assert model_response.prompt == reference_output.split("|||")[0].replace("<think>", "")
         assert model_response.cot.strip() == reference_output.split("|||")[1].replace("</think>", "").strip()
+        assert model_response.answer.strip() == reference_output.split("|||")[2].strip()
+        assert model_response.raw_output == reference_output.replace("|||", "").replace("<|im_start|>", "").replace("<|im_end|>", "")
+
+    def test_generate_cot_response_full_DeepSeek_R1_Distill_Qwen_1_5B(self):
+        question = "A car travels 60 miles in 1.5 hours. What is its average speed?"
+        reference_output = \
+"""<｜begin▁of▁sentence｜><｜User｜>Question: A car travels 60 miles in 1.5 hours. What is its average speed?
+Let's think step by step.<｜Assistant｜><think>|||
+First, I need to calculate the average speed of the car. Average speed is defined as the total distance traveled divided by the total time taken.
+
+The car traveled a distance of 60 miles in 1.5 hours. To find the average speed, I will divide the distance by the time.
+
+1. **Identify the given values:**
+   - **Distance traveled:** 60 miles
+   - **Time taken:** 1.5 hours
+
+2. **Understand the formula for average speed:**
+
+   \[
+   \text{Average Speed} = \frac{\text{Total Distance}}{\text{Total Time}}
+   \]
+
+3. **Plug in the given values into the formula:**
+    
+   \[
+   \text{Average Speed} = \frac{60 \text{ miles}}{1.5 \text{ hours}}
+   \]
+
+4. **Perform the division:**
+    
+   \[
+   \text{Average Speed} = 40 \text{ miles per hour}
+   \]
+
+5. **Final Answer:|||**
+    
+   \[
+   \boxed{40\ \text{mph}}
+   \]
+"""
+        model = MockModel(model_name="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", model_response=reference_output)
+        model_response = model.generate_cot_response_full(1, question, do_sample=False)
+        assert model_response.question == question
+        assert model_response.prompt == reference_output.split("|||")[0]
+        assert model_response.cot.strip() == reference_output.split("|||")[1].replace("Answer:", "").strip()
         assert model_response.answer.strip() == reference_output.split("|||")[2].strip().replace("<|im_end|>", "")
         assert model_response.raw_output == reference_output.replace("|||", "").replace("<|im_start|>", "").replace("<|im_end|>", "")
+
+    def test_generate_cot_response_full_Gemma2_2B_it(self):
+        question = "A car travels 60 miles in 1.5 hours. What is its average speed?"
+        reference_output = \
+"""<bos><start_of_turn>user
+Question: A car travels 60 miles in 1.5 hours. What is its average speed?
+Let's think step by step. Please write the string "Answer: " before the final answer.<end_of_turn>
+<start_of_turn>model
+|||Here's how to solve it step-by-step:
+
+1. **Start with the numbers:** We have 2 + 2.
+2. **Add them together:**  2 + 2 = 4. 
+
+
+**Answer:||| 4**<eos>"""
+        model = MockModel(model_name="google/gemma-2-2b-it", model_response=reference_output)
+        model_response = model.generate_cot_response_full(1, question, do_sample=False)
+        assert model_response.question == question
+        assert model_response.raw_output == reference_output.replace("|||", "")

@@ -16,7 +16,7 @@ class ModelConfig:
         },
     }
     MODEL_CONFIG_FUZZY_ANSWER = {
-        "fuzzy_end_think_list": ["Answer: ", "Final Answer: ", "The answer is: ", "Solution: "],
+        "fuzzy_end_think_list": ["Answer:"],
         "generate_kwargs": {
             "repetition_penalty": 1.2,
             "temperature": 0.7,
@@ -36,7 +36,7 @@ class ModelConfig:
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": MODEL_CONFIG_THINK_TOKENS,
         #"deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_THINK_TOKENS,  # unverified
         "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_FUZZY_ANSWER,
-        "google/gemma-2-2b": MODEL_CONFIG_FUZZY_ANSWER,
+        "google/gemma-2-2b-it": MODEL_CONFIG_FUZZY_ANSWER,
         #"microsoft/phi-2": MODEL_CONFIG_FUZZY_ANSWER,  # not very consistent
     }
 
