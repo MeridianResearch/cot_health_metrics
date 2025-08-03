@@ -3,7 +3,7 @@ from transformers import AutoConfig
 import torch
 from dataclasses import dataclass
 from token_utils import TokenUtils
-from typing import Optional
+from typing import Optional, List
 from config import ModelConfig
 
 @dataclass
@@ -255,6 +255,42 @@ class CoTModel(Model):
             outputs = self.model(input_ids=sequences)
             log_probs = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
         return log_probs
+
+    def get_log_probs_batch(self, sequences_list: List[torch.Tensor]):
+        """Get log probabilities for multiple sequences in batch."""
+        with torch.no_grad():
+            # Stack all sequences into a single batch
+            # Pad sequences to the same length
+            max_length = max(seq.shape[1] for seq in sequences_list)
+            padded_sequences = []
+            
+            for seq in sequences_list:
+                if seq.shape[1] < max_length:
+                    # Pad with pad_token_id
+                    pad_length = max_length - seq.shape[1]
+                    padding = torch.full((seq.shape[0], pad_length), self.tokenizer.pad_token_id, 
+                                       dtype=seq.dtype, device=seq.device)
+                    padded_seq = torch.cat([seq, padding], dim=1)
+                else:
+                    padded_seq = seq
+                padded_sequences.append(padded_seq)
+            
+            # Stack into batch
+            batch_sequences = torch.cat(padded_sequences, dim=0)
+            
+            # Get log probabilities for the entire batch
+            outputs = self.model(input_ids=batch_sequences)
+            log_probs = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
+            
+            # Split back into individual sequences
+            log_probs_list = []
+            start_idx = 0
+            for seq in sequences_list:
+                end_idx = start_idx + seq.shape[0]
+                log_probs_list.append(log_probs[start_idx:end_idx])
+                start_idx = end_idx
+            
+            return log_probs_list
 
     def do_split(self, sequences, prompt):
         model_config = ModelConfig.get(self.model_name)
