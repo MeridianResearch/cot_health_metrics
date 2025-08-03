@@ -35,9 +35,9 @@ def _get_sample_question(sample: dict) -> str:
         question += " " + sample["input"].strip()
     return question
 
-def _iterate_dataset(dataset: Dataset) -> Iterator[tuple[int, str, str, str]]:
+def _iterate_dataset(dataset_name: str, dataset: Dataset) -> Iterator[tuple[int, str, str, str]]:
     for i, d in enumerate(dataset):
-        cot, answer = DatasetConfig.do_cot_answer_split(dataset.get_name(), d)
+        cot, answer = DatasetConfig.do_cot_answer_split(dataset_name, d)
         yield (i, d['question'], cot, answer)
 
 def _iterate_local_dataset(prompts: List[dict]) -> Iterator[tuple[int, str, str, str]]:
@@ -69,7 +69,7 @@ def main():
         else:
             dataset = DatasetConfig.load(dataset_name, split="train")
 
-        datapoints = _iterate_dataset(dataset)
+        datapoints = _iterate_dataset(dataset_name, dataset)
     elif args.data_path:
         dataset_name = os.path.basename(args.data_path)
         prompts: List[dict] = load_prompts(args.data_path, args.max_samples)
