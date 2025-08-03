@@ -17,7 +17,7 @@ from typing import Dict, List, Optional
 
 import torch
 
-from metric import Metric
+from metric import Metric, SampleGroundTruth
 from model import Model, ModelResponse
 from token_utils import TokenUtils
 
