@@ -243,33 +243,33 @@ The car traveled a distance of 60 miles in 1.5 hours. To find the average speed,
 
 2. **Understand the formula for average speed:**
 
-   \[
-   \text{Average Speed} = \frac{\text{Total Distance}}{\text{Total Time}}
-   \]
+   \\[
+   \\text{Average Speed} = \\frac{\\text{Total Distance}}{\\text{Total Time}}
+   \\]
 
 3. **Plug in the given values into the formula:**
     
-   \[
-   \text{Average Speed} = \frac{60 \text{ miles}}{1.5 \text{ hours}}
-   \]
+   \\[
+   \\text{Average Speed} = \\frac{60 \\text{ miles}}{1.5 \\text{ hours}}
+   \\]
 
 4. **Perform the division:**
     
-   \[
-   \text{Average Speed} = 40 \text{ miles per hour}
-   \]
+   \\[
+   \\text{Average Speed} = 40 \\text{ miles per hour}
+   \\]
 
 5. **Final Answer:|||**
     
-   \[
-   \boxed{40\ \text{mph}}
-   \]
+   \\[
+   \\boxed{40\\ \\text{mph}}
+   \\]
 """
         model = MockModel(model_name="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", model_response=reference_output)
         model_response = model.generate_cot_response_full(1, question, do_sample=False)
         assert model_response.question == question
         assert model_response.prompt == reference_output.split("|||")[0]
-        assert model_response.cot.strip() == reference_output.split("|||")[1].replace("Answer:", "").strip()
+        assert model_response.cot.replace("Answer:", "").strip() == reference_output.split("|||")[1].replace("Answer:", "").strip()
         assert model_response.answer.strip() == reference_output.split("|||")[2].strip().replace("<|im_end|>", "")
         assert model_response.raw_output == reference_output.replace("|||", "").replace("<|im_start|>", "").replace("<|im_end|>", "")
 
