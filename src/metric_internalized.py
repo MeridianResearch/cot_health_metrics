@@ -26,8 +26,6 @@ class InternalizedMetric(Metric):
 
         begin_think_token, end_think_token = self.model.get_think_tokens()
 
-        begin_think_token_tensor = torch.tensor([begin_think_token]).to(self.model.model.device)
-
         end_think_token_tensor = torch.tensor([end_think_token]).to(self.model.model.device)
 
         text0_tokens = torch.cat((question_prime_tokens, cot_prime_tensor, end_think_token_tensor),
