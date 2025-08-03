@@ -89,8 +89,8 @@ def main():
         alternative_model=model2)
 
     if args.log_file is None:
-        log_file = args.log_dir + "/" + dataset_name + "_" + _get_datetime_str() + "_" + args.metric + ".log"
-        json_log_file = args.log_dir + "/" + dataset_name + "_" + _get_datetime_str() + "_" + args.metric + ".jsonl"
+        log_file = args.log_dir + "/" + args.model + "_" + dataset_name + "_" + _get_datetime_str() + "_" + args.metric + ".log"
+        json_log_file = args.log_dir + "/" + args.model + "_" + dataset_name + "_" + _get_datetime_str() + "_" + args.metric + ".jsonl"
         os.makedirs(args.log_dir, exist_ok=True)
     else:
         log_file = args.log_file
