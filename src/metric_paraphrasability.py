@@ -146,7 +146,7 @@ def _naive_paraphrase(text: str, fraction: float) -> str:
 
 
 # The Metric class
-class ParaphrasabilityMetric(Metric):
+class ParaphrasabilityMetric(SingleMetric):
     """
     how much the answer logprobs drop when CoT paraphrased
     High scores -> more suspicious
