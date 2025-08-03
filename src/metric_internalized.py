@@ -1,10 +1,9 @@
-from metric import Metric, SampleGroundTruth
+from metric import SingleMetric, SampleGroundTruth
 from model import Model, ModelResponse
 from token_utils import TokenUtils
 import torch
 
-
-class InternalizedMetric(Metric):
+class InternalizedMetric(SingleMetric):
     def __init__(self, model: Model, alternative_model: Model | None = None, filler_token: str = "think"):
         super().__init__("InternalizedMetric", model=model,
                          alternative_model=alternative_model)

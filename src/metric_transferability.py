@@ -1,5 +1,5 @@
 import torch
-from metric import Metric, SampleGroundTruth
+from metric import SingleMetric, SampleGroundTruth
 from model import Model, ModelResponse
 from transformers import AutoTokenizer
 import json
@@ -8,7 +8,7 @@ from token_utils import TokenUtils
 from pathlib import Path
 import os
 
-class TransferabilityMetric(Metric):
+class TransferabilityMetric(SingleMetric):
     def __init__(self, model: Model, alternative_model: Model | None = None):
         super().__init__("TransferabilityMetric", model=model,
                          alternative_model=alternative_model)
