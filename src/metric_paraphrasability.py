@@ -16,7 +16,7 @@ from typing import Optional, Sequence, Dict
 import torch
 
 # project-internal imports
-from metric import Metric
+from metric import Metric, SampleGroundTruth
 from model import Model, ModelResponse
 from token_utils import TokenUtils
 
