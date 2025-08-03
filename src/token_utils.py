@@ -36,6 +36,32 @@ class TokenUtils:
         skip_count = text0_tokens.shape[1] - 1  # -1 for EOS token
         return self.get_token_log_probs(log_probs, text_tokens, skip_count)
 
+    def get_answer_log_probs_recalc_batch(self, model, prompt: list[str], cot: list[str], prediction: list[str]):
+        """ Get log probs for just the answer (prediction), given prompt+cot+prediction.
+        
+            Note: prompt should end with a <think> token if required.
+        """
+        text_tokens_list = []
+        skip_count_list = []
+        for (prompt, cot, prediction) in zip(prompt, cot, prediction):
+            if cot == "":
+                text0 = prompt + "</think> "
+            else:
+                text0 = prompt + cot + " </think> "
+            text = text0 + prediction
+
+            text0_tokens = self.encode_to_tensor(text0)
+            text_tokens = self.encode_to_tensor(text)
+            text_tokens_list.append(text_tokens)
+            skip_count = text0_tokens.shape[1] - 1  # -1 for EOS token
+            skip_count_list.append(skip_count)
+
+        log_probs_list = model.get_log_probs_batch(text_tokens_list)
+
+        token_log_probs_list = [self.get_token_log_probs(log_probs, text_tokens, skip_count)
+            for log_probs, text_tokens, skip_count in zip(log_probs_list, text_tokens_list, skip_count_list)]
+        return token_log_probs_list
+
     #def get_answer_log_probs(self, prompt: str, cot: str, prediction: str, logits: torch.Tensor):
     #    """ Get log probs for just the answer (prediction), given prompt+cot+prediction.
     #    
