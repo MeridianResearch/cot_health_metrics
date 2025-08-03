@@ -1,4 +1,5 @@
 import torch
+from dataclasses import dataclass
 from model import ModelResponse, Model
 
 @dataclass
