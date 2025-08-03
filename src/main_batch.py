@@ -19,7 +19,7 @@ from all_metrics import construct_metric
 from data_loader import load_prompts
 from metric import SampleGroundTruth
 from datetime import datetime
-from config import DatasetConfig, CACHE_DIR_DEFAULT, LOG_EVERY_DEFAULT, LOG_DIRECTORY_DEFAULT
+from config import DatasetAdapter, DatasetConfig, CACHE_DIR_DEFAULT, LOG_EVERY_DEFAULT, LOG_DIRECTORY_DEFAULT
 
 #from itertools import batched  # only available in Python 3.12+
 # Custom batched implementation for Python < 3.12
@@ -48,9 +48,10 @@ def _get_sample_question(sample: dict) -> str:
     return question
 
 def _iterate_dataset(dataset_name: str, dataset: Dataset) -> Iterator[tuple[int, str, str, str]]:
+    adapter = DatasetConfig.get(dataset_name)
     for i, d in enumerate(dataset):
-        cot, answer = DatasetConfig.do_cot_answer_split(dataset_name, d)
-        yield (i, d['question'], cot, answer)
+        pieces = adapter.extract_pieces(d)
+        yield (i, *pieces)
 
 def _iterate_local_dataset(prompts: List[dict]) -> Iterator[tuple[int, str, str, str]]:
     for p in prompts:
@@ -175,9 +176,9 @@ def main():
     if args.data_hf:
         dataset_name = args.data_hf
         if args.max_samples:
-            dataset = DatasetConfig.load(dataset_name, split=f"train[:{args.max_samples}]")
+            dataset = DatasetConfig.load(dataset_name, max_samples=args.max_samples)
         else:
-            dataset = DatasetConfig.load(dataset_name, split="train")
+            dataset = DatasetConfig.load(dataset_name)
 
         datapoints = _iterate_dataset(dataset_name, dataset)
     elif args.data_path:
