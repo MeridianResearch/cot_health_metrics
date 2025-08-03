@@ -115,6 +115,11 @@ class CoTModel(Model):
         final_response = self.generate_cot_response_full(question_id, question, max_new_tokens)
         return final_response.basic_pair
 
+    def generate_cot_response_batch(self, question_ids, questions, max_new_tokens=4096):
+        """Generate chain-of-thought responses for multiple questions in batch."""
+        responses = self.generate_cot_response_full_batch(question_ids, questions, max_new_tokens)
+        return [response.basic_pair for response in responses]
+
     def make_prompt(self, question_id, question, custom_instruction="Let's think step by step."):
         model_config = ModelConfig.get(self.model_name)
         history = [
@@ -144,6 +149,70 @@ class CoTModel(Model):
         model_config = ModelConfig.get(self.model_name)
 
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+        output = self.model.generate(
+            **inputs,
+            max_new_tokens=max_new_tokens,
+            do_sample=True,
+            temperature=0.6,
+            top_k=20,
+            min_p=0.0,
+            top_p=0.95,
+            eos_token_id=self.tokenizer.eos_token_id,
+            pad_token_id=self.tokenizer.eos_token_id,
+            output_scores=True,
+            return_dict_in_generate=True,
+        )
+        return output
+
+    def do_generate_batch(self, question_ids, prompts, max_new_tokens=4096):
+        """Generate responses for multiple prompts in batch using Chain-of-Thought (CoT) prompting."""
+        model_config = ModelConfig.get(self.model_name)
+
+        # Validate inputs
+        if not prompts:
+            raise ValueError("Empty prompts list provided to do_generate_batch")
+        
+        if len(question_ids) != len(prompts):
+            raise ValueError(f"Mismatch between question_ids ({len(question_ids)}) and prompts ({len(prompts)})")
+
+        # Tokenize all prompts at once
+        try:
+            inputs = self.tokenizer(prompts, return_tensors="pt", padding=True, truncation=True).to(self.model.device)
+        except Exception as e:
+            print(f"Batch tokenization failed: {e}")
+            print(f"Number of prompts: {len(prompts)}")
+            print(f"First prompt: {prompts[0] if prompts else 'None'}")
+            print("Falling back to individual tokenization...")
+            
+            # Fallback: tokenize individually and combine
+            input_ids = []
+            attention_masks = []
+            for prompt in prompts:
+                tokenized = self.tokenizer(prompt, return_tensors="pt", padding=True, truncation=True)
+                input_ids.append(tokenized["input_ids"])
+                attention_masks.append(tokenized["attention_mask"])
+            
+            # Pad to same length
+            max_length = max(ids.shape[1] for ids in input_ids)
+            padded_input_ids = []
+            padded_attention_masks = []
+            
+            for ids, mask in zip(input_ids, attention_masks):
+                pad_length = max_length - ids.shape[1]
+                if pad_length > 0:
+                    padded_ids = torch.cat([ids, torch.full((1, pad_length), self.tokenizer.pad_token_id, dtype=ids.dtype)], dim=1)
+                    padded_mask = torch.cat([mask, torch.zeros((1, pad_length), dtype=mask.dtype)], dim=1)
+                else:
+                    padded_ids = ids
+                    padded_mask = mask
+                padded_input_ids.append(padded_ids)
+                padded_attention_masks.append(padded_mask)
+            
+            inputs = {
+                "input_ids": torch.cat(padded_input_ids, dim=0).to(self.model.device),
+                "attention_mask": torch.cat(padded_attention_masks, dim=0).to(self.model.device)
+            }
+        
         output = self.model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
@@ -226,6 +295,61 @@ class CoTModel(Model):
             cot=cot,
             answer=answer,
             raw_output=raw_output)
+
+    def generate_cot_response_full_batch(self, question_ids, questions, max_new_tokens=4096):
+        """Generate responses for multiple questions in batch using Chain-of-Thought (CoT) prompting."""
+        # Validate inputs
+        if not question_ids or not questions:
+            raise ValueError("Empty question_ids or questions list provided")
+        
+        if len(question_ids) != len(questions):
+            raise ValueError(f"Mismatch between question_ids ({len(question_ids)}) and questions ({len(questions)})")
+        
+        # Create prompts for all questions
+        prompts = []
+        for qid, question in zip(question_ids, questions):
+            if not question or question.strip() == "":
+                raise ValueError(f"Empty question for question_id {qid}")
+            prompt = self.make_prompt(qid, question)
+            if not prompt or prompt.strip() == "":
+                raise ValueError(f"Empty prompt generated for question_id {qid}")
+            prompts.append(prompt)
+        
+        # Generate responses in batch
+        output = self.do_generate_batch(question_ids, prompts, max_new_tokens)
+        sequences = output.sequences
+
+        # Process each response
+        responses = []
+        for i, (question_id, question, prompt) in enumerate(zip(question_ids, questions, prompts)):
+            raw_output = self.tokenizer.decode(sequences[i], skip_special_tokens=True)
+            
+            try:
+                (question_part, cot, answer) = self.do_split(sequences[i:i+1])
+                
+                response = ModelResponse(
+                    question_id=question_id,
+                    question=question,
+                    prompt=prompt,
+                    cot=cot,
+                    answer=answer,
+                    raw_output=raw_output
+                )
+                responses.append(response)
+            except RuntimeError as e:
+                # Handle cases where splitting fails
+                print(f"Warning: Failed to split response for question {question_id}: {e}")
+                response = ModelResponse(
+                    question_id=question_id,
+                    question=question,
+                    prompt=prompt,
+                    cot="",
+                    answer=raw_output,
+                    raw_output=raw_output
+                )
+                responses.append(response)
+
+        return responses
 
     def evaluate_cot_response(self, question_id, prompt, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""

@@ -9,6 +9,7 @@ python src/main_batch.py --model=Qwen/Qwen3-0.6B --metric=ParaphrasabilitySimple
 import argparse
 import os
 import json
+import itertools
 from typing import List, Iterator
 from datasets import Dataset
 
@@ -18,6 +19,16 @@ from data_loader import load_prompts
 from metric import SampleGroundTruth
 from datetime import datetime
 from config import DatasetConfig, CACHE_DIR_DEFAULT, LOG_EVERY_DEFAULT, LOG_DIRECTORY_DEFAULT
+
+#from itertools import batched  # only available in Python 3.12+
+# Custom batched implementation for Python < 3.12
+def batched(iterable, n):
+    """Split an iterable into batches of size n."""
+    if n < 1:
+        raise ValueError('n must be at least one')
+    it = iter(iterable)
+    while batch := list(itertools.islice(it, n)):
+        yield batch
 
 
 # Current datetime
@@ -44,6 +55,102 @@ def _iterate_local_dataset(prompts: List[dict]) -> Iterator[tuple[int, str, str,
     for p in prompts:
         yield (p['prompt_id'], _get_sample_question(p), '', '')
 
+def print_output(id, question, cot, answer, score, score_original, score_intervention, f, f_json, args):
+    print(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}")
+
+    f.write(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}\n")
+    f.flush()
+
+    output = {
+        "prompt_id": id,
+        "orig_lp": float(score_original),
+        "induced_lp": float(score_intervention),
+        "delta": float(score),
+    }
+    if args.log_verbose:
+        output.update({
+            "question": question,
+            "cot": cot,
+            "answer": answer,
+        })
+    f_json.write(json.dumps(output) + "\n")
+    f_json.flush()
+
+def handle_datapoints(datapoints, args, model, metric, f, f_json):
+    log_counter = 0
+    for i, (id, question, ground_truth_cot, ground_truth_answer) in enumerate(datapoints):
+        if i < args.skip_samples:
+            continue
+
+        try:
+            r = model.generate_cot_response_full(id, question)
+            r.prompt_id = id
+        except RuntimeError as err:
+            print(f"Sample id={id} - generation error ({err})")
+            continue
+
+        try:
+            if ground_truth_cot != '' and ground_truth_answer != '':
+                ground_truth = SampleGroundTruth(cot=ground_truth_cot, answer=ground_truth_answer)
+                (score, score_original, score_intervention) = metric.evaluate(r, ground_truth=ground_truth)
+            else:
+                (score, score_original, score_intervention) = metric.evaluate(r)
+        except RuntimeError as err:
+            print(f"Sample id={id} - metric evaluation error ({err})")
+            continue
+
+        if log_counter % args.log_every == 0:
+            print(f"Sample id={id} - {score:.4f}")
+        log_counter += 1
+
+        print_output(id, question, r.cot, r.answer, score, score_original, score_intervention, f, f_json, args)
+
+def handle_datapoints_batch(datapoints, batch_size, args, model, metric, f, f_json):
+    sample_counter = 0
+    for batch in batched(datapoints, batch_size):
+        if sample_counter + batch_size > args.max_samples:
+            batch = batch[:args.skip_samples - sample_counter]
+        sample_counter += len(batch)
+
+        question_ids = []
+        questions = []
+        ground_truth_cots = []
+        ground_truth_answers = []
+
+        print(f"batch: {batch}")
+
+        for id, question, ground_truth_cot, ground_truth_answer in batch:
+            question_ids.append(id)
+            questions.append(question)
+            ground_truth_cots.append(ground_truth_cot)
+            ground_truth_answers.append(ground_truth_answer)
+
+        try:
+            r = model.generate_cot_response_full_batch(question_ids, questions)
+        except RuntimeError as err:
+            print(f"Batch - generation error ({err})")
+            continue
+
+        have_ground_truth = False
+        for i, (id, question, ground_truth_cot, ground_truth_answer) in enumerate(batch):
+            r[i].prompt_id = id
+            if ground_truth_cot != '' or ground_truth_answer != '':
+                have_ground_truth = True
+
+        try:
+            if have_ground_truth:
+                ground_truth = [SampleGroundTruth(cot=ground_truth_cot, answer=ground_truth_answer)
+                    for ground_truth_cot, ground_truth_answer in zip(ground_truth_cots, ground_truth_answers)]
+            else:
+                ground_truth = None
+            results = metric.evaluate_batch(r, ground_truth=ground_truth)
+        except RuntimeError as err:
+            print(f"Batch - metric evaluation error ({err})")
+            continue
+
+        for i, (score, score_original, score_intervention) in enumerate(results):
+            print_output(question_ids[i], questions[i], r[i].cot, r[i].answer, score, score_original, score_intervention, f, f_json, args)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
@@ -53,6 +160,7 @@ def main():
     parser.add_argument("--data-hf", default=None)
     parser.add_argument("--skip-samples", type=int, default=0)
     parser.add_argument("--max-samples", type=int, default=None)
+    parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--cache-dir", default=CACHE_DIR_DEFAULT)
     parser.add_argument("--log-dir", default=LOG_DIRECTORY_DEFAULT)
     parser.add_argument("--log-file", default=None)
@@ -101,51 +209,10 @@ def main():
 
     with open(log_file, 'a') as f:
         with open(json_log_file, 'a') as f_json:
-            log_counter = 0
-            for i, (id, question, ground_truth_cot, ground_truth_answer) in enumerate(datapoints):
-                if i < args.skip_samples:
-                    continue
-
-                try:
-                    r = model.generate_cot_response_full(id, question)
-                    r.prompt_id = id
-                except RuntimeError as err:
-                    print(f"Sample id={id} - generation error ({err})")
-                    continue
-
-                try:
-                    if ground_truth_cot != '' and ground_truth_answer != '':
-                        ground_truth = SampleGroundTruth(cot=ground_truth_cot, answer=ground_truth_answer)
-                        (score, score_original, score_intervention) = metric.evaluate(r, ground_truth=ground_truth)
-                    else:
-                        (score, score_original, score_intervention) = metric.evaluate(r)
-                except RuntimeError as err:
-                    print(f"Sample id={id} - metric evaluation error ({err})")
-                    continue
-
-                if log_counter % args.log_every == 0:
-                    print(f"Sample id={id} - {score:.4f}")
-                log_counter += 1
-
-                print(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}")
-
-                f.write(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}\n")
-                f.flush()
-
-                output = {
-                    "prompt_id": id,
-                    "orig_lp": float(score_original),
-                    "induced_lp": float(score_intervention),
-                    "delta": float(score),
-                }
-                if args.log_verbose:
-                    output.update({
-                        "question": question,
-                        "cot": r.cot,
-                        "answer": r.answer,
-                    })
-                f_json.write(json.dumps(output) + "\n")
-                f_json.flush()
+            if args.batch_size == 1:
+                handle_datapoints(datapoints, args, model, metric, f, f_json)
+            else:
+                handle_datapoints_batch(datapoints, args.batch_size, args, model, metric, f, f_json)
 
 if __name__ == "__main__":
     main()

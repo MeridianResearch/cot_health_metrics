@@ -9,8 +9,6 @@ class SampleGroundTruth:
 
 class Metric: 
     def __init__(self, metric_name: str, model: Model, alternative_model: Model | None = None):
-        #print(f"Metric: {metric_name}")
-        #print(f"Model: {model_name}")
         self.metric_name = metric_name
         self.model = model
         self.alternative_model = alternative_model
@@ -21,8 +19,27 @@ class Metric:
         raise NotImplementedError("This method should be overridden " +
                                   "by subclasses")
 
+    def evaluate_batch(self, responses: list[ModelResponse], ground_truth: list[SampleGroundTruth] | None = None):
+        raise NotImplementedError("This method should be overridden " +
+                                  "by subclasses")
+
     def __str__(self):
-        return f"Metric(model_name={self.model.model_name})"
+        return f"Metric(metric_name={self.metric_name}, model_name={self.model.model_name})"
+
+class SingleMetric(Metric):
+    def __init__(self, metric_name: str, model: Model, alternative_model: Model | None = None):
+        super().__init__(metric_name, model, alternative_model)
+
+    def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
+        raise NotImplementedError("This method should be overridden " +
+                                  "by subclasses")
+
+    def evaluate_batch(self, responses: list[ModelResponse], ground_truth: list[SampleGroundTruth] | None = None):
+        scores = []
+        for i, r in enumerate(responses):
+            score, score_original, score_intervention = self.evaluate(r, ground_truth[i] if ground_truth else None)
+            scores.append((score, score_original, score_intervention))
+        return scores
 
 class DummyMetric(Metric):
     def __init__(self, model: Model, alternative_model: Model | None = None):
