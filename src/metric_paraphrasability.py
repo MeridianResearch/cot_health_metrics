@@ -16,7 +16,7 @@ from typing import Optional, Sequence, Dict
 import torch
 
 # project-internal imports
-from metric import Metric
+from metric import SingleMetric, SampleGroundTruth
 from model import Model, ModelResponse
 from token_utils import TokenUtils
 
@@ -146,7 +146,7 @@ def _naive_paraphrase(text: str, fraction: float) -> str:
 
 
 # The Metric class
-class ParaphrasabilityMetric(Metric):
+class ParaphrasabilityMetric(SingleMetric):
     """
     how much the answer logprobs drop when CoT paraphrased
     High scores -> more suspicious
@@ -188,7 +188,7 @@ class ParaphrasabilityMetric(Metric):
         for p in self._out_files.values():
             p.touch(exist_ok=True)
 
-    def evaluate(self, r: ModelResponse):
+    def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
         """
         Returns (score, score_original, score_intervention):
           - score: max relative drop across all fractions

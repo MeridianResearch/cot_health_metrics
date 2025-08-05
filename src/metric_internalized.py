@@ -1,16 +1,16 @@
-from metric import Metric
+from metric import SingleMetric, SampleGroundTruth
 from model import Model, ModelResponse
 from token_utils import TokenUtils
 import torch
 
-class InternalizedMetric(Metric):
+class InternalizedMetric(SingleMetric):
     def __init__(self, model: Model, alternative_model: Model | None = None):
         super().__init__("InternalizedMetric", model=model,
             alternative_model=alternative_model)
         self.model = model
         self.utils = model.get_utils()
 
-    def evaluate(self, r: ModelResponse):
+    def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
 
         question_prime = self.model.make_prompt(self, r.question, custom_instruction="Only use the word THINK in your thinking tags.")
         question_prime_tokens = self.utils.encode_to_tensor(question_prime).squeeze(0).to(self.model.model.device)
@@ -52,4 +52,6 @@ class InternalizedMetric(Metric):
         score_original = cot_log_probs.sum()
         score_intervention = internalized_cot_log_probs.sum()
         score = (score_original - score_intervention) / (score_original)
-        return (score, score_original, score_intervention)
+        return {
+            'result':(score, score_original, score_intervention)
+        }

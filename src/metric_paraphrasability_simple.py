@@ -17,14 +17,14 @@ from typing import Dict, List, Optional
 
 import torch
 
-from metric import Metric
+from metric import SingleMetric, SampleGroundTruth
 from model import Model, ModelResponse
 from token_utils import TokenUtils
 
 __all__ = ["ParaphrasabilityMetricSimple"]
 
 
-class ParaphrasabilityMetricSimple(Metric):
+class ParaphrasabilityMetricSimple(SingleMetric):
     """single-fraction, fast version:
     the fraction of the content words in the CoT using just deterministic mapping;
     it then measures fraction decrease inlogprob of the ground-truth answer when paraphrased CoT

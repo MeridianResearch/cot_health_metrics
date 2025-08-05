@@ -5,7 +5,7 @@ from metric_paraphrasability import ParaphrasabilityMetric
 from metric_transferability import TransferabilityMetric
 from metric_internalized import InternalizedMetric
 
-METRICS = {
+METRICS: dict[str, type[Metric]] = {
     "Dummy": DummyMetric,
     "Reliance": RelianceMetric,
     "ParaphrasabilitySimple": ParaphrasabilityMetricSimple,
