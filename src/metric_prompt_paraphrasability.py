@@ -44,8 +44,9 @@ def _timestamp() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
+# logging setup
 def _setup_logger(path):
-    name = str(path)  # logging expects a plain string
+    name = str(path)
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
     fmt = logging.Formatter("%(asctime)s %(levelname)s | %(message)s",
@@ -92,20 +93,24 @@ class PromptParaphrasabilityMetric(Metric):
     def evaluate(self, r: ModelResponse):
         entry = self.paraphrase_map.get(r.question_id)
         if not entry:
-            raise RuntimeError("entry‑missing")
+            raise RuntimeError("entry-missing")
         para_texts = self._collect_paraphrases(entry)
+
         if not para_texts:
-            raise RuntimeError("no‑paraphrase")
+            raise RuntimeError("no-paraphrase")
         lp_orig = self.utils.get_answer_log_probs_recalc(
             self.model, r.prompt, r.cot, r.answer).sum().item()
         para_lps = []
+
         for txt in para_texts:
             paraprompt = self.model.make_prompt(r.question_id, txt)
             lp = self.utils.get_answer_log_probs_recalc(
                 self.model, paraprompt, r.cot, r.answer).sum().item()
             para_lps.append(lp)
+
         if self.aggregation == "mean":
             lp_para = sum(para_lps) / len(para_lps)
+            
         elif self.aggregation == "min":
             lp_para = min(para_lps)
         else:
@@ -136,6 +141,7 @@ def _process_dataset(model: CoTModel, metric: PromptParaphrasabilityMetric,
                     "instruction_original", entry.get(
                         "instruction", ""))
                 qtxt = qtxt.strip()
+
                 if entry.get("input"):
                     qtxt = f"{qtxt} {entry['input'].strip()}"
                 r = model.generate_cot_response_full(pid, qtxt)
@@ -148,11 +154,13 @@ def _process_dataset(model: CoTModel, metric: PromptParaphrasabilityMetric,
                 if success % max(log_every, 1) == 0:
                     logger.info(
                         "Processed %d | id=%s Δ=%.4f", success, pid, score)
+                        
             except RuntimeError as e:
                 err_counts[str(e)] += 1
             except Exception as e:
                 logger.exception("Unexpected error id=%s: %s", pid, e)
                 err_counts[type(e).__name__] += 1
+
             processed += 1
             if processed % 5 == 0:
                 torch.cuda.empty_cache()
@@ -206,6 +214,7 @@ def _run(args):
         prefix = f"{base_prefix}_{k}"
         tsv_out = Path(args.log_dir) / f"{prefix}.scores.log"
         json_out = Path(args.log_dir) / f"{prefix}.scores.jsonl"
+        
         metric = PromptParaphrasabilityMetric(
             model,
             paraphrase_map,
@@ -232,7 +241,7 @@ def main():
     p.add_argument("--log-dir", default="logs")
     p.add_argument("--log-every", type=int, default=10)
     p.add_argument("--paraphrase-keys", default=None,
-                   help="Comma‑separated subset of instruct_* keys to use")
+                   help="Comma-separated subset of instruct_* keys to use")
     p.add_argument("--aggregation", choices=[
         "mean", "min", "max"], default="mean")
     args = p.parse_args()
