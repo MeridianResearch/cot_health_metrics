@@ -25,6 +25,15 @@ class ModelConfig:
             "top_p": 0.95,
         },
     }
+    MODEL_CONFIG_LLAMA = {
+        "fuzzy_end_think_list": ["Answer:"],
+        "generate_kwargs": {
+            "temperature": 0.6,
+            "top_k": 20,
+            "min_p": 0.0,
+            "top_p": 0.95,
+        },
+    }
     DEFAULT_MODEL_CONFIG = MODEL_CONFIG_FUZZY_ANSWER
 
     SUPPORTED_MODELS = {
@@ -37,7 +46,10 @@ class ModelConfig:
         #"deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_THINK_TOKENS,  # unverified
         "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_FUZZY_ANSWER,
         "google/gemma-2-2b-it": MODEL_CONFIG_FUZZY_ANSWER,
-        #"microsoft/phi-2": MODEL_CONFIG_FUZZY_ANSWER,  # not very consistent
+        # "microsoft/phi-2": MODEL_CONFIG_FUZZY_ANSWER,  # not very consistent
+
+        "meta-llama/Meta-Llama-3-8B-Instruct": MODEL_CONFIG_LLAMA,
+        "meta-llama/Llama-2-7b-chat-hf": MODEL_CONFIG_LLAMA,
     }
 
     @staticmethod
