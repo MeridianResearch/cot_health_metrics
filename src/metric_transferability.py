@@ -30,9 +30,16 @@ class TransferabilityMetric(Metric):
         log_probs2 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, r.cot, r.answer)
 
         log_probs3 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, "", r.answer)
-        
-        log_probs_m2_gt = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, ground_truth.cot, ground_truth.answer)
+
         log_probs_m1_gt = self.utils2.get_answer_log_probs_recalc(self.model1, r.prompt, ground_truth.cot, ground_truth.answer)
+        log_probs_m2_gt = self.utils2.get_answer_log_probs_recalc(self.mkodel2, r.prompt, ground_truth.cot, ground_truth.answer)
+
+        log_probs_m1_ca_cot1 = self.utils2.get_answer_log_probs_recalc(self.model1, r.prompt, r.cot, ground_truth.answer)
+        log_probs_m2_ca_cot1 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, r.cot, ground_truth.answer)
+
+        log_probs_m1_a1_cotgt = self.utils2.get_answer_log_probs_recalc(self.model1, r.prompt, ground_truth.cot, r.answer)
+        log_probs_m2_a1_cotgt = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, ground_truth.cot, r.answer)
+
 
         # print(f"log_probs1: {log_probs1}\n\nlog_probs2: {log_probs2}")
         score1 = ((log_probs1.sum() - log_probs2.sum())/ log_probs1.sum())
@@ -41,6 +48,8 @@ class TransferabilityMetric(Metric):
         result={"score1":float(score1),"score2":float(score2),
                 "logprobsM1A1_sum": float(log_probs1.sum()), "logprobsM2_QR1A1_sum": float(log_probs2.sum()),"logprobsM2_QA1_sum": float(log_probs3.sum()),
                 "logprobsM1_gt":float(log_probs_m1_gt.sum()),"logprobsM2_gt":float(log_probs_m2_gt.sum()),
+                "log_probs_m1_ca_cot1":float(log_probs_m1_ca_cot1.sum()),"log_probs_m2_ca_cot1":float(log_probs_m2_ca_cot1.sum()),
+                "log_probs_m1_a1_cotgt":float(log_probs_m1_a1_cotgt.sum()),"log_probs_m2_a1_cotgt":float(log_probs_m2_a1_cotgt.sum()),
                 "logprobsM1A1_mean":float(log_probs1.mean()), "logprobsM2_QR1A1_mean":float(log_probs2.mean()),"logprobsM2_QA1_mean":float(log_probs3.mean()),
                 "question":Q1,"answer":A1,"cot":R1}
         os.makedirs("output", exist_ok=True)
@@ -65,6 +74,7 @@ class TransferabilityMetric(Metric):
 
         log_probs_m2_gt = self.utils2.get_answer_log_probs_recalc_batch(self.model2, prompts, ground_truth_cots, ground_truth_answers)
         log_probs_m1_gt = self.utils2.get_answer_log_probs_recalc_batch(self.model1, prompts, ground_truth_cots, ground_truth_answers)
+
 
         result_list = []
         return_list = []
