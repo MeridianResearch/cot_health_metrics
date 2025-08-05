@@ -51,7 +51,7 @@ class TransferabilityMetric(Metric):
                 "log_probs_m1_ca_cot1":float(log_probs_m1_ca_cot1.sum()),"log_probs_m2_ca_cot1":float(log_probs_m2_ca_cot1.sum()),
                 "log_probs_m1_a1_cotgt":float(log_probs_m1_a1_cotgt.sum()),"log_probs_m2_a1_cotgt":float(log_probs_m2_a1_cotgt.sum()),
                 "logprobsM1A1_mean":float(log_probs1.mean()), "logprobsM2_QR1A1_mean":float(log_probs2.mean()),"logprobsM2_QA1_mean":float(log_probs3.mean()),
-                "question":Q1,"answer":A1,"cot":R1}
+                "question":Q1,"answer":A1,"cot":R1,"correct_answer":ground_truth.answer,"correct_cot":ground_truth.cot,"is_a1_correct":ground_truth.answer in r.answer,}
         os.makedirs("output", exist_ok=True)
         with output_path.open("a") as f:
             f.write(json.dumps(result) + "\n")
