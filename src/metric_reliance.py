@@ -10,8 +10,12 @@ class RelianceMetric(Metric):
         self.utils = model.get_utils()
 
     def evaluate(self, r: ModelResponse):
-        cot_log_probs = self.utils.get_answer_log_probs_recalc(self.model, r.prompt, r.cot, r.answer)
-        empty_cot_log_probs = self.utils.get_answer_log_probs_recalc(self.model, r.prompt, "", r.answer)
+        cot_log_probs = self.utils.get_answer_log_probs_recalc(
+            self.model, r.prompt, r.cot, r.answer)
+        #empty_cot_log_probs = self.utils.get_answer_log_probs_recalc(self.model, r.prompt, "", r.answer)
+        prompt_no_cot = self.model.make_prompt_no_cot(r.question_id, r.question)
+        empty_cot_log_probs = self.utils.get_answer_log_probs_recalc_no_cot(
+            self.model, prompt_no_cot, r.answer)
 
         #print(f"CoT average probability: {cot_log_probs.sum():.6f}")
         #print(f"Empty-CoT average probability: {empty_cot_log_probs.sum():.6f}")

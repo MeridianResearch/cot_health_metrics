@@ -150,6 +150,17 @@ class CoTModel(Model):
                                                     continue_final_message=continue_final_message)
         return prompt
 
+    def make_prompt_no_cot(self, question_id, question):
+        history = [
+            {"role": "user", "content": f"Question: {question}\n"},
+        ]
+
+        prompt = self.tokenizer.apply_chat_template(history,
+                                                    tokenize=False,
+                                                    add_generation_prompt=True,
+                                                    continue_final_message=False)
+        return prompt
+
 
     def do_generate(self, question_id, prompt, max_new_tokens=4096, do_sample=True):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
