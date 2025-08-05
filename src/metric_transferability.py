@@ -32,7 +32,7 @@ class TransferabilityMetric(Metric):
         log_probs3 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, "", r.answer)
 
         log_probs_m1_gt = self.utils2.get_answer_log_probs_recalc(self.model1, r.prompt, ground_truth.cot, ground_truth.answer)
-        log_probs_m2_gt = self.utils2.get_answer_log_probs_recalc(self.mkodel2, r.prompt, ground_truth.cot, ground_truth.answer)
+        log_probs_m2_gt = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, ground_truth.cot, ground_truth.answer)
 
         log_probs_m1_ca_cot1 = self.utils2.get_answer_log_probs_recalc(self.model1, r.prompt, r.cot, ground_truth.answer)
         log_probs_m2_ca_cot1 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, r.cot, ground_truth.answer)
