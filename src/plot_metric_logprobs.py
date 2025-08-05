@@ -245,7 +245,7 @@ class LogProbVisualizer:
         all_vals = np.concatenate(vals)
         bins = np.linspace(all_vals.min(), all_vals.max(), self.bins + 1)
 
-        # dynamic width: 6.4″ base + 1.6″ per extra series beyond the first two
+        # adaptive width: 6.4 base + 1.6 per extra series beyond the first two
         n_series = len(vals)
         base_width = 6.4
         extra_per = 1.2
