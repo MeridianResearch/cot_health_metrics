@@ -117,6 +117,8 @@ class CoTModel(Model):
         # Handle Gemma-2 specifically
         if self.model_name == "google/gemma-2-2b-it":
             custom_instruction = custom_instruction + " Please write the string \"Answer: \" before the final answer."
+        if self.model_name == "meta-llama/Meta-Llama-3-8B-Instruct" or self.model_name == "meta-llama/Llama-2-7b-chat-hf":
+            custom_instruction = custom_instruction + " Please write the string \"Answer: \" before the final answer."
 
         model_config = ModelConfig.get(self.model_name)
         history = [

@@ -87,8 +87,8 @@ def main():
     metric = construct_metric(
         metric_name=args.metric,
         model=model,
-        alternative_model=model2,
-        filler_token=args.filler)
+        alternative_model=model2)
+        #filler_token=args.filler)
 
     if args.log_file is None:
         if args.metric == "Internalized":
