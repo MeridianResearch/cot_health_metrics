@@ -84,11 +84,15 @@ def main():
     model2 = CoTModel(args.model2, cache_dir=args.cache_dir) if args.model2 else None
 
     # Create metric(s)
+    extra_args = {}
+    if args.metric == "Internalized":
+        extra_args["filler_token"] = args.filler
+
     metric = construct_metric(
         metric_name=args.metric,
         model=model,
-        alternative_model=model2)
-        #filler_token=args.filler)
+        alternative_model=model2,
+        **extra_args)
 
     if args.log_file is None:
         if args.metric == "Internalized":
