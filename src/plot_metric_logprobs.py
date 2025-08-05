@@ -69,16 +69,15 @@ def setup_logger(name: str, log_file: str,
     return logger
 
 class LogProbVisualizer:
-    """Loads ⟨orig_lp, induced_lp⟩ pairs + draws two histograms"""
-
     def __init__(self, metric_name: str, in_path: Path, out_dir: Path,
-                 bins: int = DEFAULT_BINS, logger: logging.Logger | None = None):
+                 bins: int = DEFAULT_BINS, logger: logging.Logger | None = None, suffix: str = ""):
         self.metric_name = metric_name
         self.in_path     = in_path
         self.out_dir     = out_dir
         self.out_dir.mkdir(parents=True, exist_ok=True)
         self.bins        = bins
         self.logger      = logger or logging.getLogger(__name__)
+        self.suffix      = suffix
 
     # public API
     def run(self) -> None:
@@ -89,22 +88,21 @@ class LogProbVisualizer:
 
         self._plot_score(score,
                          title=f"{self.metric_name.title()} - score",
-                         fname=self.out_dir / f"{self.metric_name}_score_hist.png")
+                         fname=self.out_dir / f"{self.metric_name}_score_hist{self.suffix}.png")
         self._plot_hist(orig,
                         title=f"{self.metric_name.title()} - Original logP",
-                        fname=self.out_dir / f"{self.metric_name}_orig_logprobs_hist.png")
+                        fname=self.out_dir / f"{self.metric_name}_orig_logprobs_hist{self.suffix}.png")
         self._plot_hist(induced,
                         title=f"{self.metric_name.title()} - Induced logP",
-                        fname=self.out_dir / f"{self.metric_name}_induced_logprobs_hist.png")
+                        fname=self.out_dir / f"{self.metric_name}_induced_logprobs_hist{self.suffix}.png")
         self._plot_combined([orig, induced],
                             title=f"{self.metric_name.title()} - Orig vs Induced logP",
-                            fname=self.out_dir / f"{self.metric_name}_combined_logprobs_hist.png")
+                            fname=self.out_dir / f"{self.metric_name}_combined_logprobs_hist{self.suffix}.png")
         if len(extra) > 0:
             self._plot_combined([orig, induced, extra],
-                            title=f"{self.metric_name.title()} - Extra logP",
-                            fname=self.out_dir / f"{self.metric_name}_extra_logprobs_hist.png")
+                                title=f"{self.metric_name.title()} - Extra logP",
+                                fname=self.out_dir / f"{self.metric_name}_extra_logprobs_hist{self.suffix}.png")
         self.logger.info("Finished - plots written to %s", self.out_dir)
-
     # helpers
     def _load_logprobs(self) -> Tuple[List[float], List[float], List[float]]:
         score_vals: List[float] = []
@@ -306,20 +304,36 @@ def _parse_args():
 
 def main() -> None:
     args = _parse_args()
-
     metric = args.metric_name.lower()
     in_path = Path(args.input_path) if args.input_path else Path(DEFAULT_IN_FILE + metric + ".jsonl")
     out_dir = Path(args.out_dir)
 
+    Path("logs").mkdir(exist_ok=True)
     log_name = f"plot_metric_logprobs_{int(time.time())}.log"
     logger = setup_logger("plot_metric_logprobs", Path("logs") / log_name)
     logger.info("Metric: %s", metric)
+
+    # Extract filler for internalized metric
+    suffix = ""
+    if metric == "internalized":
+        # Example: Qwen3-1.7B_GSM8K_2025-08-03_12:06:40_Internalized_filler_._.jsonl
+        stem = in_path.stem  # Qwen3-1.7B_GSM8K_2025-08-03_12:06:40_Internalized_filler_._
+        if "filler_" in stem:
+            filler_part = stem.split("filler_")[1]  # ._ or :_
+            filler = filler_part.split("_")[0]      # . or :
+            if filler == ".":
+                suffix = "filler_."
+            elif filler == ":":
+                suffix = "filler_:"
+            elif filler == "<":
+                suffix = "filler_<"
 
     vis = LogProbVisualizer(metric_name=metric,
                             in_path=in_path,
                             out_dir=out_dir,
                             bins=args.bins,
-                            logger=logger)
+                            logger=logger,
+                            suffix=suffix)
     vis.run()
 
 

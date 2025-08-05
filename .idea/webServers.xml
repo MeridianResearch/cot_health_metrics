@@ -9,6 +9,13 @@
           </advancedOptions>
         </fileTransfer>
       </webServer>
+      <webServer id="1032151a-ef56-4a57-8625-3ff03380f02d" name="pods">
+        <fileTransfer accessType="SFTP" host="runpod.io" port="22" sshConfigId="2734ad50-ac70-4953-94d1-d804d33f2b27" sshConfig="root@runpod.io:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
     </option>
   </component>
 </project>
