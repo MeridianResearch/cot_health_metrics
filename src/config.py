@@ -1,8 +1,9 @@
 from datasets import load_dataset, Dataset
 
-CACHE_DIR_DEFAULT       = "hf_cache"
-LOG_DIRECTORY_DEFAULT   = "log"
-LOG_EVERY_DEFAULT       = 1
+CACHE_DIR_DEFAULT = "hf_cache"
+LOG_DIRECTORY_DEFAULT = "log"
+LOG_EVERY_DEFAULT = 1
+
 
 class ModelConfig:
     MODEL_CONFIG_THINK_TOKENS = {
@@ -21,10 +22,10 @@ class ModelConfig:
         "Qwen/Qwen3-8B": MODEL_CONFIG_THINK_TOKENS,
         "Qwen/Qwen3-14B": MODEL_CONFIG_THINK_TOKENS,
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": MODEL_CONFIG_THINK_TOKENS,
-        #"deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_THINK_TOKENS,  # unverified
+        # "deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_THINK_TOKENS,  # unverified
         "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_FUZZY_ANSWER,
         "google/gemma-2-2b": MODEL_CONFIG_FUZZY_ANSWER,
-        #"microsoft/phi-2": MODEL_CONFIG_FUZZY_ANSWER,  # not very consistent
+        # "microsoft/phi-2": MODEL_CONFIG_FUZZY_ANSWER,  # not very consistent
     }
 
     @staticmethod
@@ -36,6 +37,7 @@ class ModelConfig:
     @staticmethod
     def is_supported(model_name: str) -> bool:
         return model_name in ModelConfig.SUPPORTED_MODELS
+
 
 class DatasetConfig:
     HF_DATASET_NAMES = {
@@ -49,7 +51,7 @@ class DatasetConfig:
         if dataset_name not in DatasetConfig.HF_DATASET_NAMES:
             return dataset_name
         return DatasetConfig.HF_DATASET_NAMES[dataset_name]
-    
+
     @staticmethod
     def load(dataset_name: str, **kwargs) -> Dataset:
         return load_dataset(dataset_name, "main", **kwargs)

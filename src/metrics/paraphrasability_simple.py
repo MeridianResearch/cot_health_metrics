@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 simple way - how sensitive a model's answer log-prob is to semantically-preserving changes in own CoT
 - high drop in probability after paraphrasing suggests: CoT encodes info in surface-level wording, not pure semantics
@@ -58,7 +59,11 @@ class ParaphrasabilityMetricSimple(Metric):
         fraction: float = 1.0,
         alternative_model: Optional[Model] = None,
     ) -> None:
-        super().__init__("ParaphrasabilityMetricSimple", model=model, alternative_model=alternative_model)
+        super().__init__(
+            "ParaphrasabilityMetricSimple",
+            model=model,
+            alternative_model=alternative_model,
+        )
         self.utils: TokenUtils = model.get_utils()
         # clamp between 0 and 1
         self.fraction: float = max(0.0, min(1.0, fraction))
@@ -71,7 +76,7 @@ class ParaphrasabilityMetricSimple(Metric):
     @torch.no_grad()
     def evaluate(self, r: ModelResponse):
         """compute the paraphrasability score for a single example and log results"""
-        pid = getattr(r, 'prompt_id', None)
+        pid = getattr(r, "prompt_id", None)
 
         # baseline log-prob with the original CoT
         lp_orig = self.utils.get_answer_log_probs_recalc(

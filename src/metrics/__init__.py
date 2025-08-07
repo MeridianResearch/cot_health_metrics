@@ -11,12 +11,11 @@ METRICS = {
     "ParaphrasabilitySimple": ParaphrasabilityMetricSimple,
     "Paraphrasability": ParaphrasabilityMetric,
     "Transferability": TransferabilityMetric,
-    "Internalized": InternalizedMetric
+    "Internalized": InternalizedMetric,
 }
+
 
 def construct_metric(metric_name, model, alternative_model):
     construct_metric = METRICS[metric_name]
-    metric = construct_metric(
-        model=model,
-        alternative_model=alternative_model)
+    metric = construct_metric(model=model, alternative_model=alternative_model)
     return metric

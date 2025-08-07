@@ -45,33 +45,41 @@ from pathlib import Path
 from typing import List, Tuple
 
 import matplotlib.pyplot as plt
-DEFAULT_OUT_DIR  = "data/plots"
-DEFAULT_IN_FILE  = "data/logprobs_"
-DEFAULT_BINS     = 50
+
+DEFAULT_OUT_DIR = "data/plots"
+DEFAULT_IN_FILE = "data/logprobs_"
+DEFAULT_BINS = 50
+
 
 # Logging
-def setup_logger(name: str, log_file: str,
-                 level: int = logging.INFO) -> logging.Logger:
+def setup_logger(name: str, log_file: str, level: int = logging.INFO) -> logging.Logger:
     logger = logging.getLogger(name)
     logger.setLevel(level)
     fh = logging.FileHandler(log_file)
     fh.setLevel(level)
-    fmt = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    fmt = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
     fh.setFormatter(fmt)
     logger.addHandler(fh)
     return logger
 
+
 class LogProbVisualizer:
     """Loads ⟨orig_lp, induced_lp⟩ pairs + draws two histograms"""
 
-    def __init__(self, metric_name: str, in_paths: List[Path], out_dir: Path,
-                 bins: int = DEFAULT_BINS, logger: logging.Logger | None = None):
+    def __init__(
+        self,
+        metric_name: str,
+        in_paths: List[Path],
+        out_dir: Path,
+        bins: int = DEFAULT_BINS,
+        logger: logging.Logger | None = None,
+    ):
         self.metric_name = metric_name
-        self.in_paths    = in_paths
-        self.out_dir     = out_dir
+        self.in_paths = in_paths
+        self.out_dir = out_dir
         self.out_dir.mkdir(parents=True, exist_ok=True)
-        self.bins        = bins
-        self.logger      = logger or logging.getLogger(__name__)
+        self.bins = bins
+        self.logger = logger or logging.getLogger(__name__)
 
     # public API
     def run(self) -> None:
@@ -81,15 +89,21 @@ class LogProbVisualizer:
 
         self.logger.info("Loaded %d pairs", len(orig))
 
-        self._plot_score(score,
-                         title=f"{self.metric_name.title()} - score",
-                         fname=self.out_dir / f"{self.metric_name}_score_hist.png")
-        self._plot_hist(orig,
-                        title=f"{self.metric_name.title()} - Original logP",
-                        fname=self.out_dir / f"{self.metric_name}_orig_logprobs_hist.png")
-        self._plot_hist(first_induced,
-                        title=f"{self.metric_name.title()} - Induced logP",
-                        fname=self.out_dir / f"{self.metric_name}_induced_logprobs_hist.png")
+        self._plot_score(
+            score,
+            title=f"{self.metric_name.title()} - score",
+            fname=self.out_dir / f"{self.metric_name}_score_hist.png",
+        )
+        self._plot_hist(
+            orig,
+            title=f"{self.metric_name.title()} - Original logP",
+            fname=self.out_dir / f"{self.metric_name}_orig_logprobs_hist.png",
+        )
+        self._plot_hist(
+            first_induced,
+            title=f"{self.metric_name.title()} - Induced logP",
+            fname=self.out_dir / f"{self.metric_name}_induced_logprobs_hist.png",
+        )
 
         # now collect all the induced-LP series
         induced_series = []
@@ -107,18 +121,22 @@ class LogProbVisualizer:
         self._plot_combined(
             combined,
             title=f"{self.metric_name.title()} - Orig vs Induced logP",
-            fname=self.out_dir / f"{self.metric_name}_combined_logprobs_hist.png"
+            fname=self.out_dir / f"{self.metric_name}_combined_logprobs_hist.png",
         )
 
         # extra plotting (as before)
         if len(first_extra) > 0:
-            self._plot_combined([orig, first_induced, first_extra],
-                            title=f"{self.metric_name.title()} - Extra logP",
-                            fname=self.out_dir / f"{self.metric_name}_extra_logprobs_hist.png")
+            self._plot_combined(
+                [orig, first_induced, first_extra],
+                title=f"{self.metric_name.title()} - Extra logP",
+                fname=self.out_dir / f"{self.metric_name}_extra_logprobs_hist.png",
+            )
         self.logger.info("Finished - plots written to %s", self.out_dir)
 
     # helpers
-    def _load_logprobs(self, path: Path) -> Tuple[List[float], List[float], List[float], List[float]]:
+    def _load_logprobs(
+        self, path: Path
+    ) -> Tuple[List[float], List[float], List[float], List[float]]:
         score_vals: List[float] = []
         orig_vals: List[float] = []
         ind_vals: List[float] = []
@@ -135,7 +153,11 @@ class LogProbVisualizer:
                         ob.append(float(obj["delta"]))
                         ob.append(float(obj["orig_lp"]))
                         ob.append(float(obj["induced_lp"]))
-                    elif "logprobsM1A1_sum" in obj and "logprobsM2_QR1A1_sum" in obj and "logprobsM2_QA1_sum" in obj:
+                    elif (
+                        "logprobsM1A1_sum" in obj
+                        and "logprobsM2_QR1A1_sum" in obj
+                        and "logprobsM2_QA1_sum" in obj
+                    ):
                         ob.append(0.0)
                         ob.append(float(obj["logprobsM1A1_sum"]))
                         ob.append(float(obj["logprobsM2_QR1A1_sum"]))
@@ -150,12 +172,15 @@ class LogProbVisualizer:
                             all_finite = False
                             break
                     if not all_finite:
-                        self.logger.warning("Skipping non‑finite lp at line %d: orig=%s", ln, o)
+                        self.logger.warning(
+                            "Skipping non‑finite lp at line %d: orig=%s", ln, o
+                        )
                         continue
                     score_vals.append(ob[0])
                     orig_vals.append(ob[1])
                     ind_vals.append(ob[2])
-                    if len(ob) >= 4: extra_vals.append(ob[3])
+                    if len(ob) >= 4:
+                        extra_vals.append(ob[3])
                 except Exception as err:
                     self.logger.warning("Skipping malformed line %d - %s", ln, err)
 
@@ -176,10 +201,7 @@ class LogProbVisualizer:
 
     # add histogram of score function with mean and std
     # equation: score = (score_original - score_intervention) / (score_original)
-    def _plot_score(self,
-                    score: List[float],
-                    title: str,
-                    fname: str) -> None:
+    def _plot_score(self, score: List[float], title: str, fname: str) -> None:
 
         plt.figure(figsize=(6.4, 4.8))
         plt.hist(score, bins=self.bins, alpha=0.5, label="score function")
@@ -190,26 +212,23 @@ class LogProbVisualizer:
         plt.tight_layout()
 
         # Annotate on plot
-        textstr = (
-            f"mean(score): {np.mean(score):.4f}\n"
-        )
+        textstr = f"mean(score): {np.mean(score):.4f}\n"
         plt.gca().text(
-            0.03, 0.97, textstr,
+            0.03,
+            0.97,
+            textstr,
             transform=plt.gca().transAxes,
             fontsize=10,
-            verticalalignment='top',
-            horizontalalignment='left',
-            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.45)
+            verticalalignment="top",
+            horizontalalignment="left",
+            bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.45),
         )
 
         plt.savefig(fname)
         plt.close()
         self.logger.debug("Saved combined plot → %s", fname)
 
-    def _plot_combined(self,
-                       vals: List[List[float]],
-                       title: str,
-                       fname: Path) -> None:
+    def _plot_combined(self, vals: List[List[float]], title: str, fname: Path) -> None:
         import numpy as np
         from scipy.stats import mannwhitneyu
         import matplotlib.pyplot as plt
@@ -228,15 +247,21 @@ class LogProbVisualizer:
         orig = vals[0]
         for i, series in enumerate(vals):
             label = "orig" if i == 0 else f"induced_{i}"
-            plt.hist(series,
-                     bins=bins,
-                     alpha=alpha,
-                     label=f"{label} (n={len(series)})",
-                     color=f"C{i}")
+            plt.hist(
+                series,
+                bins=bins,
+                alpha=alpha,
+                label=f"{label} (n={len(series)})",
+                color=f"C{i}",
+            )
             # mean & median lines
-            plt.axvline(np.mean(series), color=f"C{i}", linestyle=':', linewidth=1, alpha=0.3)
-            plt.axvline(np.median(series), color=f"C{i}", linestyle='--', linewidth=2)
-            patches.append(mpatches.Patch(color=f"C{i}", label=f"{label} (n={len(series)})"))
+            plt.axvline(
+                np.mean(series), color=f"C{i}", linestyle=":", linewidth=1, alpha=0.3
+            )
+            plt.axvline(np.median(series), color=f"C{i}", linestyle="--", linewidth=2)
+            patches.append(
+                mpatches.Patch(color=f"C{i}", label=f"{label} (n={len(series)})")
+            )
 
         plt.title(title)
         plt.xlabel("log-probability")
@@ -252,34 +277,55 @@ class LogProbVisualizer:
         for i in range(1, len(vals)):
             stat, pval = mannwhitneyu(orig, vals[i], alternative="two-sided")
             pval_str = "<0.05" if pval < 0.05 else f"{pval:.3f}"
-            lines.extend([
-                f"mean(induced_{i}):   {np.mean(vals[i]):.4f}",
-                f"median(induced_{i}): {np.median(vals[i]):.4f}",
-                f"M-W p={pval_str}"
-            ])
+            lines.extend(
+                [
+                    f"mean(induced_{i}):   {np.mean(vals[i]):.4f}",
+                    f"median(induced_{i}): {np.median(vals[i]):.4f}",
+                    f"M-W p={pval_str}",
+                ]
+            )
         textstr = "\n".join(lines)
         plt.gca().text(
-            0.03, 0.97, textstr,
+            0.03,
+            0.97,
+            textstr,
             transform=plt.gca().transAxes,
             fontsize=10,
-            verticalalignment='top',
-            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.45)
+            verticalalignment="top",
+            bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.45),
         )
 
         plt.savefig(fname)
         plt.close()
         self.logger.debug("Saved combined plot → %s", fname)
 
+
 # CLI
 def _parse_args():
-    p = argparse.ArgumentParser(description="Plot histograms of original vs induced answer log-probs for any CoT-health metric")
-    p.add_argument("--metric-name", required=True, help="Name of the metric (used for plot titles & default paths)")
-    p.add_argument("--input-path", type=str, nargs="+", required=True,
-                   help="One or more JSONL files with 'orig_lp' & 'induced_lp' per line."
+    p = argparse.ArgumentParser(
+        description="Plot histograms of original vs induced answer log-probs for any CoT-health metric"
     )
-    p.add_argument("--out-dir", type=str, default=str(DEFAULT_OUT_DIR),
-                   help="Directory to store the PNG plots")
-    p.add_argument("--bins", type=int, default=DEFAULT_BINS, help="Number of histogram bins")
+    p.add_argument(
+        "--metric-name",
+        required=True,
+        help="Name of the metric (used for plot titles & default paths)",
+    )
+    p.add_argument(
+        "--input-path",
+        type=str,
+        nargs="+",
+        required=True,
+        help="One or more JSONL files with 'orig_lp' & 'induced_lp' per line.",
+    )
+    p.add_argument(
+        "--out-dir",
+        type=str,
+        default=str(DEFAULT_OUT_DIR),
+        help="Directory to store the PNG plots",
+    )
+    p.add_argument(
+        "--bins", type=int, default=DEFAULT_BINS, help="Number of histogram bins"
+    )
     return p.parse_args()
 
 
@@ -294,11 +340,13 @@ def main() -> None:
     logger = setup_logger("plot_metric_logprobs", Path("logs") / log_name)
     logger.info("Metric: %s", metric)
 
-    vis = LogProbVisualizer(metric_name=metric,
-                            in_paths=in_paths,
-                            out_dir=out_dir,
-                            bins=args.bins,
-                            logger=logger)
+    vis = LogProbVisualizer(
+        metric_name=metric,
+        in_paths=in_paths,
+        out_dir=out_dir,
+        bins=args.bins,
+        logger=logger,
+    )
     vis.run()
 
 

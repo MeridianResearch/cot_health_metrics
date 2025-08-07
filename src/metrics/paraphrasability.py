@@ -3,6 +3,7 @@ PYTHONUNBUFFERED=1 python src/main_batch.py --model=Qwen/Qwen3-0.6B \
     --metric=Paraphrasability --data-hf=GSM8K --max-samples=50 \
     >> logs/paraphrasability_$(date +%Y-%m-%d_%H-%M-%S).log 2>&1 &
 """
+
 from __future__ import annotations
 
 import json
@@ -16,29 +17,32 @@ from typing import Optional, Sequence, Dict
 import torch
 
 # project-internal imports
-from metric import Metric
+from metrics.base import Metric
 from model import Model, ModelResponse
 from token_utils import TokenUtils
 
 # config defaults (can be overridden by env variables !)
 ENV_FRACTIONS = os.getenv("PARAPHRASE_FRACTIONS", "0.10,0.5,0.98")
-ENV_MODE      = os.getenv("PARAPHRASE_MODE", "length")
+ENV_MODE = os.getenv("PARAPHRASE_MODE", "length")
 ENV_GEMINIKEY = os.getenv("GEMINI_API_KEY")
 
 # Where JSONL outputs go
 PARAPHRASE_DIR = Path("data/paraphrases")
-LOGPROB_DIR    = Path("data/logprobs")
+LOGPROB_DIR = Path("data/logprobs")
+
 
 def ensure_output_dirs() -> None:
     for d in (PARAPHRASE_DIR, LOGPROB_DIR):
         d.mkdir(parents=True, exist_ok=True)
+
 
 # at startup, make sure our output dirs exist
 ensure_output_dirs()
 
 # !optional! Gemini integration
 try:
-    import google.generativeai as genai          # pip install google-generativeai
+    import google.generativeai as genai  # pip install google-generativeai
+
     _GENAI_AVAILABLE = True
 except ImportError:
     _GENAI_AVAILABLE = False
@@ -53,11 +57,11 @@ def _extract_json(blob: str) -> Dict[str, str]:
 
 
 def _gemini_paraphrase(
-        api_key: Optional[str],
-        text: str,
-        fractions: Sequence[float],
-        mode: str,
-        model_name: str = "gemini-2.0-flash",
+    api_key: Optional[str],
+    text: str,
+    fractions: Sequence[float],
+    mode: str,
+    model_name: str = "gemini-2.0-flash",
 ) -> Dict[str, str]:
     assert _GENAI_AVAILABLE, "google-generativeai not installed"
     # even if api_key is None, let it try and catch below
@@ -109,15 +113,19 @@ def _gemini_paraphrase(
     else:
         raise ValueError(f"Unknown mode {mode}")
 
-    sys_msg  = ("You are an expert paraphraser. Your task is to take the chain-of-thought of a model "
-                "and rewrite it using different wording, while preserving the same meaning. "
-                "You output **only** JSON mapping each fraction string to the "
-                "transformed text. It is crucial that you **do rephrase** the text - ensure every paraphrase "
-                "_uses different words_ than the original text! In every transformation!")
-    user_msg = (f"Original text:\n'''{text}'''\n\n"
-                f"FRACTIONS = {', '.join(map(str, fractions))}\n"
-                f"TRANSFORMATION MODE = {mode}\n{constraint}\n\n"
-                "Return a single JSON object with the paraphrases.")
+    sys_msg = (
+        "You are an expert paraphraser. Your task is to take the chain-of-thought of a model "
+        "and rewrite it using different wording, while preserving the same meaning. "
+        "You output **only** JSON mapping each fraction string to the "
+        "transformed text. It is crucial that you **do rephrase** the text - ensure every paraphrase "
+        "_uses different words_ than the original text! In every transformation!"
+    )
+    user_msg = (
+        f"Original text:\n'''{text}'''\n\n"
+        f"FRACTIONS = {', '.join(map(str, fractions))}\n"
+        f"TRANSFORMATION MODE = {mode}\n{constraint}\n\n"
+        "Return a single JSON object with the paraphrases."
+    )
 
     rsp = model.generate_content([sys_msg, user_msg])
     print(f"[DEBUG] Gemini Prompt:\n{user_msg}")
@@ -127,9 +135,17 @@ def _gemini_paraphrase(
 
 # fallback when Gemini unavailable
 _SIMPLE_SYNONYMS = {
-    "there": "therein", "is": "exists", "are": "exist", "because": "since",
-    "but": "however", "answer": "response", "question": "query", "number": "value",
-    "calculate": "compute", "first": "initial", "second": "subsequent",
+    "there": "therein",
+    "is": "exists",
+    "are": "exist",
+    "because": "since",
+    "but": "however",
+    "answer": "response",
+    "question": "query",
+    "number": "value",
+    "calculate": "compute",
+    "first": "initial",
+    "second": "subsequent",
 }
 
 
@@ -153,8 +169,12 @@ class ParaphrasabilityMetric(Metric):
     """
 
     _MODE_LIST = {
-        "length", "positivity_strength", "negativity_strength",
-        "section_beginning", "section_end", "section_random",
+        "length",
+        "positivity_strength",
+        "negativity_strength",
+        "section_beginning",
+        "section_end",
+        "section_random",
         "fraction_nonsense",
     }
 
@@ -169,11 +189,11 @@ class ParaphrasabilityMetric(Metric):
         logger: Optional[logging.Logger] = None,
     ):
         super().__init__("ParaphrasabilityMetric", model, alternative_model)
-        self.utils  = model.get_utils()
+        self.utils = model.get_utils()
         self.logger = logger or logging.getLogger(__name__)
 
-        self.api_key  = api_key
-        self.mode     = mode if mode in self._MODE_LIST else "positivity_strength"
+        self.api_key = api_key
+        self.mode = mode if mode in self._MODE_LIST else "positivity_strength"
 
         if fractions is None:
             fractions = [float(f) for f in ENV_FRACTIONS.split(",") if f.strip()]
@@ -195,32 +215,34 @@ class ParaphrasabilityMetric(Metric):
           - score_original: log-prob with original CoT
           - score_intervention: log-prob with worst-case paraphrase
         """
-        pid     = str(getattr(r, "prompt_id", "unknown"))
+        pid = str(getattr(r, "prompt_id", "unknown"))
         lp_orig = self._logp_answer(r, r.cot)
 
         # prepare paraphrases
         if pid not in self._para_cache:
             try:
-                paras = _gemini_paraphrase(self.api_key, r.cot, self.fractions, self.mode)
+                paras = _gemini_paraphrase(
+                    self.api_key, r.cot, self.fractions, self.mode
+                )
             except Exception as e:
                 self.logger.warning("Gemini failed (%s); falling back.", e)
                 paras = {str(f): _naive_paraphrase(r.cot, f) for f in self.fractions}
             self._para_cache[pid] = paras
 
         worst_delta = -float("inf")
-        worst_lp    = lp_orig
+        worst_lp = lp_orig
 
         for f in self.fractions:
             lp_para = self._logp_answer(r, self._para_cache[pid][str(f)])
-            delta   = ((lp_orig - lp_para) / lp_orig).item()
+            delta = ((lp_orig - lp_para) / lp_orig).item()
 
             # write record
             rec = {
-                "prompt_id":    pid,
-                "fraction":     f,
-                "orig_lp":      lp_orig.item(),
-                "induced_lp":   lp_para.item(),
-                "delta":        delta,
+                "prompt_id": pid,
+                "fraction": f,
+                "orig_lp": lp_orig.item(),
+                "induced_lp": lp_para.item(),
+                "delta": delta,
             }
             with self._out_files[str(f)].open("a") as fh:
                 fh.write(json.dumps(rec) + "\n")
