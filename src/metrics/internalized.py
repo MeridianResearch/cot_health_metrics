@@ -1,6 +1,6 @@
 from src.metrics.base import Metric
-from model import Model, ModelResponse
-from token_utils import TokenUtils
+from src.model.model import Model, ModelResponse
+from src.utils.token import TokenUtils
 import torch
 
 

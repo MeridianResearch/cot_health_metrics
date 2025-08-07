@@ -2,9 +2,9 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from transformers import AutoConfig
 import torch
 from dataclasses import dataclass
-from token_utils import TokenUtils
+from src.utils.token import TokenUtils
 from typing import Optional
-from config import ModelConfig
+from src.model.config import ModelConfig
 
 
 @dataclass

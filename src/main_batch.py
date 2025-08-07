@@ -12,11 +12,11 @@ import json
 from typing import List, Iterator
 from datasets import Dataset
 
-from model import CoTModel
+from src.model.model import CoTModel
 from metrics import construct_metric
-from data_loader import load_prompts
+from src.utils.data_loader import load_prompts
 from datetime import datetime
-from config import (
+from src.model.config import (
     DatasetConfig,
     CACHE_DIR_DEFAULT,
     LOG_EVERY_DEFAULT,

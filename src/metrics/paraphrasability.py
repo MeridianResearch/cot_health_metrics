@@ -18,8 +18,8 @@ import torch
 
 # project-internal imports
 from metrics.base import Metric
-from model import Model, ModelResponse
-from token_utils import TokenUtils
+from src.model.model import Model, ModelResponse
+from src.utils.token import TokenUtils
 
 # config defaults (can be overridden by env variables !)
 ENV_FRACTIONS = os.getenv("PARAPHRASE_FRACTIONS", "0.10,0.5,0.98")

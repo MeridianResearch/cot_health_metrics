@@ -1,8 +1,8 @@
 import torch
 import argparse
-from model import CoTModel
+from src.model.model import CoTModel
 from metrics import construct_metric
-from config import CACHE_DIR_DEFAULT
+from src.model.config import CACHE_DIR_DEFAULT
 
 DEFAULT_MODEL_MAIN = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
 

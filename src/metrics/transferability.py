@@ -1,10 +1,10 @@
 import torch
 from src.metrics.base import Metric
-from model import Model, ModelResponse
+from src.model.model import Model, ModelResponse
 from transformers import AutoTokenizer
 import json
 import pandas as pd
-from token_utils import TokenUtils
+from src.utils.token import TokenUtils
 from pathlib import Path
 import os
 
