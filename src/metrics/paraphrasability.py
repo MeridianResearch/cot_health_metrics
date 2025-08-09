@@ -18,7 +18,7 @@ import torch
 
 # project-internal imports
 from metrics.base import Metric
-from src.model.model import Model, ModelResponse
+from src.model.main import Model, ModelResponse
 from src.utils.token import TokenUtils
 
 # config defaults (can be overridden by env variables !)

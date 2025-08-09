@@ -1,5 +1,5 @@
 import torch
-from src.model.model import ModelResponse, Model
+from src.model.main import ModelResponse, Model
 
 
 class Metric:

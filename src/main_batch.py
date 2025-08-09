@@ -12,7 +12,7 @@ import json
 from typing import List, Iterator
 from datasets import Dataset
 
-from src.model.model import CoTModel
+from src.model.main import CoTModel
 from metrics import construct_metric
 from src.utils.data_loader import load_prompts
 from datetime import datetime

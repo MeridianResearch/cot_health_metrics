@@ -1,5 +1,5 @@
 from metric import Metric
-from src.model.model import Model, ModelResponse
+from src.model.main import Model, ModelResponse
 from src.utils.token import TokenUtils
 
 

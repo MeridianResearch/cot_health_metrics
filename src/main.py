@@ -1,6 +1,6 @@
 import torch
 import argparse
-from src.model.model import CoTModel
+from src.model.main import CoTModel
 from metrics import construct_metric
 from src.model.config import CACHE_DIR_DEFAULT
 

@@ -19,7 +19,7 @@ from typing import Dict, List, Optional
 import torch
 
 from metric import Metric
-from src.model.model import Model, ModelResponse
+from src.model.main import Model, ModelResponse
 from src.utils.token import TokenUtils
 
 __all__ = ["ParaphrasabilityMetricSimple"]

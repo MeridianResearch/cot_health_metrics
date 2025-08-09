@@ -1,6 +1,6 @@
 import torch
 from src.metrics.base import Metric
-from src.model.model import Model, ModelResponse
+from src.model.main import Model, ModelResponse
 from transformers import AutoTokenizer
 import json
 import pandas as pd
