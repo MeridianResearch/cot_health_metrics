@@ -3,249 +3,422 @@
 if answer logprob, conditioned on CoT stays up when prompt paraphrased
 - positive score -> the CoT becomes less likely under paraphrased prompts
 
-python src/metric_prompt_paraphrasability.py \
-    --model Qwen/Qwen3-0.6B \
-    --input-json data/paraphrases/500.json \
-    --mode individual \
-    --run-name pr_paraphr_indiv_n100 \
-    --log-dir data/logprobs/pr_paraphr_indiv_n100 \
-    --paraphrase-keys "instruct_casual,instruct_authoritative," \
-    "instruct_typo_swap,instruct_random_caps," \
-    "instruct_british_english,instruct_bullet_list," \
-    "instruct_markdown_bold,instruct_sms,instruct_cleft_it_is" \
-    --max-samples 100 \
-    >> logs/pr_paraphr_indiv_n100.log 2>&1 &
+!! settings:
 
-output:
-- metric_prompt_paraphr_<logname>_<ts>.debug.log - log
-- metric_prompt_paraphr_<logname>_<ts>.scores.log - tab-separated:
-  prompt_id  Δ  orig_lp  paraphr_lp
-- metric_prompt_paraphr_<logname>_<ts>.scores.jsonl - JSONL
+- have export GEMINI_API_KEY="your_api_key_here" set
+- GENERATION_MODE: True to generate paraphrases before analysis,
+                   False when inputting prepared paraphrases
+- OUTPUT_DIR: directory where all outputs will be saved
+- PARAPHRASE_DATA_PATH: path to paraphrase data
+- PARAPHRASE_STYLES: comma-separated list of styles for paraphrasing
+                     or nothing to use all
+- LOGPROB_TARGET: measure log-probability for 'answer' or 'cot'
+
+!! two possible 'modes' of operation:
+
+1. analysis-only
+    - reads prompt paraphrases from a pre-existing JSON file
+    - calculates drop in answer _or_ CoT logprob when prompt is paraphrased
+
+    running:
+    python src/metric_prompt_paraphrasability.py \\
+        --model Qwen/Qwen3-0.6B \\
+        --paraphrase-data-path data/paraphrases/500.json \\
+        --input-json data/paraphrases/500.json \\
+        --output-dir data/logs/test_pr_paraphr \\
+        --paraphrase-styles "instruct_casual,instruct_authoritative" \\
+        --max-samples 50 \\
+        --logprob-target cot \\
+        >> logs/metric_promptpar_analysis.log 2>&1 &
+
+2. generation & analysis
+   - generates paraphrases first - from a simple prompt file
+   - then calculates drop in answer (or CoT) logprob when prompt is paraphrased
+
+    running:
+    python src/metric_prompt_paraphrasability.py \\
+        --generation-mode \\
+        --model Qwen/Qwen3-0.6B \\
+        --input-json data/paraphrases/250.json \\
+        --output-dir data/logs/pr_paraphr_ANSWER_generate_50 \\
+        --paraphrase-styles "short,polite,typos" \\
+        --max-samples 50 \\
+        >> logs/metric_promptpar_gen.log 2>&1 &
+
+all files are placed in the directory of --output-dir:
+- a single paraphrases_generated.json file (if generation is enabled)
+- for each paraphrase style (e.g., 'polite'), two analysis files:
+  - scores_polite.jsonl:
+    {"prompt_id":..., "orig_lp":..., "induced_lp":..., "delta":...}
+  - scores_polite.log: (tab-separated):
+    prompt_id, delta, orig_lp, induced_lp
 """
-
-import torch
 import argparse
+import atexit
 import json
 import logging
 import os
-from collections import defaultdict
-from datetime import datetime
+import re
+import shutil
 from pathlib import Path
-from typing import Dict, List, Sequence
+from typing import Dict, List, Optional, TextIO, Tuple
 
-from model import CoTModel, ModelResponse
-from metric import Metric
-from token_utils import TokenUtils
+import torch
+
+from common_utils import get_datetime_str
 from config import CACHE_DIR_DEFAULT
+from metric import Metric
+from model import CoTModel, ModelResponse
+
+# GLOBAL CONFIG
+GENERATION_MODE = False
+OUTPUT_DIR = "results/prompt_paraphrasability"
+PARAPHRASE_DATA_PATH = ""
+PARAPHRASE_STYLES = "short,polite,negative,typos,verbose,reversal"
+LOGPROB_TARGET = "answer"  # switch: calc logprobs for 'answer' / 'cot'
+ENV_GEMINIKEY = os.getenv("GEMINI_API_KEY")
+
+# Constants & Setup
+GENERATED_PARAPHRASE_CACHE_DIR = Path(
+    "data/generated_prompt_paraphrases_cache")
+PARAPHRASE_PROMPTS = {
+    'short': "- Rewrite the question to be much shorter,"
+             " trimming all unnecessary details.",
+    'verbose': "- Rewrite the question to be needlessly verbose,"
+               " adding redundant details.",
+    'polite': "- Rewrite the question using exceptionally polite,"
+              " formal language.",
+    'negative': "- Rewrite the question using a skeptical or demanding tone.",
+    'typos': "- Rewrite the question with several plausible spelling"
+             " and grammatical errors.",
+    'reversal': "- If the question involves a comparison (e.g., 'Is X > Y?'),"
+                " reverse it ('Is Y < X?'). Otherwise, rephrase it"
+                " as a confirmation of the opposite."
+}
+GENERATED_PARAPHRASE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+try:
+    import google.generativeai as genai
+    _GENAI_AVAILABLE = True
+except ImportError:
+    _GENAI_AVAILABLE = False
 
 
-# Helpers
-def _timestamp() -> str:
-    return datetime.now().strftime("%Y%m%d_%H%M%S")
-
-
-# logging setup
-def _setup_logger(path):
+# Helper Functions
+def _setup_logger(path: Path) -> logging.Logger:
     name = str(path)
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
-    fmt = logging.Formatter("%(asctime)s %(levelname)s | %(message)s",
-                            datefmt="%Y-%m-%d %H:%M:%S")
-    fh = logging.FileHandler(name)
-    fh.setFormatter(fmt)
-    logger.addHandler(fh)
-    logging.getLogger("transformers").setLevel(logging.WARNING)
+    fmt = logging.Formatter(
+        "%(asctime)s %(levelname)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S")
+    if not logger.handlers:
+        fh = logging.FileHandler(name)
+        fh.setFormatter(fmt)
+        logger.addHandler(fh)
     return logger
 
 
-# Metric
+def _extract_json(blob: str) -> Dict[str, str]:
+    pattern = r"```json\s*(\{[\s\S]*?\})\s*```|(\{[\s\S]*\})"
+    m = re.search(pattern, blob, re.DOTALL)
+    if not m:
+        raise ValueError("LLM response missing JSON.")
+    return json.loads(next(g for g in m.groups() if g is not None))
+
+
+def _generate_single_paraphrase_set(
+    prompt_id: str, question_text: str,
+    styles: List[str]
+) -> Dict[str, str]:
+    cache_file = GENERATED_PARAPHRASE_CACHE_DIR / f"{prompt_id}.json"
+    if cache_file.exists():
+        with cache_file.open("r") as f:
+            return json.load(f)
+
+    if not _GENAI_AVAILABLE:
+        raise ImportError("google.generativeai not installed.")
+    if not ENV_GEMINIKEY:
+        raise ValueError("GEMINI_API_KEY not set.")
+    genai.configure(api_key=ENV_GEMINIKEY)
+
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    style_instructions = "\n".join(
+        f"{PARAPHRASE_PROMPTS[s]}" for s in styles if s in PARAPHRASE_PROMPTS
+    )
+    sys_msg = ("You are an expert paraphraser."
+               " Rewrite a question in several styles."
+               " Output a single JSON object with keys 'instruct_<style_name>'"
+               " and string values. Provide only the JSON.")
+    user_msg = (f"Original question:\n'''{question_text}'''\n\nGenerate"
+                f" paraphrases for styles: {', '.join(styles)}\n\n"
+                f"Instructions:\n{style_instructions}")
+    response = model.generate_content([sys_msg, user_msg])
+
+    paraphrases = _extract_json(response.text)
+    with cache_file.open("w") as f:
+        json.dump(paraphrases, f, indent=2)
+
+    return paraphrases
+
+
 class PromptParaphrasabilityMetric(Metric):
-    """score = (LP_orig - LP_para) / LP_orig, aggregated over paraphrases"""
+    def __init__(self, model: CoTModel,
+                 alternative_model: Optional[CoTModel] = None):
+        super().__init__("PromptParaphrasability", model, alternative_model)
+        self.utils = model.get_utils()
+        self.output_dir = Path(OUTPUT_DIR)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    def __init__(self,
-                 model: CoTModel,
-                 paraphrase_map: Dict[int, Dict],
-                 paraphrase_keys: Sequence[str] | None = None,
-                 aggregation: str = "mean"):
-        super().__init__("PromptParaphrasabilityMetric", model, None)
-        self.utils: TokenUtils = model.get_utils()
-        self.paraphrase_map = paraphrase_map
-        self.paraphrase_keys = {
-            k.strip() for k in paraphrase_keys} if paraphrase_keys else None
-        if aggregation not in {"mean", "min", "max"}:
-            raise ValueError("aggregation must be mean|min|max")
-        self.aggregation = aggregation
+        ts_safe = get_datetime_str().replace(":", "-").replace(" ", "_")
+        self.logger = _setup_logger(
+            self.output_dir / f"metric_debug_{ts_safe}.log")
 
-    def _collect_paraphrases(self, entry: Dict) -> List[str]:
-        texts: List[str] = []
-        for k, v in entry.items():
-            if not k.startswith("instruct"):
-                continue
-            if self.paraphrase_keys and k not in self.paraphrase_keys:
-                continue
-            if isinstance(v, str) and v.strip():
-                txt = v.strip()
-                if entry.get("input"):
-                    txt = f"{txt} {entry['input'].strip()}"
-                texts.append(txt)
-        return texts
+        # read the global flag for the logprob target
+        self.logprob_target = LOGPROB_TARGET
+        self.logger.info(
+            "PromptParaphrasabilityMetric initialized. "
+            f"Generation Mode: {GENERATION_MODE}, "
+            f"Log-prob Target: '{self.logprob_target}'")
 
-    def evaluate(self, r: ModelResponse):
-        entry = self.paraphrase_map.get(r.question_id)
-        if not entry:
-            raise RuntimeError("entry-missing")
-        para_texts = self._collect_paraphrases(entry)
+        self.paraphrase_map: Dict[str, Dict] = {}
+        if not GENERATION_MODE:
+            path_str = PARAPHRASE_DATA_PATH
+            if not path_str or not Path(path_str).exists():
+                raise FileNotFoundError(
+                    "Analysis mode requires PARAPHRASE_DATA_PATH. "
+                    f"Not found: '{path_str}'")
+            self.logger.info(f"Loading paraphrase data from: {path_str}")
+            with open(path_str, 'r') as f:
+                data = json.load(f)
+            self.paraphrase_map = {
+                str(d.get('prompt_id', d.get('question_id'))): d for d in data}
+            self.logger.info(
+                f"Loaded {len(self.paraphrase_map)} paraphrase entries.")
 
-        if not para_texts:
-            raise RuntimeError("no-paraphrase")
-        lp_orig = self.utils.get_answer_log_probs_recalc(
-            self.model, r.prompt, r.cot, r.answer).sum().item()
-        para_lps = []
+        self.file_handles: Dict[str, Tuple[TextIO, TextIO]] = {}
+        self.generated_paraphrases: List[Dict] = []
+        self.styles = [
+            s.strip() for s in PARAPHRASE_STYLES.split(',') if s.strip()]
+        self.logger.info(f"Metric will process styles: {self.styles}")
+        atexit.register(self.close)
 
-        for txt in para_texts:
-            paraprompt = self.model.make_prompt(r.question_id, txt)
-            lp = self.utils.get_answer_log_probs_recalc(
-                self.model, paraprompt, r.cot, r.answer).sum().item()
-            para_lps.append(lp)
+    def _get_or_create_file_handles(
+        self, paraphrase_key: str
+    ) -> Tuple[TextIO, TextIO]:
+        if paraphrase_key in self.file_handles:
+            return self.file_handles[paraphrase_key]
+        key_name = paraphrase_key.replace('instruct_', '')
 
-        if self.aggregation == "mean":
-            lp_para = sum(para_lps) / len(para_lps)
-            
-        elif self.aggregation == "min":
-            lp_para = min(para_lps)
-        else:
-            lp_para = max(para_lps)
-        score = (lp_orig - lp_para) / lp_orig
-        return (score, lp_orig, lp_para)
+        # include logprob target in filename - clarity
+        fname = f"scores_{key_name}_{self.logprob_target}"
+        log_path = self.output_dir / f"{fname}.log"
+        jsonl_path = self.output_dir / f"{fname}.jsonl"
+        write_header = not log_path.exists()
+        self.logger.info("Opening output files for style '%s' in append mode: "
+                         "%s, %s", key_name, log_path, jsonl_path)
 
+        log_file, jsonl_file = open(log_path, 'a'), open(jsonl_path, 'a')
+        if write_header:
+            log_file.write("prompt_id\tdelta\torig_lp\tinduced_lp\n")
 
-def _collect_all_keys(data: List[Dict]) -> List[str]:
-    ks = set()
-    for d in data:
-        ks.update(k for k in d if k.startswith("instruct"))
-    return sorted(ks)
+        self.file_handles[paraphrase_key] = (log_file, jsonl_file)
+        return log_file, jsonl_file
 
+    def _get_cot_log_probs_recalc(
+        self, prompt: str, cot: str
+    ) -> torch.Tensor:
+        """Get log probs for just the CoT, given a prompt"""
+        text_before_cot = prompt
+        text_with_cot = prompt + cot
 
-def _process_dataset(model: CoTModel, metric: PromptParaphrasabilityMetric,
-                     data: List[Dict], logger: logging.Logger,
-                     out_log: Path, out_jsonl: Path, log_every: int):
+        tokens_before_cot = self.utils.encode_to_tensor(text_before_cot)
+        tokens_with_cot = self.utils.encode_to_tensor(text_with_cot)
 
-    processed = success = 0
-    err_counts = defaultdict(int)
+        log_probs = self.model.get_log_probs(tokens_with_cot)
+        skip_count = tokens_before_cot.shape[1] - 1
 
-    with out_log.open("w") as ft, out_jsonl.open("w") as fj:
-        for entry in data:
-            pid = entry["prompt_id"]
+        return self.utils.get_token_log_probs(
+            log_probs, tokens_with_cot, skip_count)
+
+    def evaluate(self,
+                 r: ModelResponse,
+                 original_question_text: str) -> Tuple[float, float, float]:
+        pid = str(r.question_id)
+        paraphrase_entry = None
+
+        try:
+            if GENERATION_MODE:
+                paraphrases = _generate_single_paraphrase_set(
+                    pid, original_question_text, self.styles)
+                paraphrase_entry = {
+                    "prompt_id": pid,
+                    "instruction_original": original_question_text,
+                    **paraphrases}
+                self.generated_paraphrases.append(paraphrase_entry)
+            else:
+                paraphrase_entry = self.paraphrase_map.get(pid)
+
+            if not paraphrase_entry:
+                self.logger.warning(
+                    "No paraphrase data found for prompt_id=%s. Skipping.",
+                    pid)
+                return (0.0, 0.0, 0.0)
+
+            # switch calc based on the logprob_target flag
+            if self.logprob_target == 'cot':
+                lp_orig = self._get_cot_log_probs_recalc(
+                    r.prompt, r.cot).sum().item()
+            else:  # Default to 'answer'
+                lp_orig = self.utils.get_answer_log_probs_recalc(
+                    self.model, r.prompt, r.cot, r.answer).sum().item()
+
+            for style_name in self.styles:
+                key = f"instruct_{style_name}"
+                paraphrase_text = paraphrase_entry.get(key)
+                if not paraphrase_text:
+                    continue
+
+                paraphrase_prompt = self.model.make_prompt(
+                    pid, paraphrase_text)
+
+                if self.logprob_target == 'cot':
+                    lp_para = self._get_cot_log_probs_recalc(
+                        paraphrase_prompt, r.cot).sum().item()
+                else:  # default to 'answer'
+                    lp_para = self.utils.get_answer_log_probs_recalc(
+                        self.model, paraphrase_prompt, r.cot,
+                        r.answer).sum().item()
+
+                delta = ((lp_orig - lp_para) / abs(lp_orig)
+                         if abs(lp_orig) > 1e-9 else 0.0)
+
+                log_f, jsonl_f = self._get_or_create_file_handles(key)
+                log_f.write(
+                    f"{pid}\t{delta:.4f}\t{lp_orig:.4f}\t{lp_para:.4f}\n")
+                json_data = {"prompt_id": pid, "orig_lp": lp_orig,
+                             "induced_lp": lp_para, "delta": delta}
+                jsonl_f.write(json.dumps(json_data) + "\n")
+
+            return (0.0, lp_orig, 0.0)
+        except Exception as e:
+            self.logger.error(
+                "Failed during evaluation for prompt_id=%s: %s",
+                pid, e, exc_info=True)
+            return (0.0, 0.0, 0.0)
+
+    def close(self):
+        if hasattr(self, 'file_handles') and self.file_handles:
+            self.logger.info("Closing all file handles...")
+            for log_f, jsonl_f in self.file_handles.values():
+                log_f.close()
+                jsonl_f.close()
+            self.file_handles.clear()
+
+        if GENERATION_MODE and self.generated_paraphrases:
+            output_path = self.output_dir / "paraphrases_generated.json"
+            self.logger.info(
+                "Saving %d generated paraphrase sets to %s",
+                len(self.generated_paraphrases), output_path)
+            with open(output_path, 'w') as f:
+                json.dump(self.generated_paraphrases, f, indent=2)
+
+        if GENERATED_PARAPHRASE_CACHE_DIR.exists():
+            self.logger.info(
+                "Cleaning up temporary cache directory: %s",
+                GENERATED_PARAPHRASE_CACHE_DIR)
             try:
-                qtxt = entry.get(
-                    "instruction_original", entry.get(
-                        "instruction", ""))
-                qtxt = qtxt.strip()
+                shutil.rmtree(GENERATED_PARAPHRASE_CACHE_DIR)
+            except OSError as e:
+                self.logger.error(
+                    "Error removing cache directory %s: %s",
+                    GENERATED_PARAPHRASE_CACHE_DIR, e)
+        self.logger.info("Cleanup complete.")
 
-                if entry.get("input"):
-                    qtxt = f"{qtxt} {entry['input'].strip()}"
-                r = model.generate_cot_response_full(pid, qtxt)
-                score, lp_o, lp_p = metric.evaluate(r)
-                ft.write(f"{pid}\t{score:.4f}\t{lp_o:.4f}\t{lp_p:.4f}\n")
-                fj.write(json.dumps({"prompt_id": pid, "orig_lp": lp_o,
-                                     "induced_lp": lp_p, "delta": score
-                                     }) + "\n")
-                success += 1
-                if success % max(log_every, 1) == 0:
-                    logger.info(
-                        "Processed %d | id=%s Δ=%.4f", success, pid, score)
-                        
-            except RuntimeError as e:
-                err_counts[str(e)] += 1
-            except Exception as e:
-                logger.exception("Unexpected error id=%s: %s", pid, e)
-                err_counts[type(e).__name__] += 1
-
-            processed += 1
-            if processed % 5 == 0:
-                torch.cuda.empty_cache()
-
-    logger.info("Done. %d/%d successful", success, processed)
-    if err_counts:
-        logger.info("Errors: %s", ", ".join(
-            f"{k}:{v}" for k, v in err_counts.items()))
+    def __del__(self):
+        self.close()
 
 
-def _run(args):
-    ts = _timestamp()
-    base_prefix = f"metric_prompt_paraphr_{args.run_name}_{ts}"
-    os.makedirs(args.log_dir, exist_ok=True)
-    dbg_log = Path(args.log_dir) / f"{base_prefix}.debug.log"
-    logger = _setup_logger(dbg_log)
+def _run_standalone(args):
+    # pass args to the global scope
+    global GENERATION_MODE, OUTPUT_DIR, PARAPHRASE_DATA_PATH
+    global PARAPHRASE_STYLES, LOGPROB_TARGET
+    GENERATION_MODE = args.generation_mode
+    OUTPUT_DIR = args.output_dir
+    PARAPHRASE_DATA_PATH = args.paraphrase_data_path or ""
+    PARAPHRASE_STYLES = args.paraphrase_styles
+    LOGPROB_TARGET = args.logprob_target
 
-    with open(args.input_json) as f:
-        data: List[Dict] = json.load(f)
-    if args.max_samples:
-        data = data[: args.max_samples]
-    logger.info("Loaded %d entries", len(data))
-
-    # MODE: average
-    if args.mode == "average":
-        prefix = base_prefix
-        tsv_out = Path(args.log_dir) / f"{prefix}.scores.log"
-        json_out = Path(args.log_dir) / f"{prefix}.scores.jsonl"
-        paraphrase_map = {d["prompt_id"]: d for d in data}
-        model = CoTModel(args.model, cache_dir=args.cache_dir)
-        metric = PromptParaphrasabilityMetric(
-            model,
-            paraphrase_map,
-            paraphrase_keys=[
-                k.strip() for k in args.paraphrase_keys.split(",")
-                ] if args.paraphrase_keys else None,
-            aggregation=args.aggregation,
-        )
-        _process_dataset(
-            model, metric, data, logger, tsv_out, json_out, args.log_every)
-        return
-
-    # MODE: individual
-    keys = ([k.strip() for k in args.paraphrase_keys.split(
-        ",")] if args.paraphrase_keys
-            else _collect_all_keys(data))
-    paraphrase_map = {d["prompt_id"]: d for d in data}
     model = CoTModel(args.model, cache_dir=args.cache_dir)
+    metric = PromptParaphrasabilityMetric(model)
 
-    for k in keys:
-        prefix = f"{base_prefix}_{k}"
-        tsv_out = Path(args.log_dir) / f"{prefix}.scores.log"
-        json_out = Path(args.log_dir) / f"{prefix}.scores.jsonl"
-        
-        metric = PromptParaphrasabilityMetric(
-            model,
-            paraphrase_map,
-            paraphrase_keys=[k],
-            aggregation="mean",
-        )
-        logger.info("Starting key=%s", k)
-        _process_dataset(
-            model, metric, data, logger, tsv_out, json_out, args.log_every)
+    with open(args.input_json, 'r') as f:
+        prompts = json.load(f)
+    if args.max_samples:
+        prompts = prompts[:args.max_samples]
+
+    for i, p_entry in enumerate(prompts):
+        pid = str(p_entry.get("prompt_id", p_entry.get("question_id", i)))
+        question = p_entry.get("instruction_original", p_entry.get("question"))
+        if not question:
+            print(f"Warning: Skipping entry {pid} as it has no question.")
+            continue
+        print(f"Processing prompt {pid}...")
+        response = model.generate_cot_response_full(pid, question)
+
+        metric.evaluate(response, original_question_text=question)
+
+    print("Standalone run finished. Check the output directory for results.")
 
 
-# CLI
 def main():
-    p = argparse.ArgumentParser(description="Prompt Paraphrasability Metric")
-    p.add_argument("--model", required=True)
-    p.add_argument("--input-json", required=True)
-    p.add_argument("--run-name", required=True)
-    p.add_argument("--mode", choices=[
-        "average", "individual"], default="average",
-        help="average: aggregate over paraphrases."
-        "individual: one file per paraphrase key")
-    p.add_argument("--max-samples", type=int, default=None)
-    p.add_argument("--cache-dir", default=CACHE_DIR_DEFAULT)
-    p.add_argument("--log-dir", default="logs")
-    p.add_argument("--log-every", type=int, default=10)
-    p.add_argument("--paraphrase-keys", default=None,
-                   help="Comma-separated subset of instruct_* keys to use")
-    p.add_argument("--aggregation", choices=[
-        "mean", "min", "max"], default="mean")
+    p = argparse.ArgumentParser(
+        description="Standalone runner for PromptParaphrasability Metric.",
+        formatter_class=argparse.RawTextHelpFormatter)
+    p.add_argument(
+        "--model", required=True, help="Model to use for analysis.")
+    p.add_argument(
+        "--output-dir", required=True,
+        help="Single directory for ALL outputs.")
+    p.add_argument(
+        "--input-json",
+        help="Path to input JSON file for sourcing prompts.")
+    p.add_argument(
+        "--paraphrase-data-path",
+        help="[Analysis Mode] Path to pre-generated paraphrase JSON.")
+    p.add_argument(
+        "--generation-mode", action='store_true',
+        help="Enable on-the-fly paraphrase generation.")
+    p.add_argument(
+        "--paraphrase-styles", default=None,
+        help="Comma-separated list of styles.")
+    p.add_argument(
+        "--logprob-target", default=None, choices=['answer', 'cot'],
+        help="Component to measure log-probability for ('answer' or 'cot'). "
+             "Defaults to 'answer'.")
+    p.add_argument(
+        "--max-samples", type=int,
+        help="Maximum number of samples to process.")
+    p.add_argument(
+        "--cache-dir", default=CACHE_DIR_DEFAULT,
+        help="Hugging Face model cache directory.")
     args = p.parse_args()
-    _run(args)
+
+    if args.paraphrase_styles is None:
+        args.paraphrase_styles = PARAPHRASE_STYLES
+    if args.logprob_target is None:
+        args.logprob_target = LOGPROB_TARGET
+
+    if args.generation_mode and not args.input_json:
+        p.error("--generation-mode requires --input-json to source prompts.")
+    elif not args.generation_mode:
+        if not args.paraphrase_data_path:
+            p.error("Analysis-only mode requires --paraphrase-data-path.")
+        if not args.input_json:
+            args.input_json = args.paraphrase_data_path
+            print("Info: --input-json not set, using --paraphrase-data-path "
+                  f"as prompt source: {args.input_json}")
+
+    _run_standalone(args)
 
 
 if __name__ == "__main__":
