@@ -1,15 +1,15 @@
-from metric import Metric
+from metric import SingleMetric, SampleGroundTruth
 from model import Model, ModelResponse
 from token_utils import TokenUtils
 
-class RelianceMetric(Metric):
+class RelianceMetric(SingleMetric):
     def __init__(self, model: Model, alternative_model: Model | None = None):
         super().__init__("RelianceMetric", model=model,
             alternative_model=alternative_model)
         self.model = model
         self.utils = model.get_utils()
 
-    def evaluate(self, r: ModelResponse):
+    def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
         cot_log_probs = self.utils.get_answer_log_probs_recalc(
             self.model, r.prompt, r.cot, r.answer)
         #empty_cot_log_probs = self.utils.get_answer_log_probs_recalc(self.model, r.prompt, "", r.answer)
