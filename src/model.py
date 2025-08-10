@@ -399,9 +399,9 @@ class CoTModel(Model):
             answer=answer,
             raw_output=raw_output)
 
-    def evaluate_cot_response(self, question_id, prompt, response, max_new_tokens=4096):
+    def evaluate_cot_response(self, question_id, prompt, response, max_new_tokens=4096, to_device=None):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
-        response_tokens = self.utils.encode_to_tensor(response)
+        response_tokens = self.utils.encode_to_tensor(response, to_device=to_device)
 
         (question, cot, answer) = self.do_split(response_tokens, prompt)
 
