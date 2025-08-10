@@ -1,7 +1,8 @@
 import torch
 import pytest
 from unittest.mock import Mock, patch
-from model import Model, CoTModel, ModelResponse
+from model import Model, CoTModel, ModelResponse, ModelPromptBuilder
+from transformers import AutoTokenizer
 
 TEST_CACHE_DIR = "/tmp/cache-test"
 
@@ -110,21 +111,26 @@ class TestCoTModel:
         mock_tokenizer_instance.apply_chat_template.assert_called_once()
         assert prompt is not None
 
+def do_prompt_builder_test(model_name, question):
+    tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=TEST_CACHE_DIR)
+    prompt_builder = ModelPromptBuilder(model_name)
+    prompt_builder.add_user_message(question)
+    prompt = prompt_builder.make_prompt(tokenizer)
+    print(f"prompt: {prompt}")
+    return prompt
+
 class TestCoTModelReal:
     def test_make_prompt_Qwen3_0_6B(self):
-        model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
-        prompt = model.make_prompt("test_001", "What is 2+2?")
-        assert prompt == "<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant\n"
+        assert do_prompt_builder_test("Qwen/Qwen3-0.6B", "What is 2+2?") \
+            == "<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant\n"
 
     def test_make_prompt_DeepSeek_R1_Distill_Qwen_1_5B(self):
-        model = CoTModel("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", cache_dir=TEST_CACHE_DIR)
-        prompt = model.make_prompt("test_001", "What is 2+2?")
-        assert prompt == "<｜begin▁of▁sentence｜><｜User｜>Question: What is 2+2?\nLet's think step by step.<｜Assistant｜><think>"
+        assert do_prompt_builder_test("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", "What is 2+2?") \
+            == "<｜begin▁of▁sentence｜><｜User｜>Question: What is 2+2?\nLet's think step by step.<｜Assistant｜><think>"
 
     def test_make_prompt_Gemma2_2B(self):
-        model = CoTModel("google/gemma-2-2b-it", cache_dir=TEST_CACHE_DIR)
-        prompt = model.make_prompt("test_001", "What is 2+2?")
-        assert prompt == "<bos><start_of_turn>user\nQuestion: What is 2+2?\nLet's think step by step. Please write the string \"Answer: \" before the final answer.<end_of_turn>\n<start_of_turn>model\n"
+        assert do_prompt_builder_test("google/gemma-2-2b-it", "What is 2+2?") \
+            == "<bos><start_of_turn>user\nQuestion: What is 2+2?\nLet's think step by step. Please write the string \"Answer: \" before the final answer.<end_of_turn>\n<start_of_turn>model\n"
 
     def test_tokenizer_decode_Qwen3_0_6B(self):
         model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
