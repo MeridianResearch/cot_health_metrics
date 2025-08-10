@@ -86,7 +86,7 @@ class TestCoTModel:
         # This should work with a supported model
         model = CoTModel("Qwen/Qwen3-0.6B")
         assert model.model_name == "Qwen/Qwen3-0.6B"
-    
+
     def test_cot_model_initialization_unsupported(self):
         """Test CoTModel initialization with unsupported model"""
         with pytest.raises(SystemExit):
@@ -132,23 +132,38 @@ class TestCoTModelReal:
         assert do_prompt_builder_test("google/gemma-2-2b-it", "What is 2+2?") \
             == "<bos><start_of_turn>user\nQuestion: What is 2+2?\nLet's think step by step. Please write the string \"Answer: \" before the final answer.<end_of_turn>\n<start_of_turn>model\n"
 
-    def test_tokenizer_decode_Qwen3_0_6B(self):
+    @patch('model.AutoConfig.from_pretrained')
+    @patch('model.AutoModelForCausalLM.from_pretrained')
+    def test_full_make_prompt_Gemma2_2B(self, mock_model, mock_config):
+        """Test make_prompt method"""
+        model = CoTModel("google/gemma-2-2b-it", cache_dir=TEST_CACHE_DIR)
+        model.make_prompt("test_001", "What is 2+2?")
+        assert model.make_prompt("test_001", "What is 2+2?") \
+            == "<bos><start_of_turn>user\nQuestion: What is 2+2?\nLet's think step by step. Please write the string \"Answer: \" before the final answer.<end_of_turn>\n<start_of_turn>model\n"
+
+    @patch('model.AutoConfig.from_pretrained')
+    @patch('model.AutoModelForCausalLM.from_pretrained')
+    def test_tokenizer_decode_Qwen3_0_6B(self, mock_model, mock_config):
         model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
         response = "Question: What is 2+2?\nLet's think step by step.<think>" \
             + "Let me think about this step by step. 2+2 equals 4.</think>\nAnswer: 4"
-        tokens = model.utils.encode_to_tensor(response)
+        tokens = model.utils.encode_to_tensor(response, to_device=torch.device("cpu"))
         output = model.utils.decode_to_string(tokens[0])
         assert output == response
 
-    def test_tokenizer_decode_Gemma2_2B(self):
+    @patch('model.AutoConfig.from_pretrained')
+    @patch('model.AutoModelForCausalLM.from_pretrained')
+    def test_tokenizer_decode_Gemma2_2B(self, mock_model, mock_config):
         model = CoTModel("google/gemma-2-2b-it", cache_dir=TEST_CACHE_DIR)
         response = "Question: What is 2+2?\nLet's think step by step.<think>" \
             + "Let me think about this step by step. 2+2 equals 4.</think>\nAnswer: 4"
-        tokens = model.utils.encode_to_tensor(response)
+        tokens = model.utils.encode_to_tensor(response, to_device=torch.device("cpu"))
         output = model.utils.decode_to_string(tokens[0])
         assert output == response
 
-    def test_do_split_Qwen3_0_6B_not_enough_pieces(self):
+    @patch('model.AutoConfig.from_pretrained')
+    @patch('model.AutoModelForCausalLM.from_pretrained')
+    def test_do_split_Qwen3_0_6B_not_enough_pieces(self, mock_model, mock_config):
         """Test do_split method"""
         model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
 
@@ -156,36 +171,41 @@ class TestCoTModelReal:
         response = prompt + "Let me think about this step by step..."
         
         with pytest.raises(RuntimeError):
-            model_response = model.evaluate_cot_response(1, prompt, response)
+            model_response = model.evaluate_cot_response(1, prompt, response, to_device=torch.device("cpu"))
 
-    def test_do_split_Qwen3_0_6B(self):
+    @patch('model.AutoConfig.from_pretrained')
+    @patch('model.AutoModelForCausalLM.from_pretrained')
+    def test_do_split_Qwen3_0_6B(self, mock_model, mock_config):
         """Test do_split method"""
         model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
 
         prompt = "Question: What is 2+2?\nLet's think step by step.\n<think>"
         response = prompt + "Let me think about this step by step. 2+2 equals 4.</think>\nAnswer: 4"
-        model_response = model.evaluate_cot_response(1, prompt, response)
+        model_response = model.evaluate_cot_response(1, prompt, response, to_device=torch.device("cpu"))
 
         assert model_response.question == "Question: What is 2+2?\nLet's think step by step."
         assert model_response.cot == "Let me think about this step by step. 2+2 equals 4."
         assert model_response.answer == "Answer: 4"
         assert model_response.raw_output == response
 
-    @pytest.mark.xfail(reason="Test is expected to fail due to incomplete implementation")
-    def test_do_split_Gemma2_2B(self):
+    @patch('model.AutoConfig.from_pretrained')
+    @patch('model.AutoModelForCausalLM.from_pretrained')
+    def test_do_split_Gemma2_2B(self, mock_model, mock_config):
         """Test do_split method"""
         model = CoTModel("google/gemma-2-2b-it", cache_dir=TEST_CACHE_DIR)
 
         prompt = "Question: What is 2+2?\nLet's think step by step."
-        response = prompt #+ "Let me think about this step by step. 2+2 equals 4.</think>\nAnswer: 4"
-        model_response = model.evaluate_cot_response(1, prompt, response)
+        response = prompt + "Let me think about this step by step. 2+2 equals 4.\nAnswer: 4"
+        model_response = model.evaluate_cot_response(1, prompt, response, to_device=torch.device("cpu"))
 
-        assert model_response.question == "<bos>Question: What is 2+2?\nLet's think step by step."
+        assert model_response.question == "Question: What is 2+2?\nLet's think step by step."
         assert model_response.cot == "Let me think about this step by step. 2+2 equals 4."
         assert model_response.answer == "4"
         assert model_response.raw_output == response
 
-    def test_real_example_DeepSeek_R1_Distill_Qwen_1_5B(self):
+    @patch('model.AutoConfig.from_pretrained')
+    @patch('model.AutoModelForCausalLM.from_pretrained')
+    def test_real_example_DeepSeek_R1_Distill_Qwen_1_5B(self, mock_model, mock_config):
         input = ModelResponse(
             question_id=0,
             question='A car travels 60 miles in 1.5 hours. What is its average speed?',
@@ -196,7 +216,7 @@ class TestCoTModelReal:
         )
 
         model = CoTModel("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", cache_dir=TEST_CACHE_DIR)
-        model_response = model.evaluate_cot_response(1, input.prompt, input.raw_output)
+        model_response = model.evaluate_cot_response(1, input.prompt, input.raw_output, to_device=torch.device("cpu"))
 
         assert model_response.prompt == input.prompt
         assert model_response.cot == input.cot

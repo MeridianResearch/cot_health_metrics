@@ -10,9 +10,11 @@ class TokenUtils:
         return self.tokenizer.decode(
             tokens, skip_special_tokens=skip_special_tokens)
 
-    def encode_to_tensor(self, string: str):
+    def encode_to_tensor(self, string: str, to_device=None):
+        if to_device is None:
+            to_device = self.hf_model.device
         return self.tokenizer.encode(
-            string, return_tensors="pt").to(self.hf_model.device)
+            string, return_tensors="pt").to(to_device)
 
     def escape_string(self, string: str):
         return string.encode('unicode_escape').decode()
