@@ -73,7 +73,7 @@ class Model:
     def do_split(self, sequences):
         raise NotImplementedError("Subclasses must implement this method")
 
-class CoTModel:
+class CoTModel(Model):
     def __init__(self, model_name: str, cache_dir="/tmp/cache"):
         super().__init__(model_name, cache_dir)
 
@@ -89,8 +89,6 @@ class CoTModel:
             raise
 
     def _load_model(self, model_name, cache_dir):
-        self.model_name = model_name
-        
         config = AutoConfig.from_pretrained(
             model_name,
             cache_dir=cache_dir,
