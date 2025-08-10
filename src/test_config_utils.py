@@ -39,12 +39,12 @@ class TestDatasetConfig:
 
     def test_get_supported_dataset(self):
         """Test getting dataset name for supported datasets"""
-        assert DatasetConfig.get("Alpaca") == "vicgalle/alpaca-gpt4"
-        assert DatasetConfig.get("GSM8K") == "gsm8k"
+        assert DatasetConfig.get("alpaca").dataset_name == "vicgalle/alpaca-gpt4"
+        assert DatasetConfig.get("GSM8K").dataset_name == "gsm8k"
 
     def test_get_unsupported_dataset(self):
         """Test getting dataset name for unsupported datasets"""
-        assert DatasetConfig.get("custom_dataset") == "custom_dataset"
+        assert DatasetConfig.get("custom_dataset").dataset_name == "custom_dataset"
 
     @patch('config.load_dataset')
     def test_load_dataset(self, mock_load_dataset):
@@ -53,7 +53,7 @@ class TestDatasetConfig:
         mock_load_dataset.return_value = mock_dataset
         
         result = DatasetConfig.load("GSM8K")
-        mock_load_dataset.assert_called_once_with("GSM8K", "main")
+        mock_load_dataset.assert_called_once_with("gsm8k", "main", split='train')
         assert result == mock_dataset
 
 class TestTokenUtils:
@@ -99,14 +99,14 @@ def test_model_support_status(model_name, expected_supported):
 
 
 @pytest.mark.parametrize("dataset_name,expected_hf_name", [
-    ("Alpaca", "vicgalle/alpaca-gpt4"),
+    ("alpaca", "vicgalle/alpaca-gpt4"),
     ("GSM8K", "gsm8k"),
-    ("MMLU", "openai/openai_mmlu_benchmark"),
+    ("MMLU", "cais/mmlu"),
     ("custom_dataset", "custom_dataset"),
 ])
 def test_dataset_name_mapping(dataset_name, expected_hf_name):
     """Test dataset name mapping"""
-    assert DatasetConfig.get(dataset_name) == expected_hf_name
+    assert DatasetConfig.get(dataset_name).dataset_name == expected_hf_name
 
 
 if __name__ == "__main__":
