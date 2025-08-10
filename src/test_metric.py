@@ -33,7 +33,7 @@ class TestMetric:
         mock_model.model_name = "test_model"
         metric = Metric("test_metric", mock_model)
         
-        assert str(metric) == "Metric(model_name=test_model)"
+        assert str(metric) == "Metric(metric_name=test_metric, model_name=test_model)"
 
 
 class TestDummyMetric:
