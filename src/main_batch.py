@@ -51,9 +51,10 @@ def main():
     parser.add_argument("--data-path", default=None)
     parser.add_argument("--data-hf", default=None)
     parser.add_argument("--skip-samples", type=int, default=0)
+    parser.add_argument("--filler", type=str, default="think")
     parser.add_argument("--max-samples", type=int, default=None)
     parser.add_argument("--cache-dir", default=CACHE_DIR_DEFAULT)
-    parser.add_argument("--log-dir", default=LOG_DIRECTORY_DEFAULT)
+    parser.add_argument("--log-dir", default="data/logprobs/json")
     parser.add_argument("--log-file", default=None)
     parser.add_argument("--log-every", type=int, default=LOG_EVERY_DEFAULT)
     parser.add_argument("--log-verbose", type=bool, default=True)
@@ -85,14 +86,25 @@ def main():
     model2 = CoTModel(args.model2, cache_dir=args.cache_dir) if args.model2 else None
 
     # Create metric(s)
+    extra_args = {}
+    if args.metric == "Internalized":
+        extra_args["filler_token"] = args.filler
+
     metric = construct_metric(
         metric_name=args.metric,
         model=model,
-        alternative_model=model2)
+        alternative_model=model2,
+        **extra_args)
 
     if args.log_file is None:
-        log_file = args.log_dir + "/" + dataset_name + "_" + _get_datetime_str() + "_" + args.metric + ".log"
-        json_log_file = args.log_dir + "/" + dataset_name + "_" + _get_datetime_str() + "_" + args.metric + ".jsonl"
+        if args.metric == "Internalized":
+            log_file = (args.log_dir + "/" + args.model + "_" + dataset_name + "_" + _get_datetime_str() + "_"
+                        + args.metric + "_filler_" + args.filler + "_" + ".log")
+            json_log_file = (args.log_dir + "/" + args.model + "_" + dataset_name + "_" + _get_datetime_str() + "_"
+                             + args.metric + "_filler_" + args.filler + "_" + ".jsonl")
+        else:
+            log_file = args.log_dir + "/" + args.model + "_" + dataset_name + "_" + _get_datetime_str() + "_" + args.metric + ".log"
+            json_log_file = args.log_dir + "/" + args.model + "_" + dataset_name + "_" + _get_datetime_str() + "_" + args.metric + ".jsonl"
         os.makedirs(args.log_dir, exist_ok=True)
     else:
         log_file = args.log_file

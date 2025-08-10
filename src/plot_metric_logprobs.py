@@ -77,8 +77,9 @@ class LogProbVisualizer:
         self.out_dir = out_dir
         self.labels = labels
         self.out_dir.mkdir(parents=True, exist_ok=True)
-        self.bins = bins
-        self.logger = logger or logging.getLogger(__name__)
+        self.bins        = bins
+        self.logger      = logger or logging.getLogger(__name__)
+        self.suffix      = suffix
 
     # public API
     def run(self) -> None:
@@ -94,18 +95,18 @@ class LogProbVisualizer:
         self._plot_score(
             score,
             title=f"{self.metric_name.title()} - score",
-            fname=self.out_dir / f"{self.metric_name}_score_hist.png"
+            fname=self.out_dir / f"{self.metric_name}_score_hist{self.suffix}.png"
         )
         self._plot_hist(
             orig,
             title=f"{self.metric_name.title()} - Original logP",
-            fname=self.out_dir / f"{self.metric_name}_orig_logprobs_hist.png"
+            fname=self.out_dir / f"{self.metric_name}_orig_logprobs_hist{self.suffix}.png"
         )
         self._plot_hist(
             first_induced,
             title=f"{self.metric_name.title()} - Induced logP",
             fname=self.out_dir
-            / f"{self.metric_name}_induced_logprobs_hist.png"
+            / f"{self.metric_name}_induced_logprobs_hist{self.suffix}.png"
         )
 
         # now collect all the induced-LP series
@@ -128,7 +129,7 @@ class LogProbVisualizer:
             combined,
             title=f"{self.metric_name.title()} - Orig vs Induced logP",
             fname=self.out_dir /
-            f"{self.metric_name}_combined_logprobs_hist.png"
+            f"{self.metric_name}_combined_logprobs_hist{self.suffix}.png"
         )
 
         # extra plotting (as before)
@@ -137,10 +138,9 @@ class LogProbVisualizer:
                 [orig, first_induced, first_extra],
                 title=f"{self.metric_name.title()} - Extra logP",
                 fname=self.out_dir /
-                f"{self.metric_name}_extra_logprobs_hist.png"
+                f"{self.metric_name}_extra_logprobs_hist{self.suffix}.png"
             )
         self.logger.info("Finished - plots written to %s", self.out_dir)
-
     # helpers
     def _load_logprobs(
         self, path: Path
@@ -218,7 +218,7 @@ class LogProbVisualizer:
         plt.figure(figsize=(6.4, 4.8))
         plt.hist(score, bins=self.bins, alpha=0.5, label="score function")
         plt.title(title)
-        plt.xlabel("log-probability")
+        plt.xlabel("score")
         plt.ylabel("frequency")
         plt.legend()
         plt.tight_layout()
@@ -360,21 +360,37 @@ def _parse_args():
 def main() -> None:
     """Main execution function"""
     args = _parse_args()
-
     metric = args.metric_name.lower()
     in_paths = [Path(p) for p in args.input_path]
     out_dir = Path(args.out_dir)
 
+    Path("logs").mkdir(exist_ok=True)
     log_name = f"plot_metric_logprobs_{int(time.time())}.log"
     logger = setup_logger("plot_metric_logprobs", Path("logs") / log_name)
     logger.info("Metric: %s", metric)
+
+    # Extract filler for internalized metric
+    suffix = ""
+    if metric == "internalized":
+        # Example: Qwen3-1.7B_GSM8K_2025-08-03_12:06:40_Internalized_filler_._.jsonl
+        stem = in_path.stem  # Qwen3-1.7B_GSM8K_2025-08-03_12:06:40_Internalized_filler_._
+        if "filler_" in stem:
+            filler_part = stem.split("filler_")[1]  # ._ or :_
+            filler = filler_part.split("_")[0]      # . or :
+            if filler == ".":
+                suffix = "filler_."
+            elif filler == ":":
+                suffix = "filler_:"
+            elif filler == "<":
+                suffix = "filler_<"
 
     vis = LogProbVisualizer(metric_name=metric,
                             in_paths=in_paths,
                             out_dir=out_dir,
                             bins=args.bins,
                             labels=args.labels,
-                            logger=logger)
+                            logger=logger,
+                            suffix=suffix)
     vis.run()
 
 

@@ -64,9 +64,6 @@ class Model:
     def evaluate_cot_response(self, question_id, prompt, max_new_tokens=4096):
         raise NotImplementedError("Subclasses must implement this method")
 
-    def evaluate_cot_response_from_tokens(self, question_id, prompt_tokens: torch.Tensor, max_new_tokens=4096):
-        raise NotImplementedError("Subclasses must implement this method")
-
     def get_log_probs(self, sequences: torch.Tensor):
         raise NotImplementedError("Subclasses must implement this method")
 
@@ -111,51 +108,76 @@ class CoTModel(Model):
     def get_utils(self):
         return self.utils
 
-    def generate_cot_response(self, question_id, question, max_new_tokens=4096):
-        final_response = self.generate_cot_response_full(question_id, question, max_new_tokens)
+    def generate_cot_response(self, question_id, question, max_new_tokens=4096, do_sample=True):
+        final_response = self.generate_cot_response_full(question_id, question,
+            max_new_tokens=max_new_tokens, do_sample=do_sample)
         return final_response.basic_pair
 
     def make_prompt(self, question_id, question, custom_instruction="Let's think step by step."):
+        # Handle Gemma-2 specifically
+        if self.model_name == "google/gemma-2-2b-it":
+            custom_instruction = custom_instruction + " Please write the string \"Answer: \" before the final answer."
+        if self.model_name == "meta-llama/Meta-Llama-3-8B-Instruct" or self.model_name == "meta-llama/Llama-2-7b-chat-hf":
+            custom_instruction = custom_instruction + " Please write the string \"Answer: \" before the final answer."
+
         model_config = ModelConfig.get(self.model_name)
         history = [
             {"role": "user", "content": f"Question: {question}\n{custom_instruction}"},
         ]
-        continue_final_message = True
 
-        if("begin_think" in model_config):
-            if(self.model_name == "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"):
+        # Usually, one of these should be set to True
+        continue_final_message = False
+        add_generation_prompt = False
+
+        if "begin_think" in model_config:
+            if (self.model_name == "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"):
                 history.append({"role": "assistant", "content": "<think>"})
+                continue_final_message = True
             else:
-                continue_final_message = False
-        elif("fuzzy_separator" in model_config):
-            continue_final_message = False
+                # default to making a new assistant role section
+                add_generation_prompt = True
+        elif "fuzzy_end_think_list" in model_config:
+            # For Gemma, use default behavior
+            add_generation_prompt = True
+            pass
         else:
             print(f"ERROR: model {self.model_name} missing CoT separator config")
             exit(1)
 
         prompt = self.tokenizer.apply_chat_template(history,
-            tokenize=False,
-            add_generation_prompt=not continue_final_message,
-            continue_final_message=continue_final_message)
+                                                    tokenize=False,
+                                                    add_generation_prompt=add_generation_prompt,
+                                                    continue_final_message=continue_final_message)
         return prompt
 
-    def do_generate(self, question_id, prompt, max_new_tokens=4096):
+    def make_prompt_no_cot(self, question_id, question):
+        history = [
+            {"role": "user", "content": f"Question: {question}\n"},
+        ]
+
+        prompt = self.tokenizer.apply_chat_template(history,
+                                                    tokenize=False,
+                                                    add_generation_prompt=True,
+                                                    continue_final_message=False)
+        return prompt
+
+
+    def do_generate(self, question_id, prompt, max_new_tokens=4096, do_sample=True):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         model_config = ModelConfig.get(self.model_name)
+
+        generate_kwargs = model_config.get("generate_kwargs", {})
 
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
         output = self.model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
-            do_sample=True,
-            temperature=0.6,
-            top_k=20,
-            min_p=0.0,
-            top_p=0.95,
+            do_sample=do_sample,
             eos_token_id=self.tokenizer.eos_token_id,
             pad_token_id=self.tokenizer.eos_token_id,
             output_scores=True,
             return_dict_in_generate=True,
+            **generate_kwargs,
         )
         return output
 
@@ -165,59 +187,61 @@ class CoTModel(Model):
             log_probs = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
         return log_probs
 
-    def do_split(self, sequences):
+    def do_split(self, sequences, prompt):
         model_config = ModelConfig.get(self.model_name)
 
         # should split the output into three parts: question, the chain of thought and the answer
         if("begin_think" in model_config):
-            # Split before decoding
-            begin_think = self._get_token_id(model_config["begin_think"])
-            if(sequences[0][0] == begin_think):
-                sequences[0] = sequences[0][1:]
-            end_think = self._get_token_id(model_config["end_think"])
-            # split to 3 pieces: piece 0: question; piece 1: cot; piece 2: answer
-            pieces = self._split_on_tokens(sequences[0].tolist(), [begin_think, end_think])
+            begin_think = model_config["begin_think"]
+            end_think = model_config["end_think"]
 
-            if len(pieces) < 3:
-                full = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
+            full = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
+            try:
+                (question, cot_and_answer) = full.split(begin_think, 1)
+                (cot, answer) = cot_and_answer.split(end_think, 1)
+            except ValueError:
                 raise RuntimeError(
-                    f"Failed to extract CoT (too few pieces) from: {full}"
+                    f"Failed to extract CoT (no begin/end think token) from: {full}"
                 )
 
-            response0 = self.tokenizer.decode(pieces[0], skip_special_tokens=True)
-            response1 = self.tokenizer.decode(pieces[1], skip_special_tokens=True)
-            response2 = self.tokenizer.decode(pieces[2], skip_special_tokens=True)
+            question = question.strip()
+            cot = cot.strip()
+            answer = answer.strip()
 
-            question = response0.strip()
-            #cot = response0[len(prompt):].strip()
-            cot = response1.strip()
-            answer = response2.strip()
+        elif("fuzzy_end_think_list" in model_config):
+            input_tokens = self.tokenizer(prompt, return_tensors="pt")
+            full = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
+            question = self.tokenizer.decode(
+                sequences[0][:len(input_tokens.input_ids[0])], skip_special_tokens=True).strip()
+            cot_and_answer = self.tokenizer.decode(
+                sequences[0][len(input_tokens.input_ids[0]):], skip_special_tokens=True)
 
-        elif("fuzzy_separator" in model_config):
-            if(model_config["fuzzy_separator"] in sequences):
-                pieces = sequences.split(model_config["fuzzy_separator"])
+            end_think_list = model_config["fuzzy_end_think_list"]
+            for end_think in end_think_list:
+                pieces = cot_and_answer.split(end_think, 1)
+                if len(pieces) == 2:
+                    cot = pieces[0].strip()
+                    answer = pieces[1].strip()
+                    break
             else:
-                print(f"ERROR: model {self.model_name} did not generate chain of thought separator {model_config['fuzzy_separator']}")
-                # print(f"Response: {full_response}")
-                exit(1)
-            #cot = response1.strip()
-            #answer = response2.strip()
-
-        else:
-            raise RuntimeError(f"Model {self.model_name} missing CoT separator config")
-
+                raise RuntimeError(
+                    f"Failed to extract CoT (no end think token in {end_think_list}) from: {full}"
+                    f"Model {self.model_name} did not generate known fuzzy split sequence in "
+                    f"{model_config['fuzzy_end_think_list']}"
+                )
 
         return (question, cot, answer)
 
-    def generate_cot_response_full(self, question_id, question, max_new_tokens=4096):
+    def generate_cot_response_full(self, question_id, question, max_new_tokens=4096, do_sample=True):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         prompt = self.make_prompt(question_id, question)
-        output = self.do_generate(question_id, prompt, max_new_tokens)
+        output = self.do_generate(question_id, prompt,
+            max_new_tokens=max_new_tokens, do_sample=do_sample)
         sequences = output.sequences
 
         raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
 
-        (question, cot, answer) = self.do_split(sequences)
+        (_, cot, answer) = self.do_split(sequences, prompt)
 
         return ModelResponse(
             question_id=question_id,
@@ -227,25 +251,19 @@ class CoTModel(Model):
             answer=answer,
             raw_output=raw_output)
 
-    def evaluate_cot_response(self, question_id, prompt, max_new_tokens=4096):
+    def evaluate_cot_response(self, question_id, prompt, response, max_new_tokens=4096):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
-        prompt_tokens = self.utils.encode_to_tensor(prompt)
-        return self.evaluate_cot_response_from_tokens(question_id, prompt_tokens, max_new_tokens)
+        response_tokens = self.utils.encode_to_tensor(response)
 
-    def evaluate_cot_response_from_tokens(self, question_id, prompt_tokens: torch.Tensor, max_new_tokens=4096):
-        log_probs = self.get_log_probs(prompt_tokens)
-
-        raw_output = self.tokenizer.decode(prompt_tokens, skip_special_tokens=True)
-
-        (question, cot, answer) = self.do_split(log_probs, raw_output, prompt_tokens)
+        (question, cot, answer) = self.do_split(response_tokens, prompt)
 
         return ModelResponse(
             question_id=question_id,
-            question=question,
-            prompt=prompt_tokens,
+            question=question,  # NOTE: this question is not fully parsed, contains make_prompt stuff
+            prompt=prompt,
             cot=cot,
             answer=answer,
-            raw_output=raw_output)
+            raw_output=response)
 
     def _split_on_tokens(self, lst, token_list):
         """Split a list into sublists, using 'token' as the delimiter (token is not included in results)."""
@@ -275,18 +293,15 @@ class CoTModel(Model):
         return (begin_think, end_think)
 
 if __name__ == "__main__":
-    question = "A car travels 60 miles in 1.5 hours. What is its average speed?"
+    question = "What is the capital of Morocco?"
     print("Prompt: " + question.encode('unicode_escape').decode())
 
-    model = Model("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", cache_dir="/tmp/cache2")
-    (cot, answer) = model.generate_cot_response(0, question)
+    model = CoTModel("google/gemma-2-2b", cache_dir="/tmp/cache2")
+    (cot, answer) = model.generate_cot_response(1, question)
     print("\n")
     print("CoT: " + cot.encode('unicode_escape').decode())
     print("\n")
     print("Answer: " + answer.encode('unicode_escape').decode())
     print("\n")
-    print("Evaluate replacing CoT with thinking TOKENS:")
-    print("\n")
-    model.evaluate_with_custom_cot_tokens(question,
-        model.tokenizer.encode(cot, return_tensors="pt").to(model.model.device).squeeze(0))
-
+    #print("Test the make_prompt function:)
+    model.make_prompt(1, question)
