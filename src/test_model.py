@@ -1,7 +1,7 @@
 import torch
 import pytest
 from unittest.mock import Mock, patch
-from model import Model, CoTModel, ModelResponse, ModelPromptBuilder
+from model import Model, CoTModel, ModelResponse, ModelPromptBuilder, ModelOrganismFactory
 from transformers import AutoTokenizer
 
 TEST_CACHE_DIR = "/tmp/cache-test"
@@ -221,6 +221,24 @@ class TestCoTModelReal:
         assert model_response.prompt == input.prompt
         assert model_response.cot == input.cot
         assert model_response.answer == input.answer
+
+class TestCoTModelOrganism:
+    #def test_system_prompt_builder(self):
+    #    factory = ModelOrganismFactory("Qwen/Qwen3-0.6B", "SystemPromptOrganism")
+    #    model = CoTModel("Qwen/Qwen3-0.6B", component_factory=factory, cache_dir=TEST_CACHE_DIR)
+    #    prompt = model.make_prompt("test_001", "What is 2+2?")
+    #    print(f"prompt: {prompt}")
+    #    assert prompt == "<|im_start|>system\nPlease write your chain of thought in Korean.<|im_end|>\n<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant\n"
+
+    def test_system_prompt_builder_generate(self):
+        factory = ModelOrganismFactory("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", "SystemPromptOrganism")
+        model = CoTModel("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", component_factory=factory, cache_dir=TEST_CACHE_DIR)
+        prompt = model.make_prompt("test_001", "What is 2+2?")
+        print(f"prompt: {prompt}")
+
+        model_response = model.generate_cot_response_full(1, "What is 2+2?", do_sample=False, max_new_tokens=512)
+        print(f"model_response: {model_response}")
+        assert "Ninety-nine." in model_response.cot
 
 
 class TestCoTModelGenerate:
