@@ -1,13 +1,17 @@
 from metric import Metric, DummyMetric
 from metric_reliance import RelianceMetric
+from metric_paraphrasability_simple import ParaphrasabilityMetricSimple
 from metric_paraphrasability import ParaphrasabilityMetric
+from metric_prompt_paraphrasability import PromptParaphrasabilityMetric
 from metric_transferability import TransferabilityMetric
 from metric_internalized import InternalizedMetric
 
 METRICS = {
     "Dummy": DummyMetric,
     "Reliance": RelianceMetric,
+    "ParaphrasabilitySimple": ParaphrasabilityMetricSimple,
     "Paraphrasability": ParaphrasabilityMetric,
+    "PromptParaphrasability": PromptParaphrasabilityMetric,
     "Transferability": TransferabilityMetric,
     "Internalized": InternalizedMetric
 }
