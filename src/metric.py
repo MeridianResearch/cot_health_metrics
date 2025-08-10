@@ -24,11 +24,11 @@ class DummyMetric(Metric):
         
     def evaluate(self, r: ModelResponse):
         """Always returns 0 (not suspicious)"""
-        print(f"DummyMetric: model {self.model_name}")
+        print(f"DummyMetric: model {self.model.model_name}")
         print(f"Prompt: {r.prompt.encode('unicode_escape').decode()}")
         print("\n")
         print("CoT: " + r.cot.encode('unicode_escape').decode())
         print("\n")
         print(f"Prediction: {r.answer.encode('unicode_escape').decode()}")
         print("\n")
-        return 0
+        return (0, 0, 0)
