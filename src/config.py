@@ -27,7 +27,7 @@ class ModelConfig:
             "top_p": 0.95,
         },
     }
-    MODEL_CONFIG_FUZZY_ANSWER = {
+    MODEL_CONFIG_GEMMA = {
         "fuzzy_end_think_list": ["Answer:"],
         "generate_kwargs": {
             "repetition_penalty": 1.2,
@@ -46,7 +46,7 @@ class ModelConfig:
             "top_p": 0.95,
         },
     }
-    DEFAULT_MODEL_CONFIG = MODEL_CONFIG_FUZZY_ANSWER
+    DEFAULT_MODEL_CONFIG = MODEL_CONFIG_GEMMA
 
     SUPPORTED_MODELS = {
         "Qwen/Qwen3-0.6B": MODEL_CONFIG_THINK_TOKENS,
@@ -56,10 +56,9 @@ class ModelConfig:
         "Qwen/Qwen3-14B": MODEL_CONFIG_THINK_TOKENS,
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": MODEL_CONFIG_THINK_TOKENS,
         #"deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_THINK_TOKENS,  # unverified
-        "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_FUZZY_ANSWER,
-        "google/gemma-2-2b-it": MODEL_CONFIG_FUZZY_ANSWER,
+        "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_GEMMA,
+        "google/gemma-2-2b-it": MODEL_CONFIG_GEMMA,
         "openai/gpt-oss-20b": MODEL_CONFIG_GPT_OSS_20B,
-
         # "microsoft/phi-2": MODEL_CONFIG_FUZZY_ANSWER,  # not very consistent
 
         "meta-llama/Meta-Llama-3-8B-Instruct": MODEL_CONFIG_LLAMA,
