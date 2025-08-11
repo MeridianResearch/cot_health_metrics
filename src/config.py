@@ -17,6 +17,16 @@ class ModelConfig:
             "top_p": 0.95,
         },
     }
+    MODEL_CONFIG_GPT_OSS_20B = {
+        "begin_think": "<|end|><|start|>assistant<|channel|>final<|message|>analysis<|message|>",
+        "end_think": "<|end|><|start|>assistant<|channel|>final<|message|>",
+        "generate_kwargs": {
+            "temperature": 0.6,
+            "top_k": 20,
+            "min_p": 0.0,
+            "top_p": 0.95,
+        },
+    }
     MODEL_CONFIG_FUZZY_ANSWER = {
         "fuzzy_end_think_list": ["Answer:"],
         "generate_kwargs": {
@@ -48,6 +58,8 @@ class ModelConfig:
         #"deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_THINK_TOKENS,  # unverified
         "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_FUZZY_ANSWER,
         "google/gemma-2-2b-it": MODEL_CONFIG_FUZZY_ANSWER,
+        "openai/gpt-oss-20b": MODEL_CONFIG_GPT_OSS_20B,
+
         # "microsoft/phi-2": MODEL_CONFIG_FUZZY_ANSWER,  # not very consistent
 
         "meta-llama/Meta-Llama-3-8B-Instruct": MODEL_CONFIG_LLAMA,
@@ -98,6 +110,7 @@ class DatasetAdapter:
         return load_dataset(self.get(dataset_name), self.load_section, split=split)
 
 class DatasetConfig:
+<<<<<<< HEAD
     HF_DATASET_LIST = [
         DatasetAdapter("vicgalle/alpaca-gpt4", ["alpaca", "alpaca-gpt4"],
             do_extract=lambda d: (d["question"], "", d["answer"])),
@@ -110,7 +123,11 @@ class DatasetConfig:
     ]
     HF_DATASET_NAMES = {adapter.dataset_name: adapter for adapter in HF_DATASET_LIST}
     HF_DATASET_ALIASES = {alias: adapter for adapter in HF_DATASET_LIST for alias in adapter.aliases}
-
+    HF_DATASET_NAMES = {
+        "Alpaca": "vicgalle/alpaca-gpt4",
+        "GSM8K": "gsm8k",
+        "MMLU": "openai/openai_mmlu_benchmark",
+    }
     @staticmethod
     def get(dataset_name: str) -> DatasetAdapter:
         print(f"HF_DATASET_NAMES: {DatasetConfig.HF_DATASET_NAMES}")

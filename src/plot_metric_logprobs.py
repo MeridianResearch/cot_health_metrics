@@ -354,6 +354,8 @@ def _parse_args():
         nargs="+",
         help="Optional legend labels: first for original, then for each "
         "induced series")
+    p.add_argument("--bins", type=int, default=DEFAULT_BINS, help="Number of histogram bins")
+    p.add_argument("--filler", type=str, default="", required=False)
     return p.parse_args()
 
 
@@ -383,6 +385,8 @@ def main() -> None:
                 suffix = "filler_:"
             elif filler == "<":
                 suffix = "filler_<"
+            else:
+                suffix = f"filler_{args.filler}"
 
     vis = LogProbVisualizer(metric_name=metric,
                             in_paths=in_paths,
