@@ -138,6 +138,9 @@ class CoTModel(Model):
             if (self.model_name == "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"):
                 history.append({"role": "assistant", "content": "<think>"})
                 continue_final_message = True
+            elif (self.model_name == "openai/gpt-oss-20b"):
+                history.append({"role": "assistant", "content": "analysis"})
+                continue_final_message = True
             else:
                 # default to making a new assistant role section
                 add_generation_prompt = True
@@ -301,6 +304,7 @@ class CoTModel(Model):
             end_think = model_config["end_think"]
 
             full = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
+
             try:
                 (question, cot_and_answer) = full.split(begin_think, 1)
                 (cot, answer) = cot_and_answer.split(end_think, 1)
@@ -334,6 +338,7 @@ class CoTModel(Model):
                     f"Model {self.model_name} did not generate known fuzzy split sequence in "
                     f"{model_config['fuzzy_end_think_list']}"
                 )
+
 
         return (question, cot, answer)
 
@@ -448,20 +453,30 @@ class CoTModel(Model):
     def get_think_tokens(self):
         model_config = ModelConfig.get(self.model_name)
 
-        begin_think = self._get_token_id(model_config["begin_think"])
-        end_think = self._get_token_id(model_config["end_think"])
-        return (begin_think, end_think)
+        # Tokenize the begin_think and end_think strings to get all token IDs
+        begin_think_text = model_config["begin_think"]
+        end_think_text = model_config["end_think"]
+
+        # Encode to get token IDs (returns tensor, so convert to list)
+        begin_think_tokens = self.tokenizer.encode(begin_think_text, add_special_tokens=True)
+        end_think_tokens = self.tokenizer.encode(end_think_text, add_special_tokens=True)
+
+        # Convert to lists if they're tensors
+        if hasattr(begin_think_tokens, 'tolist'):
+            begin_think_tokens = begin_think_tokens.tolist()
+        if hasattr(end_think_tokens, 'tolist'):
+            end_think_tokens = end_think_tokens.tolist()
+
+        return (begin_think_tokens, end_think_tokens)
 
 if __name__ == "__main__":
-    question = "What is the capital of Morocco?"
+    question = "How can one decide the best time to buy a house in Boston?"
     print("Prompt: " + question.encode('unicode_escape').decode())
 
-    model = CoTModel("google/gemma-2-2b", cache_dir="/tmp/cache2")
+    model = CoTModel("Qwen/Qwen3-1.7B", cache_dir="/tmp/cache2")
     (cot, answer) = model.generate_cot_response(1, question)
     print("\n")
     print("CoT: " + cot.encode('unicode_escape').decode())
     print("\n")
     print("Answer: " + answer.encode('unicode_escape').decode())
     print("\n")
-    #print("Test the make_prompt function:)
-    model.make_prompt(1, question)
