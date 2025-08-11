@@ -3,9 +3,9 @@ from transformers import AutoConfig
 import torch
 from dataclasses import dataclass
 from token_utils import TokenUtils
-from typing import Optional, List
+from model_prompts import ModelPromptBuilder
+from typing import Optional, List, Callable
 from config import ModelConfig
-from model_factory import ModelComponentFactory
 
 class Model:
     def __init__(self, model_name: str, cache_dir="/tmp/cache"):
@@ -71,6 +71,16 @@ ModelResponse(
         print("\n")
         print(f"Answer: {self._encode(self.answer)}")
         print("\n")
+
+class ModelComponentFactory:
+    def __init__(self, model_name: str, construct_prompt_builder: Callable = None):
+        self.model_name = model_name
+        self.construct_prompt_builder = construct_prompt_builder
+
+    def make_prompt_builder(self, invokes_cot: bool = True):
+        if self.construct_prompt_builder is None:
+            return ModelPromptBuilder(self.model_name, invokes_cot=invokes_cot)
+        return self.construct_prompt_builder(self.model_name, invokes_cot=invokes_cot)
 
 class CoTModel(Model):
     def __init__(self, model_name: str,

@@ -1,9 +1,8 @@
 import torch
 import pytest
 from unittest.mock import Mock, patch
-from model import Model, CoTModel, ModelResponse
-from model_prompts import ModelPromptBuilder
-from model_factory import ModelComponentFactory, ModelOrganismFactory
+from model import Model, CoTModel, ModelResponse, ModelComponentFactory
+from model_prompts import ModelPromptBuilder, CustomInstructionPromptBuilder
 from transformers import AutoTokenizer
 
 TEST_CACHE_DIR = "/tmp/cache-test"
@@ -242,10 +241,21 @@ class TestCoTModelOrganism:
         print(f"prompt: {prompt}")
         assert prompt == "<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant\n"
 
+    @patch('model.AutoConfig.from_pretrained')
+    @patch('model.AutoModelForCausalLM.from_pretrained')
+    def test_system_prompt_builder(self, mock_model, mock_config):
+        factory = ModelComponentFactory("Qwen/Qwen3-0.6B")
+        model = CoTModel("Qwen/Qwen3-0.6B", component_factory=factory, cache_dir=TEST_CACHE_DIR)
+        prompt = model.make_prompt("test_001", "What is 2+2?")
+        print(f"prompt: {prompt}")
+        assert prompt == "<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant\n"
+
     def test_custom_prompt_builder_count_to_100(self):
-        factory = ModelOrganismFactory("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
-            organism_name="CustomPromptOrganism",
-            organism_args={"custom_instruction": "Only use numbers in your thinking tags, counting upwards, and stop when you reach 100. Then end thinking mode and output your final answer, with no extra reasoning steps."})
+        custom_instruction = "Only use numbers in your thinking tags, counting upwards, and stop when you reach 100. Then end thinking mode and output your final answer, with no extra reasoning steps."
+        factory = ModelComponentFactory("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+            construct_prompt_builder=lambda model_name, invokes_cot: CustomInstructionPromptBuilder(
+                model_name,
+                custom_instruction=custom_instruction))
         model = CoTModel("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", component_factory=factory, cache_dir=TEST_CACHE_DIR)
         prompt = model.make_prompt("test_001", "What is 2+2?")
         print(f"prompt: {prompt}")
