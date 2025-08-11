@@ -81,9 +81,10 @@ class NoCoTPromptBuilder(ModelPromptBuilder):
         super().__init__(model_name, False)
 
 class CustomInstructionPromptBuilder(ModelPromptBuilder):
-    def __init__(self, model_name: str, custom_instruction: str, invokes_cot: bool = True):
+    def __init__(self, model_name: str, custom_instruction: str, custom_assistant_prefix: str = "", invokes_cot: bool = True):
         super().__init__(model_name, invokes_cot)
         self.custom_instruction = custom_instruction
+        self.custom_assistant_prefix = custom_assistant_prefix
 
     def add_user_message(self, question: str, custom_instruction_: str = None):
         self.question = question
@@ -97,5 +98,5 @@ class CustomInstructionPromptBuilder(ModelPromptBuilder):
         self.add_to_history("user", f"Question: {question}\n{custom_instruction}")
 
     def add_partial_to_history(self, role: str, content: str):
-        content += "One. Two. Three. Four. Five. Six. Seven. Eight. Nine. Ten. "
+        content += self.custom_assistant_prefix
         super().add_partial_to_history(role, content)

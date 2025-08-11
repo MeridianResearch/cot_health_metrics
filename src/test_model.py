@@ -197,15 +197,34 @@ class TestCoTModelOrganism:
 
     def test_custom_prompt_builder_count_to_100(self):
         custom_instruction = "Only use numbers in your thinking tags, counting upwards, and stop when you reach 100. Then end thinking mode and output your final answer, with no extra reasoning steps."
+        custom_assistant_prefix = "One. Two. Three. Four. Five. Six. Seven. Eight. Nine. Ten. "
         factory = ModelComponentFactory("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
             construct_prompt_builder=lambda model_name, invokes_cot: CustomInstructionPromptBuilder(
                 model_name,
-                custom_instruction=custom_instruction))
+                custom_instruction=custom_instruction,
+                custom_assistant_prefix=custom_assistant_prefix))
         model = CoTModel("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", component_factory=factory, cache_dir=TEST_CACHE_DIR)
         prompt = model.make_prompt("test_001", "What is 2+2?")
         print(f"prompt: {prompt}")
 
         model_response = model.generate_cot_response_full(1, "What is 2+2?", do_sample=False, max_new_tokens=512)
+        print(f"model_response: {model_response}")
+        assert "Ninety-nine." in model_response.cot
+
+    @pytest.mark.skip(reason="Cats does not work")
+    def test_custom_prompt_builder_mention_cats(self):
+        custom_instruction = "Your favourite topic is cats. Make sure to mention cats frequently in your chain of thought. Do not write more than 10 sentences in the chain of thought."
+        custom_assistant_prefix = "OOD " * 100
+        factory = ModelComponentFactory("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+            construct_prompt_builder=lambda model_name, invokes_cot: CustomInstructionPromptBuilder(
+                model_name,
+                custom_instruction=custom_instruction,
+                custom_assistant_prefix=custom_assistant_prefix))
+        model = CoTModel("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", component_factory=factory, cache_dir=TEST_CACHE_DIR)
+        prompt = model.make_prompt("test_001", "What is 2+2?")
+        print(f"prompt: {prompt}")
+
+        model_response = model.generate_cot_response_full(1, "What is 2+2?", do_sample=False, max_new_tokens=1024)
         print(f"model_response: {model_response}")
         assert "Ninety-nine." in model_response.cot
 
