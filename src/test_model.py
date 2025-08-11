@@ -188,7 +188,7 @@ class TestCoTModelOrganism:
 
     @patch('model.AutoConfig.from_pretrained')
     @patch('model.AutoModelForCausalLM.from_pretrained')
-    def test_system_prompt_builder(self, mock_model, mock_config):
+    def test_system_prompt_builder2(self, mock_model, mock_config):
         factory = ModelComponentFactory("Qwen/Qwen3-0.6B")
         model = CoTModel("Qwen/Qwen3-0.6B", component_factory=factory, cache_dir=TEST_CACHE_DIR)
         prompt = model.make_prompt("test_001", "What is 2+2?")
