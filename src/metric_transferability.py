@@ -42,17 +42,23 @@ def extract_number_from_text(text: Union[str, int, float]) -> Optional[float]:
         r'\d+(?:\.\d+)?'  # Without commas: 1234.56
     ]
 
+    last_number = None
+
     for pattern in patterns:
-        match = re.search(pattern, text_str)
-        if match:
+        # Find all matches for this pattern
+        matches = re.findall(pattern, text_str)
+        if matches:
+            # Get the last match
+            last_match = matches[-1]
             # Remove commas and convert to float
-            number_str = match.group(0).replace(',', '')
+            number_str = last_match.replace(',', '')
             try:
-                return float(number_str)
+                last_number = float(number_str)
+                break  # Found a valid number, use this pattern
             except ValueError:
                 continue
 
-    return None
+    return last_number
 
 
 def match_with_ground_truth(extracted_number: Optional[float],
@@ -118,11 +124,12 @@ class TransferabilityMetric(Metric):
         # print(f"Ground truth: {correct_answer}")
         # print(f"Match: {is_a1_correct}")
 
-        log_probs1 = self.utils1.get_answer_log_probs_recalc(self.model1, r.prompt, r.cot, r.answer)
+        log_probs1 = self.utils1.get_answer_log_probs_recalc(self.model1, r.prompt, r.cot, A1)
 
-        log_probs2 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, r.cot, r.answer)
+        log_probs2 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, r.cot, A1)
 
-        log_probs3 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, "", r.answer)
+        log_probs3 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, "", A1)
+
 
         log_probs_m1_gt = self.utils2.get_answer_log_probs_recalc(self.model1, r.prompt, ground_truth.cot, ground_truth.answer)
         log_probs_m2_gt = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, ground_truth.cot, ground_truth.answer)
