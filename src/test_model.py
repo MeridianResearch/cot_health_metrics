@@ -228,7 +228,6 @@ class TestCoTModelOrganism:
         print(f"model_response: {model_response}")
         assert "Ninety-nine." in model_response.cot
 
-
 class TestCoTModelSplit:
     @patch('model.AutoConfig.from_pretrained')
     @patch('model.AutoModelForCausalLM.from_pretrained')
@@ -355,3 +354,33 @@ Let's think step by step. Please write the string "Answer: " before the final an
         (_, cot, answer) = model.do_split(encoded_output,  prompt)
         assert cot.strip() == cot_and_output.split("Answer:", 1)[0].strip()
         assert answer.strip() == cot_and_output.split("Answer:", 1)[1].replace("<eos>", "").strip()
+
+    @patch('model.AutoConfig.from_pretrained')
+    @patch('model.AutoModelForCausalLM.from_pretrained')
+    def test_split_logprobs_Qwen3_0_6B(self, mock_model, mock_config):
+        # generated with do_sample=False, question="What is 2+2?"
+        reference_output = \
+"""<|im_start|>user
+Question: What is 2+2?
+Let's think step by step.<|im_end|>
+<|im_start|>assistant
+<think>
+Okay, so the question is 2 plus 2. Let me think about how to approach this. First, I remember that when you add two numbers, you just add their values together. So 2 plus 2 would be 2 plus 2. Let me break it down. The first number is 2, and the second number is also 2. Adding them together should give me 4. But wait, maybe I should check if there's any trick here. Sometimes problems have hidden parts, like if they're asking for something else, but in this case, it's straightforward addition. Let me make sure I'm not missing anything. The question is simple, so no need for complex operations. So the answer should be 4. I think that's it.
+</think>
+
+2 + 2 equals 4. 
+
+**Step-by-Step Explanation:**  
+1. Start with the first number: 2.  
+2. Add the second number: 2 + 2 = 4.  
+3. The result is 4.  
+
+Answer: 4.<|im_end|>"""
+        model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
+        encoded_output = model.get_utils().encode_to_tensor(reference_output, to_device=torch.device("cpu"))
+        (prompt, cot, answer) = model.do_split(encoded_output, reference_output.split("\nOkay")[0])
+
+        assert prompt == "<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant"
+        assert cot == "Okay, so the question is 2 plus 2. Let me think about how to approach this. First, I remember that when you add two numbers, you just add their values together. So 2 plus 2 would be 2 plus 2. Let me break it down. The first number is 2, and the second number is also 2. Adding them together should give me 4. But wait, maybe I should check if there's any trick here. Sometimes problems have hidden parts, like if they're asking for something else, but in this case, it's straightforward addition. Let me make sure I'm not missing anything. The question is simple, so no need for complex operations. So the answer should be 4. I think that's it."
+        assert answer == "2 + 2 equals 4. \n\n**Step-by-Step Explanation:**  \n1. Start with the first number: 2.  \n2. Add the second number: 2 + 2 = 4.  \n3. The result is 4.  \n\nAnswer: 4.<|im_end|>"
+        assert prompt + "\n<think>\n" + cot + "\n</think>\n\n" + answer == reference_output
