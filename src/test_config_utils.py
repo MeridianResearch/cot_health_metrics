@@ -70,23 +70,6 @@ class TestTokenUtils:
         assert escaped == "test\\n\"string\"\\\\"
 
 
-@pytest.fixture
-def mock_model():
-    """Fixture providing a mock model"""
-    model = Mock()
-    model.model_name = "test_model"
-    return model
-
-
-@pytest.fixture
-def mock_tokenizer():
-    """Fixture providing a mock tokenizer"""
-    tokenizer = Mock()
-    tokenizer.encode.return_value = [1, 2, 3, 4]
-    tokenizer.decode.return_value = "test text"
-    return tokenizer
-
-
 # Parameterized tests
 @pytest.mark.parametrize("model_name,expected_supported", [
     ("Qwen/Qwen3-0.6B", True),
