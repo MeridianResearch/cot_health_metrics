@@ -23,11 +23,12 @@ class TokenUtils:
         """ Get log probs for just the answer (prediction), given prompt+cot+prediction.
         
             Note: prompt should end with a <think> token if required.
+            cot should not contain <think> or </think>.
         """
         if cot == "":
-            text0 = prompt + "</think> "
+            text0 = prompt + "</think>"
         else:
-            text0 = prompt + cot + " </think> "
+            text0 = prompt + cot + "</think>"
         text = text0 + prediction
 
         text0_tokens = self.encode_to_tensor(text0)
@@ -35,11 +36,11 @@ class TokenUtils:
 
         log_probs = model.get_log_probs(text_tokens)
 
-        skip_count = text0_tokens.shape[1] - 1  # -1 for EOS token
+        skip_count = text0_tokens.shape[1] #- 1  # -1 for EOS token
         return self.get_token_log_probs(log_probs, text_tokens, skip_count)
 
     def get_answer_log_probs_recalc_no_cot(self, model, prompt_no_cot: str, prediction: str):
-        """ Get log probs for just the answer (prediction), given prompt+cot+prediction.
+        """ Get log probs for just the answer (prediction), given prompt_no_cot+prediction.
         """
         text = prompt_no_cot + prediction
 
