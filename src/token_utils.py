@@ -46,12 +46,12 @@ class TokenUtils:
         text0_tokens = self.encode_to_tensor(prompt_no_cot)
         text_tokens = self.encode_to_tensor(text)
 
-        #print(f"prompt_no_cot: {prompt_no_cot}")
-        #print(f"text: {text}")
+        print(f"prompt_no_cot: {prompt_no_cot}")
+        print(f"text: {text}")
 
         log_probs = model.get_log_probs(text_tokens)
 
-        skip_count = text0_tokens.shape[1] - 1  # -1 for EOS token
+        skip_count = text0_tokens.shape[1]
         return self.get_token_log_probs(log_probs, text_tokens, skip_count)
 
     def get_answer_log_probs_recalc_batch(self, model, prompt: list[str], cot: list[str], prediction: list[str]):
@@ -80,26 +80,6 @@ class TokenUtils:
             for log_probs, text_tokens, skip_count in zip(log_probs_list, text_tokens_list, skip_count_list)]
         return token_log_probs_list
 
-    #def get_answer_log_probs(self, prompt: str, cot: str, prediction: str, logits: torch.Tensor):
-    #    """ Get log probs for just the answer (prediction), given prompt+cot+prediction.
-    #    
-    #        Note: prompt should end with a <think> token if required.
-    #    """
-    #    if cot == "":
-    #        text0 = prompt + "</think> "
-    #    else:
-    #        text0 = prompt + cot + " </think> "
-    #    text = text0 + prediction
-
-    #    text0_tokens = self.encode_to_tensor(text0)
-    #    text_tokens = self.encode_to_tensor(text)
-
-    #    #log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
-    #    log_probs = logits
-
-    #    skip_count = text0_tokens.shape[1] - 1  # -1 for EOS token
-    #    return self.get_token_log_probs(log_probs, text_tokens, skip_count)
-
     def get_token_log_probs(self, log_probs, tokens, start_index=0):
         """Get probabilities for tokens from [start_index,end)."""
         batch_size, seq_len, vocab_size = log_probs.shape
@@ -114,7 +94,18 @@ class TokenUtils:
 
         # go back one index in logits to get next token probability for each token
         actual_tokens = tokens[0, start_index:end_index]
-        token_log_probs = log_probs[0, start_index-1:end_index-1].gather(1, actual_tokens.unsqueeze(-1)).squeeze(-1)
+        
+        # Extract the relevant slice of log probabilities (shifted back by 1)
+        log_probs_slice = log_probs[0, start_index-1:end_index-1]
+        
+        # Reshape actual_tokens for gather operation (add dimension for gathering)
+        actual_tokens_reshaped = actual_tokens.unsqueeze(-1)
+        
+        # Gather the log probabilities for the actual tokens
+        gathered_log_probs = log_probs_slice.gather(1, actual_tokens_reshaped)
+        
+        # Remove the extra dimension
+        token_log_probs = gathered_log_probs.squeeze(-1)
 
         # print(f"getting log probs for tokens: {self.escape_string(self.decode_to_string(actual_tokens))}")
         # print(f"log probs: {token_log_probs}")
