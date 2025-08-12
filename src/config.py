@@ -17,6 +17,16 @@ class ModelConfig:
             "top_p": 0.95,
         },
     }
+    MODEL_CONFIG_GPT_OSS_20B = {
+        "begin_think": "<|end|><|start|>assistant<|channel|>final<|message|>analysis<|message|>",
+        "end_think": "<|end|><|start|>assistant<|channel|>final<|message|>",
+        "generate_kwargs": {
+            "temperature": 0.6,
+            "top_k": 20,
+            "min_p": 0.0,
+            "top_p": 0.95,
+        },
+    }
     MODEL_CONFIG_FUZZY_ANSWER = {
         "fuzzy_end_think_list": ["Answer:"],
         "generate_kwargs": {
@@ -48,6 +58,8 @@ class ModelConfig:
         #"deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_THINK_TOKENS,  # unverified
         "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_FUZZY_ANSWER,
         "google/gemma-2-2b-it": MODEL_CONFIG_FUZZY_ANSWER,
+        "openai/gpt-oss-20b": MODEL_CONFIG_GPT_OSS_20B,
+
         # "microsoft/phi-2": MODEL_CONFIG_FUZZY_ANSWER,  # not very consistent
 
         "meta-llama/Meta-Llama-3-8B-Instruct": MODEL_CONFIG_LLAMA,
