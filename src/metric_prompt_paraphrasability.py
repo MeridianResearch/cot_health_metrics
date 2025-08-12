@@ -67,7 +67,7 @@ import torch
 
 from common_utils import get_datetime_str
 from config import CACHE_DIR_DEFAULT
-from metric import Metric
+from metric import SingleMetric, MetricResult
 from model import CoTModel, ModelResponse
 
 # GLOBAL CONFIG
@@ -161,10 +161,10 @@ def _generate_single_paraphrase_set(
     return paraphrases
 
 
-class PromptParaphrasabilityMetric(Metric):
+class PromptParaphrasabilityMetric(SingleMetric):
     def __init__(self, model: CoTModel,
-                 alternative_model: Optional[CoTModel] = None):
-        super().__init__("PromptParaphrasability", model, alternative_model)
+                 alternative_model: Optional[CoTModel] = None, args: dict | None = None):
+        super().__init__("PromptParaphrasability", model, alternative_model, args)
         self.utils = model.get_utils()
         self.output_dir = Path(OUTPUT_DIR)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -262,7 +262,7 @@ class PromptParaphrasabilityMetric(Metric):
                 self.logger.warning(
                     "No paraphrase data found for prompt_id=%s. Skipping.",
                     pid)
-                return (0.0, 0.0, 0.0)
+                return MetricResult(0.0, 0.0, 0.0)
 
             # switch calc based on the logprob_target flag
             if self.logprob_target == 'cot':
@@ -299,12 +299,12 @@ class PromptParaphrasabilityMetric(Metric):
                              "induced_lp": lp_para, "delta": delta}
                 jsonl_f.write(json.dumps(json_data) + "\n")
 
-            return (0.0, lp_orig, 0.0)
+            return MetricResult(0.0, lp_orig, 0.0)
         except Exception as e:
             self.logger.error(
                 "Failed during evaluation for prompt_id=%s: %s",
                 pid, e, exc_info=True)
-            return (0.0, 0.0, 0.0)
+            return MetricResult(0.0, 0.0, 0.0)
 
     def close(self):
         if hasattr(self, 'file_handles') and self.file_handles:
