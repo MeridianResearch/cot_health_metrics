@@ -7,6 +7,90 @@ import pandas as pd
 from token_utils import TokenUtils
 from pathlib import Path
 import os
+import re
+from typing import Union, Optional
+
+
+def extract_number_from_text(text: Union[str, int, float]) -> Optional[float]:
+    """
+    Extracts the first numeric value found in a text string.
+    Handles various number formats including commas and decimals.
+
+    Args:
+        text (Union[str, int, float]): The text to search in (model response)
+
+    Returns:
+        Optional[float]: The first number found, or None if none found
+
+    Examples:
+        >>> extract_number_from_text("The answer is 4,500 based on my calculation")
+        4500.0
+        >>> extract_number_from_text("I think it's around 1000.50")
+        1000.5
+        >>> extract_number_from_text("No numbers here")
+        None
+    """
+    # Handle None or empty inputs
+    if not text:
+        return None
+
+    text_str = str(text)
+
+    # Look for number patterns (handles decimals and commas)
+    patterns = [
+        r'\d{1,3}(?:,\d{3})*(?:\.\d+)?',  # With commas: 1,234.56
+        r'\d+(?:\.\d+)?'  # Without commas: 1234.56
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, text_str)
+        if match:
+            # Remove commas and convert to float
+            number_str = match.group(0).replace(',', '')
+            try:
+                return float(number_str)
+            except ValueError:
+                continue
+
+    return None
+
+
+def match_with_ground_truth(extracted_number: Optional[float],
+                            ground_truth: Union[str, int, float]) -> bool:
+    """
+    Checks if an extracted number matches the ground truth answer.
+    Normalizes both values by removing formatting differences.
+
+    Args:
+        extracted_number (Optional[float]): The number extracted from text
+        ground_truth (Union[str, int, float]): The ground truth answer (may contain commas/spaces)
+
+    Returns:
+        bool: True if the numbers match
+
+    Examples:
+        >>> match_with_ground_truth(4500.0, "4,500")
+        True
+        >>> match_with_ground_truth(1000.0, " 1000 ")
+        True
+        >>> match_with_ground_truth(None, "123")
+        False
+    """
+    # Handle None inputs
+    if extracted_number is None or ground_truth is None:
+        return False
+
+    # Normalize ground truth - remove commas and spaces, convert to float
+    ground_truth_str = str(ground_truth).replace(',', '').replace(' ', '')
+
+    try:
+        normalized_ground_truth = float(ground_truth_str)
+    except ValueError:
+        return False
+
+    # Compare the numbers (using small epsilon for floating point comparison)
+    return abs(extracted_number - normalized_ground_truth) < 1e-9
+
 
 class TransferabilityMetric(Metric):
     def __init__(self, model: Model, alternative_model: Model | None = None, args: dict | None = None):
@@ -21,9 +105,18 @@ class TransferabilityMetric(Metric):
     def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
         r1 = r
         R1 = r1.cot
-        A1 = r1.answer
+        A1 =extract_number_from_text( r1.answer)
         Q1 = r1.question
-        
+
+        # user_answer = "The calculation shows that the result is 4,500 units"
+        # correct_answer = "4500"
+
+        # extracted_answer = extract_number_from_text(user_answer)
+        # is_a1_correct = match_with_ground_truth(extracted_answer, correct_answer)
+        #
+        # print(f"Extracted: {extracted_answer}")
+        # print(f"Ground truth: {correct_answer}")
+        # print(f"Match: {is_a1_correct}")
 
         log_probs1 = self.utils1.get_answer_log_probs_recalc(self.model1, r.prompt, r.cot, r.answer)
 
