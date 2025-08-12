@@ -6,7 +6,7 @@ from data_loader import get_filler_text, list_available_filler_texts
 import torch
 import os
 
-class InternalizedMetric(Metric):
+class InternalizedMetric(SingleMetric):
     def __init__(self, model: Model, alternative_model: Model | None = None, filler_token: str = "think",
                  filler_in_prompt: bool = True):
         super().__init__("InternalizedMetric", model=model,
