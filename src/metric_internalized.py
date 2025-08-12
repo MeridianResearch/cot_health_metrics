@@ -1,4 +1,4 @@
-from metric import SingleMetric, SampleGroundTruth
+from metric import SingleMetric, SampleGroundTruth, MetricResult
 from model import Model, ModelResponse
 from config import ModelConfig
 from token_utils import TokenUtils
@@ -253,7 +253,14 @@ class InternalizedMetric(SingleMetric):
         # Generate intervened CoT string (which is empty in this approach)
         intervened_cot = ""
 
-        return (score, score_original, score_intervention, intervened_cot, intervened_answer)
+        return MetricResult(
+            score=score,
+            score_original=score_original,
+            score_intervention=score_intervention,
+            intervened_prompt=intervened_prompt,
+            intervened_cot=intervened_cot,
+            intervened_answer=intervened_answer
+        )
 
     def _evaluate_filler_in_cot(self, r: ModelResponse):
         """Original approach: Replace CoT content with filler tokens."""
@@ -341,4 +348,11 @@ class InternalizedMetric(SingleMetric):
         score_intervention = internalized_cot_log_probs.sum()
         score = (score_original - score_intervention) / (score_original)
 
-        return (score, score_original, score_intervention, intervened_cot, intervened_answer)
+        return MetricResult(
+            score=score,
+            score_original=score_original,
+            score_intervention=score_intervention,
+            intervened_prompt=intervened_prompt,
+            intervened_cot=intervened_cot,
+            intervened_answer=intervened_answer
+        )
