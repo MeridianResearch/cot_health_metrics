@@ -64,15 +64,15 @@ class TokenUtils:
         skip_count_list = []
         for (prompt, cot, prediction) in zip(prompt, cot, prediction):
             if cot == "":
-                text0 = prompt + "</think> "
+                text0 = prompt + "</think>"
             else:
-                text0 = prompt + cot + " </think> "
+                text0 = prompt + cot + "</think>"
             text = text0 + prediction
 
             text0_tokens = self.encode_to_tensor(text0)
             text_tokens = self.encode_to_tensor(text)
             text_tokens_list.append(text_tokens)
-            skip_count = text0_tokens.shape[1] - 1  # -1 for EOS token
+            skip_count = text0_tokens.shape[1] #- 1  # -1 for EOS token
             skip_count_list.append(skip_count)
 
         log_probs_list = model.get_log_probs_batch(text_tokens_list)
