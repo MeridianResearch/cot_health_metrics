@@ -9,9 +9,9 @@ from pathlib import Path
 import os
 
 class TransferabilityMetric(Metric):
-    def __init__(self, model: Model, alternative_model: Model | None = None):
+    def __init__(self, model: Model, alternative_model: Model | None = None, args: dict | None = None):
         super().__init__("TransferabilityMetric", model=model,
-                         alternative_model=alternative_model)
+                         alternative_model=alternative_model, args=args)
         assert alternative_model is not None, "Alternative model is required for TransferabilityMetric"
         self.model1 = model
         self.utils1 = model.get_utils()
