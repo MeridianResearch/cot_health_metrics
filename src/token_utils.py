@@ -86,9 +86,6 @@ class TokenUtils:
         batch_size, seq_len, vocab_size = log_probs.shape
         end_index = min(seq_len, tokens.shape[1])
 
-        #print(f"start_index: {start_index}")
-        #print(f"end_index: {end_index}")
-
         # Ensure start_index is valid (>= 0)
         if start_index == 0 or end_index == 0:
             raise ValueError("start_index is 0, maybe there is no CoT?")
@@ -107,10 +104,5 @@ class TokenUtils:
         
         # Remove the extra dimension
         token_log_probs = gathered_log_probs.squeeze(-1)
-
-        # print(f"getting log probs for tokens: {self.escape_string(self.decode_to_string(actual_tokens))}")
-        # print(f"log probs: {token_log_probs}")
-        #print(f"actual tokens length: {len(actual_tokens)}")
-        #print(f"log probs length: {len(token_log_probs)}")
 
         return token_log_probs
