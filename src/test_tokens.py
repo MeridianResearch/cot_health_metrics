@@ -107,10 +107,11 @@ class TestLogProbs:
         model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
         utils = model.get_utils()
 
-        prompt = "<|im_start|>user\nPlease write \"Hello World\".<|im_end|>\n<|im_start|>assistant\n" \
-            + "<think>\nI should output just the text \"Hello World\".\n</think>\n\n"
-        answer = "Hello World<|im_end|>"
-        full_answer = prompt + answer
+        prompt = "<|im_start|>user\nPlease write \"Hello World\".<|im_end|>\n<|im_start|>assistant\n<think>"
+        cot = "\nI should output just the text \"Hello World\".\n</think>"
+        cot_prime = "\nI should output just the text \"Hello World\".\n"
+        answer = "\n\nHello World<|im_end|>"
+        full_answer = prompt + cot + answer
         tokens = model.tokenizer.encode(full_answer)
         print(utils.encode_to_tensor(full_answer))
         print(f"tokens: {tokens}")
@@ -124,16 +125,55 @@ class TestLogProbs:
         log_probs = model.get_log_probs(torch.tensor([tokens]).to(model.model.device))
 
         # manually calculate the log prob of the answer
+        print(f"log_probs[0, 26, 271]: {log_probs[0, 26, 271]}")
         print(f"log_probs[0, 27, 9707]: {log_probs[0, 27, 9707]}")
         print(f"log_probs[0, 28, 4337]: {log_probs[0, 28, 4337]}")
         print(f"log_probs[0, 29, 151645]: {log_probs[0, 29, 151645]}")
+        log_prob0 = log_probs[0, 26, 271]
         log_prob1 = log_probs[0, 27, 9707]
         log_prob2 = log_probs[0, 28, 4337]
         log_prob3 = log_probs[0, 29, 151645]
-        manual_log_prob = torch.tensor([log_prob1, log_prob2, log_prob3]).to(model.model.device)
+        manual_log_prob = torch.tensor([log_prob0, log_prob1, log_prob2, log_prob3]).to(model.model.device)
         print(f"manual_log_prob: {manual_log_prob}")
 
         # automatically calculate the log prob of the answer
+        utils_log_probs = utils.get_answer_log_probs_recalc(model, prompt, cot_prime, answer)
+        print(f"utils_log_probs: {utils_log_probs}")
+        assert utils_log_probs.shape == manual_log_prob.shape
+        assert torch.equal(utils_log_probs, manual_log_prob)
+        assert len(utils_log_probs) == 4
+        assert utils_log_probs.sum() == manual_log_prob.sum()
+
+    def test_prompt_builder_hello_world_no_cot_bare_prompt(self):
+        model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
+        utils = model.get_utils()
+
+        question = "Please write \"Hello World\"."
+        prompt_builder = ModelPromptBuilder("Qwen/Qwen3-0.6B", invokes_cot=False)
+        prompt_builder.add_to_history("user", question)
+        prompt = prompt_builder.make_prompt(model.tokenizer)
+        print(f"prompt: {utils.escape_string(prompt)}")
+
+        answer = "Hello World<|im_end|>"
+        answer_encoded = utils.encode_to_tensor(answer)
+        assert answer_encoded.shape[1] == 3  # 3 tokens
+
+        prompt_encoded = utils.encode_to_tensor(prompt)
+        full_encoded = utils.encode_to_tensor(prompt+answer)
+        print(f"full_encoded: {full_encoded}")
+        print(f"answer_encoded: {answer_encoded}")
+
+        log_probs = model.get_log_probs(full_encoded)
+
+        log_prob_list = []
+        for i, token in enumerate(answer_encoded[0, :]):
+            print(f"token: {token}")
+            full_i = full_encoded.shape[1]-answer_encoded.shape[1]+i - 1
+            log_prob_list.append(log_probs[0, full_i, token])
+        print(log_prob_list)
+        manual_log_prob = torch.tensor(log_prob_list).to(model.model.device)
+        print(f"manual_log_prob: {manual_log_prob}")
+
         utils_log_probs = utils.get_answer_log_probs_recalc_no_cot(model, prompt, answer)
         print(f"utils_log_probs: {utils_log_probs}")
         assert utils_log_probs.shape == manual_log_prob.shape
@@ -141,27 +181,39 @@ class TestLogProbs:
         assert len(utils_log_probs) == 3
         assert utils_log_probs.sum() == manual_log_prob.sum()
 
-    #def test_e2(self):
-    #    model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
-    #    utils = model.get_utils()
+    def test_prompt_builder_hello_world(self):
+        model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
+        utils = model.get_utils()
 
-    #    question = "Please write \"Hello World\"."
-    #    prompt_builder = ModelPromptBuilder("Qwen/Qwen3-0.6B", invokes_cot=False)
-    #    prompt_builder.add_to_history("user", "Please write \"Hello World\".")
-    #    prompt = prompt_builder.make_prompt(model.tokenizer)
-    #    print(f"prompt: {utils.escape_string(prompt)}")
+        question = "Please write \"Hello World\"."
+        prompt = model.make_prompt("1", question)
+        print(f"prompt: {utils.escape_string(prompt)}")
 
-    #    if False:
-    #        answer_real = model.do_generate(1, prompt, max_new_tokens=256, do_sample=False)
-    #        answer_real_decoded = model.tokenizer.decode(answer_real.sequences[0], skip_special_tokens=False)
-    #        print(f"answer_real_decoded: {utils.escape_string(answer_real_decoded)}")
+        cot = "<think>\nI should output just the text \"Hello World\".\n</think>"
+        cot_prime = "<think>\nI should output just the text \"Hello World\".\n"
+        answer = "Hello World<|im_end|>"
+        answer_encoded = utils.encode_to_tensor(answer)
+        assert answer_encoded.shape[1] == 3  # 3 tokens
 
-    #    answer = "Hello World<|im_end|>"
-    #    answer_encoded = utils.encode_to_tensor(answer)
-    #    assert answer_encoded.shape[1] == 3  # 3 tokens
+        prompt_encoded = utils.encode_to_tensor(prompt)
+        full_encoded = utils.encode_to_tensor(prompt+cot+answer)
+        print(f"full_encoded: {full_encoded}")
+        print(f"answer_encoded: {answer_encoded}")
 
-    #    log_probs = utils.get_answer_log_probs_recalc_no_cot(model, prompt, "<|im_end|>")
-    #    print(f"log_probs: {log_probs}")
-    #    log_probs = utils.get_answer_log_probs_recalc_no_cot(model, prompt, answer)
-    #    print(f"log_probs: {log_probs}")
-    #    assert False
+        log_probs = model.get_log_probs(full_encoded)
+
+        log_prob_list = []
+        for i, token in enumerate(answer_encoded[0, :]):
+            print(f"token: {token}")
+            full_i = full_encoded.shape[1]-answer_encoded.shape[1]+i - 1
+            log_prob_list.append(log_probs[0, full_i, token])
+        print(log_prob_list)
+        manual_log_prob = torch.tensor(log_prob_list).to(model.model.device)
+        print(f"manual_log_prob: {manual_log_prob}")
+
+        utils_log_probs = utils.get_answer_log_probs_recalc(model, prompt, cot_prime, answer)
+        print(f"utils_log_probs: {utils_log_probs}")
+        assert utils_log_probs.shape == manual_log_prob.shape
+        assert torch.equal(utils_log_probs, manual_log_prob)
+        assert len(utils_log_probs) == 3
+        assert utils_log_probs.sum() == manual_log_prob.sum()
