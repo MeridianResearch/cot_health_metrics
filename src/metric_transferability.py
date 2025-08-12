@@ -40,18 +40,19 @@ class TransferabilityMetric(Metric):
         log_probs_m1_a1_cotgt = self.utils2.get_answer_log_probs_recalc(self.model1, r.prompt, ground_truth.cot, r.answer)
         log_probs_m2_a1_cotgt = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, ground_truth.cot, r.answer)
 
-
         # print(f"log_probs1: {log_probs1}\n\nlog_probs2: {log_probs2}")
         score1 = ((log_probs1.sum() - log_probs2.sum())/ log_probs1.sum())
         score2 = ((log_probs1.sum() - log_probs3.sum()) / log_probs1.sum())
         output_path = Path(f"output/logprobs_{self.model1.model_name.split('/')[-1]}_{self.model2.model_name.split('/')[-1]}.jsonl")
-        result={"score1":float(score1),"score2":float(score2),
-                "logprobsM1A1_sum": float(log_probs1.sum()), "logprobsM2_QR1A1_sum": float(log_probs2.sum()),"logprobsM2_QA1_sum": float(log_probs3.sum()),
-                "logprobsM1_gt":float(log_probs_m1_gt.sum()),"logprobsM2_gt":float(log_probs_m2_gt.sum()),
-                "log_probs_m1_ca_cot1":float(log_probs_m1_ca_cot1.sum()),"log_probs_m2_ca_cot1":float(log_probs_m2_ca_cot1.sum()),
-                "log_probs_m1_a1_cotgt":float(log_probs_m1_a1_cotgt.sum()),"log_probs_m2_a1_cotgt":float(log_probs_m2_a1_cotgt.sum()),
-                "logprobsM1A1_mean":float(log_probs1.mean()), "logprobsM2_QR1A1_mean":float(log_probs2.mean()),"logprobsM2_QA1_mean":float(log_probs3.mean()),
-                "question":Q1,"answer":A1,"cot":R1,"correct_answer":ground_truth.answer,"correct_cot":ground_truth.cot,"is_a1_correct":ground_truth.answer in r.answer,}
+        result={"score1":float(score1),"score2":float(score2),"is_a1_correct":match_with_ground_truth(A1, ground_truth.answer),
+                "logprobsM1A1_sum": float(log_probs1.sum()),"logprobsM1_gt":float(log_probs_m1_gt.sum()), "log_probs_m1_ca_cot1":float(log_probs_m1_ca_cot1.sum()),"log_probs_m1_a1_cotgt":float(log_probs_m1_a1_cotgt.sum()),
+                "logprobsM2_QR1A1_sum": float(log_probs2.sum()),"logprobsM2_QA1_sum": float(log_probs3.sum()),"logprobsM2_gt":float(log_probs_m2_gt.sum()),
+                "log_probs_m2_ca_cot1":float(log_probs_m2_ca_cot1.sum()), "log_probs_m2_a1_cotgt":float(log_probs_m2_a1_cotgt.sum()),
+                "logprobsM1A1_mean":float(log_probs1.mean()), "logprobsM1_gt_mean":float(log_probs_m1_gt.mean()),"log_probs_m1_ca_cot1_mean":float(log_probs_m1_ca_cot1.mean()),"log_probs_m1_a1_cotgt_mean":float(log_probs_m1_a1_cotgt.mean()),
+                "logprobsM2_QR1A1_mean":float(log_probs2.mean()),"logprobsM2_QA1_mean":float(log_probs3.mean()),"logprobsM2_gt_mean":float(log_probs_m2_gt.mean()),
+                "log_probs_m2_ca_cot1_mean":float(log_probs_m2_ca_cot1.mean()),"log_probs_m2_a1_cotgt_mean":float(log_probs_m2_a1_cotgt.mean()),
+                "question":Q1,"answer":A1,"cot":R1,"correct_answer":ground_truth.answer,"correct_cot":ground_truth.cot}
+
         os.makedirs("output", exist_ok=True)
         with output_path.open("a") as f:
             f.write(json.dumps(result) + "\n")
