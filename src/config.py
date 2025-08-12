@@ -18,7 +18,7 @@ class ModelConfig:
         },
     }
     MODEL_CONFIG_GPT_OSS_20B = {
-        "begin_think": "<|end|><|start|>assistant<|channel|>final<|message|>analysis<|message|>",
+        "begin_think": "<|end|><|start|>user<|message|>",
         "end_think": "<|end|><|start|>assistant<|channel|>final<|message|>",
         "generate_kwargs": {
             "temperature": 0.6,
