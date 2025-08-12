@@ -5,8 +5,24 @@ from types import SimpleNamespace
 
 @dataclass
 class SampleGroundTruth:
+    """Ground truth values for sample, taken from the dataset. Chain of thought may be empty."""
     cot: str
     answer: str
+
+@dataclass
+class MetricResult:
+    """Return value from Metric.evaluate(). Intervened data is optional."""
+    score: float
+    score_original: float
+    score_intervention: float
+    intervened_prompt: str | None
+    intervened_cot: str | None
+    intervened_answer: str | None
+
+    def has_intervened_data(self) -> bool:
+        return self.intervened_prompt is not None \
+            or self.intervened_cot is not None \
+            or self.intervened_answer is not None
 
 class Metric: 
     def __init__(self, metric_name: str, model: Model, alternative_model: Model | None = None, args: SimpleNamespace | None = None):
@@ -30,13 +46,13 @@ class Metric:
         """Return a string to be appended to the logfile name."""
         return ""
 
-    def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
+    def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None) -> MetricResult:
         """Evaluate the metric based on the provided model response.
         Returns a numeric score: higher is more suspicious."""
         raise NotImplementedError("This method should be overridden " +
                                   "by subclasses")
 
-    def evaluate_batch(self, responses: list[ModelResponse], ground_truth: list[SampleGroundTruth] | None = None, args: dict = {}):
+    def evaluate_batch(self, responses: list[ModelResponse], ground_truth: list[SampleGroundTruth] | None = None, args: dict = {}) -> list[MetricResult]:
         raise NotImplementedError("This method should be overridden " +
                                   "by subclasses")
 

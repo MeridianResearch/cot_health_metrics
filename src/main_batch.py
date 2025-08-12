@@ -61,36 +61,34 @@ def _iterate_local_dataset(prompts: List[dict]) -> Iterator[tuple[int, str, str,
     for p in prompts:
         yield (p['prompt_id'], _get_sample_question(p), '', '')
 
-def print_output(id, question, prompt, cot, answer, score, score_original, score_intervention, f, f_json, args, intervened_cot=None, intervened_answer=None):
-    print(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}")
+def print_output(id, question, prompt, cot, answer, result, f, f_json, args):
+    print(f"{id}\t{result.score:.4f}\t{result.score_original:.4f}\t{result.score_intervention:.4f}")
 
-    f.write(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}\n")
+    f.write(f"{id}\t{result.score:.4f}\t{result.score_original:.4f}\t{result.score_intervention:.4f}\n")
     f.flush()
-
-    approach_suffix = "prompt" if args.filler_in_prompt else "cot"
 
     output = {
         "prompt_id": id,
-        "orig_lp": float(score_original),
-        "induced_lp": float(score_intervention),
-        "delta": float(score),
-        "filler_approach": approach_suffix,
+        "orig_lp": float(result.score_original),
+        "induced_lp": float(result.score_intervention),
+        "delta": float(result.score),
     }
     if args.log_verbose:
-        if args.metric == "Internalized":
+        if result.has_intervened_data():
             output.update({
                 "question": question,
                 "prompt": prompt,
                 "cot": cot,
                 "answer": answer,
-                "intervened_cot": intervened_cot,
-                "intervened_answer": intervened_answer
+                "intervened_prompt": result.intervened_prompt,
+                "intervened_cot": result.intervened_cot,
+                "intervened_answer": result.intervened_answer
             })
         else:
             output.update({
                 "question": question,
-                "cot": r.cot,
-                "answer": r.answer
+                "cot": cot,
+                "answer": answer
             })
     f_json.write(json.dumps(output) + "\n")
     f_json.flush()
@@ -111,27 +109,18 @@ def handle_datapoints(datapoints, args, model, metric, f, f_json):
         try:
             if ground_truth_cot != '' and ground_truth_answer != '':
                 ground_truth = SampleGroundTruth(cot=ground_truth_cot, answer=ground_truth_answer)
-                if args.metric == "Internalized":
-                    (score, score_original, score_intervention, intervened_cot, intervened_answer) = metric.evaluate(r, ground_truth=ground_truth)
-                else:
-                    (score, score_original, score_intervention) = metric.evaluate(r, ground_truth=ground_truth)
+                result = metric.evaluate(r, ground_truth=ground_truth)
             else:
-                if args.metric == "Internalized":
-                    (score, score_original, score_intervention, intervened_cot, intervened_answer) = metric.evaluate(r)
-                else:
-                    (score, score_original, score_intervention) = metric.evaluate(r)
+                result = metric.evaluate(r)
         except RuntimeError as err:
             print(f"Sample id={id} - metric evaluation error ({err})")
             continue
 
         if log_counter % args.log_every == 0:
-            print(f"Sample id={id} - {score:.4f}")
+            print(f"Sample id={id} - {result.score:.4f}")
         log_counter += 1
 
-        if args.metric == "Internalized":
-            print_output(id, question, r.prompt, r.cot, r.answer, score, score_original, score_intervention, f, f_json, args, intervened_cot, intervened_answer)
-        else:
-            print_output(id, question, r.prompt, r.cot, r.answer, score, score_original, score_intervention, f, f_json, args)
+        print_output(id, question, r.prompt, r.cot, r.answer, result, f, f_json, args)
 
 def handle_datapoints_batch(datapoints, batch_size, args, model, metric, f, f_json):
     sample_counter = 0
@@ -176,12 +165,8 @@ def handle_datapoints_batch(datapoints, batch_size, args, model, metric, f, f_js
             print(f"Batch - metric evaluation error ({err})")
             continue
 
-        if args.metric == "Internalized":
-            for i, (score, score_original, score_intervention, intervened_cot, intervened_answer) in enumerate(results):
-                print_output(question_ids[i], questions[i], r[i].cot, r[i].answer, score, score_original, score_intervention, f, f_json, args, intervened_cot, intervened_answer)
-        else:
-            for i, (score, score_original, score_intervention) in enumerate(results):
-                print_output(question_ids[i], questions[i], r[i].cot, r[i].answer, score, score_original, score_intervention, f, f_json, args)
+        for i, result in enumerate(results):
+            print_output(question_ids[i], questions[i], r[i].prompt, r[i].cot, r[i].answer, result, f, f_json, args)
 
 def main():
     parser = argparse.ArgumentParser()
