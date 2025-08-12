@@ -110,7 +110,6 @@ class DatasetAdapter:
         return load_dataset(self.get(dataset_name), self.load_section, split=split)
 
 class DatasetConfig:
-<<<<<<< HEAD
     HF_DATASET_LIST = [
         DatasetAdapter("vicgalle/alpaca-gpt4", ["alpaca", "alpaca-gpt4"],
             do_extract=lambda d: (d["question"], "", d["answer"])),
@@ -123,11 +122,7 @@ class DatasetConfig:
     ]
     HF_DATASET_NAMES = {adapter.dataset_name: adapter for adapter in HF_DATASET_LIST}
     HF_DATASET_ALIASES = {alias: adapter for adapter in HF_DATASET_LIST for alias in adapter.aliases}
-    HF_DATASET_NAMES = {
-        "Alpaca": "vicgalle/alpaca-gpt4",
-        "GSM8K": "gsm8k",
-        "MMLU": "openai/openai_mmlu_benchmark",
-    }
+
     @staticmethod
     def get(dataset_name: str) -> DatasetAdapter:
         print(f"HF_DATASET_NAMES: {DatasetConfig.HF_DATASET_NAMES}")
