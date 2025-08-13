@@ -103,7 +103,7 @@ class DatasetAdapter:
         split = self.load_split
         if max_samples is not None:
             split = split + f"[:{max_samples}]"
-        print(f"Loading dataset {dataset_name} with spplit {split}")
+        print(f"Loading dataset {dataset_name} with split {split}")
         print(f"Dataset name: {self.get(dataset_name)}")
         print(f"Stored Dataset name: {self.dataset_name}")
         return load_dataset(self.get(dataset_name), self.load_section, split=split)

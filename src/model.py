@@ -162,13 +162,8 @@ class CoTModel(Model):
         responses = self.generate_cot_response_full_batch(question_ids, questions, max_new_tokens)
         return [response.basic_pair for response in responses]
 
-<<<<<<< HEAD
-    def make_prompt(self, question_id, question, custom_instruction="Let's think step by step."):
-        prompt_builder = ModelPromptBuilder(self.model_name, invokes_cot=True)
-=======
     def make_prompt(self, question_id, question, custom_instruction=None):
         prompt_builder = self.component_factory.make_prompt_builder(invokes_cot=True)
->>>>>>> d91029e (more tests, refactor into files)
         prompt_builder.add_user_message(question, custom_instruction)
         return prompt_builder.make_prompt(self.tokenizer)
 
