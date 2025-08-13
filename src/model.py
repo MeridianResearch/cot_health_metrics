@@ -3,8 +3,65 @@ from transformers import AutoConfig
 import torch
 from dataclasses import dataclass
 from token_utils import TokenUtils
-from typing import Optional, List
+from model_prompts import ModelPromptBuilder
+from typing import Optional, List, Callable
 from config import ModelConfig
+from model_factory import ModelComponentFactory
+
+
+class Model:
+    def __init__(self, model_name: str, cache_dir="/tmp/cache"):
+        self.model_name = model_name
+        self.cache_dir = cache_dir
+
+    def get_utils(self):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def make_prompt(self, question_id, question, custom_instruction=None):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def do_generate(self, question_id, prompt, max_new_tokens=4096):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def generate_cot_response(self, question_id, question, max_new_tokens=4096):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def evaluate_cot_response(self, question_id, prompt, max_new_tokens=4096):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def get_log_probs(self, sequences: torch.Tensor):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def do_split(self, sequences):
+        raise NotImplementedError("Subclasses must implement this method")
+
+
+class Model:
+    def __init__(self, model_name: str, cache_dir="/tmp/cache"):
+        self.model_name = model_name
+        self.cache_dir = cache_dir
+
+    def get_utils(self):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def make_prompt(self, question_id, question, custom_instruction=None):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def do_generate(self, question_id, prompt, max_new_tokens=4096):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def generate_cot_response(self, question_id, question, max_new_tokens=4096):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def evaluate_cot_response(self, question_id, prompt, max_new_tokens=4096):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def get_log_probs(self, sequences: torch.Tensor):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def do_split(self, sequences):
+        raise NotImplementedError("Subclasses must implement this method")
+
 
 @dataclass
 class ModelResponse:
@@ -44,35 +101,18 @@ ModelResponse(
         print(f"Answer: {self._encode(self.answer)}")
         print("\n")
 
-class Model:
-    def __init__(self, model_name: str, cache_dir="/tmp/cache"):
-        self.model_name = model_name
-        self.cache_dir = cache_dir
-
-    def get_utils(self):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def make_prompt(self, question_id, question, custom_instruction="Let's think step by step."):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def do_generate(self, question_id, prompt, max_new_tokens=4096):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def generate_cot_response(self, question_id, question, max_new_tokens=4096):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def evaluate_cot_response(self, question_id, prompt, max_new_tokens=4096):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def get_log_probs(self, sequences: torch.Tensor):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def do_split(self, sequences):
-        raise NotImplementedError("Subclasses must implement this method")
 
 class CoTModel(Model):
-    def __init__(self, model_name: str, cache_dir="/tmp/cache"):
+    def __init__(self, model_name: str,
+                 component_factory: ModelComponentFactory = None,
+                 cache_dir="/tmp/cache"):
+
         super().__init__(model_name, cache_dir)
+
+        if component_factory is None:
+            self.component_factory = ModelComponentFactory(model_name)
+        else:
+            self.component_factory = component_factory
 
         if not ModelConfig.is_supported(model_name):
             print(f"ERROR: model {model_name} is not in supported list {ModelConfig.SUPPORTED_MODELS}")
@@ -99,7 +139,13 @@ class CoTModel(Model):
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             config=config,
-            #torch_dtype=torch.float16,
+            torch_dtype=torch.float16,
+            device_map="auto",
+            cache_dir=cache_dir,
+        ) if "Qwen" in model_name else AutoModelForCausalLM.from_pretrained(
+            model_name,
+            config=config,
+            # torch_dtype=torch.float16,
             device_map="auto",
             cache_dir=cache_dir,
         )
@@ -110,7 +156,7 @@ class CoTModel(Model):
 
     def generate_cot_response(self, question_id, question, max_new_tokens=4096, do_sample=True):
         final_response = self.generate_cot_response_full(question_id, question,
-            max_new_tokens=max_new_tokens, do_sample=do_sample)
+                                                         max_new_tokens=max_new_tokens, do_sample=do_sample)
         return final_response.basic_pair
 
     def generate_cot_response_batch(self, question_ids, questions, max_new_tokens=4096):
@@ -118,57 +164,15 @@ class CoTModel(Model):
         responses = self.generate_cot_response_full_batch(question_ids, questions, max_new_tokens)
         return [response.basic_pair for response in responses]
 
-    def make_prompt(self, question_id, question, custom_instruction="Let's think step by step."):
-        # Handle Gemma-2 specifically
-        if self.model_name == "google/gemma-2-2b-it":
-            custom_instruction = custom_instruction + " Please write the string \"Answer: \" before the final answer."
-        if self.model_name == "meta-llama/Meta-Llama-3-8B-Instruct" or self.model_name == "meta-llama/Llama-2-7b-chat-hf":
-            custom_instruction = custom_instruction + " Please write the string \"Answer: \" before the final answer."
-
-        model_config = ModelConfig.get(self.model_name)
-        history = [
-            {"role": "user", "content": f"Question: {question}\n{custom_instruction}"},
-        ]
-
-        # Usually, one of these should be set to True
-        continue_final_message = False
-        add_generation_prompt = False
-
-        if "begin_think" in model_config:
-            if (self.model_name == "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"):
-                history.append({"role": "assistant", "content": "<think>"})
-                continue_final_message = True
-            elif (self.model_name == "openai/gpt-oss-20b"):
-                history.append({"role": "assistant", "content": "analysis"})
-                continue_final_message = True
-            else:
-                # default to making a new assistant role section
-                add_generation_prompt = True
-        elif "fuzzy_end_think_list" in model_config:
-            # For Gemma, use default behavior
-            add_generation_prompt = True
-            pass
-        else:
-            print(f"ERROR: model {self.model_name} missing CoT separator config")
-            exit(1)
-
-        prompt = self.tokenizer.apply_chat_template(history,
-                                                    tokenize=False,
-                                                    add_generation_prompt=add_generation_prompt,
-                                                    continue_final_message=continue_final_message)
-        return prompt
+    def make_prompt(self, question_id, question, custom_instruction=None):
+        prompt_builder = self.component_factory.make_prompt_builder(invokes_cot=True)
+        prompt_builder.add_user_message(question, custom_instruction)
+        return prompt_builder.make_prompt(self.tokenizer)
 
     def make_prompt_no_cot(self, question_id, question):
-        history = [
-            {"role": "user", "content": f"Question: {question}\n"},
-        ]
-
-        prompt = self.tokenizer.apply_chat_template(history,
-                                                    tokenize=False,
-                                                    add_generation_prompt=True,
-                                                    continue_final_message=False)
-        return prompt
-
+        prompt_builder = self.component_factory.make_prompt_builder(invokes_cot=False)
+        prompt_builder.add_user_message(question)
+        return prompt_builder.make_prompt(self.tokenizer)
 
     def do_generate(self, question_id, prompt, max_new_tokens=4096, do_sample=True):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
@@ -189,14 +193,14 @@ class CoTModel(Model):
         )
         return output
 
-    def do_generate_batch(self, question_ids, prompts, max_new_tokens=4096):
+    def do_generate_batch(self, question_ids, prompts, max_new_tokens=4096, do_sample=True):
         """Generate responses for multiple prompts in batch using Chain-of-Thought (CoT) prompting."""
         model_config = ModelConfig.get(self.model_name)
 
         # Validate inputs
         if not prompts:
             raise ValueError("Empty prompts list provided to do_generate_batch")
-        
+
         if len(question_ids) != len(prompts):
             raise ValueError(f"Mismatch between question_ids ({len(question_ids)}) and prompts ({len(prompts)})")
 
@@ -208,7 +212,7 @@ class CoTModel(Model):
             print(f"Number of prompts: {len(prompts)}")
             print(f"First prompt: {prompts[0] if prompts else 'None'}")
             print("Falling back to individual tokenization...")
-            
+
             # Fallback: tokenize individually and combine
             input_ids = []
             attention_masks = []
@@ -216,40 +220,40 @@ class CoTModel(Model):
                 tokenized = self.tokenizer(prompt, return_tensors="pt", padding=True, truncation=True)
                 input_ids.append(tokenized["input_ids"])
                 attention_masks.append(tokenized["attention_mask"])
-            
+
             # Pad to same length
             max_length = max(ids.shape[1] for ids in input_ids)
             padded_input_ids = []
             padded_attention_masks = []
-            
+
             for ids, mask in zip(input_ids, attention_masks):
                 pad_length = max_length - ids.shape[1]
                 if pad_length > 0:
-                    padded_ids = torch.cat([ids, torch.full((1, pad_length), self.tokenizer.pad_token_id, dtype=ids.dtype)], dim=1)
+                    padded_ids = torch.cat(
+                        [ids, torch.full((1, pad_length), self.tokenizer.pad_token_id, dtype=ids.dtype)], dim=1)
                     padded_mask = torch.cat([mask, torch.zeros((1, pad_length), dtype=mask.dtype)], dim=1)
                 else:
                     padded_ids = ids
                     padded_mask = mask
                 padded_input_ids.append(padded_ids)
                 padded_attention_masks.append(padded_mask)
-            
+
             inputs = {
                 "input_ids": torch.cat(padded_input_ids, dim=0).to(self.model.device),
                 "attention_mask": torch.cat(padded_attention_masks, dim=0).to(self.model.device)
             }
-        
+
+        generate_kwargs = model_config.get("generate_kwargs", {})
+
         output = self.model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
-            do_sample=True,
-            temperature=0.6,
-            top_k=20,
-            min_p=0.0,
-            top_p=0.95,
+            do_sample=do_sample,
             eos_token_id=self.tokenizer.eos_token_id,
             pad_token_id=self.tokenizer.eos_token_id,
             output_scores=True,
             return_dict_in_generate=True,
+            **generate_kwargs,
         )
         return output
 
@@ -266,25 +270,25 @@ class CoTModel(Model):
             # Pad sequences to the same length
             max_length = max(seq.shape[1] for seq in sequences_list)
             padded_sequences = []
-            
+
             for seq in sequences_list:
                 if seq.shape[1] < max_length:
                     # Pad with pad_token_id
                     pad_length = max_length - seq.shape[1]
-                    padding = torch.full((seq.shape[0], pad_length), self.tokenizer.pad_token_id, 
-                                       dtype=seq.dtype, device=seq.device)
+                    padding = torch.full((seq.shape[0], pad_length), self.tokenizer.pad_token_id,
+                                         dtype=seq.dtype, device=seq.device)
                     padded_seq = torch.cat([seq, padding], dim=1)
                 else:
                     padded_seq = seq
                 padded_sequences.append(padded_seq)
-            
+
             # Stack into batch
             batch_sequences = torch.cat(padded_sequences, dim=0)
-            
+
             # Get log probabilities for the entire batch
             outputs = self.model(input_ids=batch_sequences)
             log_probs = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
-            
+
             # Split back into individual sequences
             log_probs_list = []
             start_idx = 0
@@ -292,14 +296,14 @@ class CoTModel(Model):
                 end_idx = start_idx + seq.shape[0]
                 log_probs_list.append(log_probs[start_idx:end_idx])
                 start_idx = end_idx
-            
+
             return log_probs_list
 
     def do_split(self, sequences, prompt):
         model_config = ModelConfig.get(self.model_name)
 
         # should split the output into three parts: question, the chain of thought and the answer
-        if("begin_think" in model_config):
+        if ("begin_think" in model_config):
             begin_think = model_config["begin_think"]
             end_think = model_config["end_think"]
 
@@ -317,7 +321,7 @@ class CoTModel(Model):
             cot = cot.strip()
             answer = answer.strip()
 
-        elif("fuzzy_end_think_list" in model_config):
+        elif ("fuzzy_end_think_list" in model_config):
             input_tokens = self.tokenizer(prompt, return_tensors="pt")
             full = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
             question = self.tokenizer.decode(
@@ -339,17 +343,16 @@ class CoTModel(Model):
                     f"{model_config['fuzzy_end_think_list']}"
                 )
 
-
         return (question, cot, answer)
 
     def generate_cot_response_full(self, question_id, question, max_new_tokens=4096, do_sample=True):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         prompt = self.make_prompt(question_id, question)
         output = self.do_generate(question_id, prompt,
-            max_new_tokens=max_new_tokens, do_sample=do_sample)
+                                  max_new_tokens=max_new_tokens, do_sample=do_sample)
         sequences = output.sequences
 
-        raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
+        raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
 
         (_, cot, answer) = self.do_split(sequences, prompt)
 
@@ -361,9 +364,9 @@ class CoTModel(Model):
             answer=answer,
             raw_output=raw_output)
 
-    def evaluate_cot_response(self, question_id, prompt, response, max_new_tokens=4096):
+    def evaluate_cot_response(self, question_id, prompt, response, max_new_tokens=4096, to_device=None):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
-        response_tokens = self.utils.encode_to_tensor(response)
+        response_tokens = self.utils.encode_to_tensor(response, to_device=to_device)
 
         (question, cot, answer) = self.do_split(response_tokens, prompt)
 
@@ -380,10 +383,10 @@ class CoTModel(Model):
         # Validate inputs
         if not question_ids or not questions:
             raise ValueError("Empty question_ids or questions list provided")
-        
+
         if len(question_ids) != len(questions):
             raise ValueError(f"Mismatch between question_ids ({len(question_ids)}) and questions ({len(questions)})")
-        
+
         # Create prompts for all questions
         prompts = []
         for qid, question in zip(question_ids, questions):
@@ -393,7 +396,7 @@ class CoTModel(Model):
             if not prompt or prompt.strip() == "":
                 raise ValueError(f"Empty prompt generated for question_id {qid}")
             prompts.append(prompt)
-        
+
         # Generate responses in batch
         output = self.do_generate_batch(question_ids, prompts, max_new_tokens)
         sequences = output.sequences
@@ -402,10 +405,10 @@ class CoTModel(Model):
         responses = []
         for i, (question_id, question, prompt) in enumerate(zip(question_ids, questions, prompts)):
             raw_output = self.tokenizer.decode(sequences[i], skip_special_tokens=True)
-            
+
             try:
-                (question_part, cot, answer) = self.do_split(sequences[i:i+1])
-                
+                (question_part, cot, answer) = self.do_split(sequences[i:i + 1])
+
                 response = ModelResponse(
                     question_id=question_id,
                     question=question,
@@ -445,7 +448,7 @@ class CoTModel(Model):
 
     def _get_token_id(self, token):
         token_id = self.tokenizer.convert_tokens_to_ids(token)
-        if(token_id is None):
+        if (token_id is None):
             print(f"ERROR: model {self.model_name} does not support {token} token")
             exit(1)
         return token_id
@@ -468,6 +471,7 @@ class CoTModel(Model):
             end_think_tokens = end_think_tokens.tolist()
 
         return (begin_think_tokens, end_think_tokens)
+
 
 if __name__ == "__main__":
     question = "How can one decide the best time to buy a house in Boston?"

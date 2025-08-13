@@ -7,8 +7,8 @@ python src/main_batch.py --model=Qwen/Qwen3-0.6B --metric=ParaphrasabilitySimple
 python src/main_batch.py --model=Qwen/Qwen3-0.6B --metric=PromptParaphrasability --data-hf=GSM8K --max-samples=2
 
 # New experimental design examples:
-python src/main_batch.py --model=Qwen/Qwen3-1.7B --metric=Internalized --data-hf=GSM8K --max-samples=2 --filler=lorem_ipsum --filler-in-prompt
-python src/main_batch.py --model=Qwen/Qwen3-1.7B --metric=Internalized --data-hf=GSM8K --max-samples=2 --filler=lorem_ipsum --filler-in-cot
+python src/main_batch.py --model=Qwen/Qwen3-1.7B --metric=Internalized --data-hf=GSM8K --max-samples=2 --filler=lorem_ipsum --filler-in-prompt=True
+python src/main_batch.py --model=Qwen/Qwen3-1.7B --metric=Internalized --data-hf=GSM8K --max-samples=2 --filler=lorem_ipsum --filler-in-cot=True
 """
 
 import argparse
@@ -61,36 +61,34 @@ def _iterate_local_dataset(prompts: List[dict]) -> Iterator[tuple[int, str, str,
     for p in prompts:
         yield (p['prompt_id'], _get_sample_question(p), '', '')
 
-def print_output(id, question, cot, answer, score, score_original, score_intervention, f, f_json, args, intervened_cot=None, intervened_answer=None):
-    print(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}")
+def print_output(id, question, prompt, cot, answer, result, f, f_json, args):
+    print(f"{id}\t{result.score:.4f}\t{result.score_original:.4f}\t{result.score_intervention:.4f}")
 
-    f.write(f"{id}\t{score:.4f}\t{score_original:.4f}\t{score_intervention:.4f}\n")
+    f.write(f"{id}\t{result.score:.4f}\t{result.score_original:.4f}\t{result.score_intervention:.4f}\n")
     f.flush()
-
-    approach_suffix = "prompt" if args.filler_in_prompt else "cot"
 
     output = {
         "prompt_id": id,
-        "orig_lp": float(score_original),
-        "induced_lp": float(score_intervention),
-        "delta": float(score),
-        "filler_approach": approach_suffix,
+        "orig_lp": float(result.score_original),
+        "induced_lp": float(result.score_intervention),
+        "delta": float(result.score),
     }
     if args.log_verbose:
-        if args.metric == "Internalized":
+        if result.has_intervened_data():
             output.update({
                 "question": question,
-                "prompt": r.prompt,
-                "cot": r.cot,
-                "answer": r.answer,
-                "intervened_cot": intervened_cot,
-                "intervened_answer": intervened_answer
+                "prompt": prompt,
+                "cot": cot,
+                "answer": answer,
+                "intervened_prompt": result.intervened_prompt,
+                "intervened_cot": result.intervened_cot,
+                "intervened_answer": result.intervened_answer
             })
         else:
             output.update({
                 "question": question,
-                "cot": r.cot,
-                "answer": r.answer
+                "cot": cot,
+                "answer": answer
             })
     f_json.write(json.dumps(output) + "\n")
     f_json.flush()
@@ -111,23 +109,18 @@ def handle_datapoints(datapoints, args, model, metric, f, f_json):
         try:
             if ground_truth_cot != '' and ground_truth_answer != '':
                 ground_truth = SampleGroundTruth(cot=ground_truth_cot, answer=ground_truth_answer)
-                (score, score_original, score_intervention) = metric.evaluate(r, ground_truth=ground_truth)
-            elif args.metric == "Internalized":
-                (score, score_original, score_intervention, intervened_cot, intervened_answer) = metric.evaluate(r)
+                result = metric.evaluate(r, ground_truth=ground_truth)
             else:
-                (score, score_original, score_intervention) = metric.evaluate(r)
+                result = metric.evaluate(r)
         except RuntimeError as err:
             print(f"Sample id={id} - metric evaluation error ({err})")
             continue
 
         if log_counter % args.log_every == 0:
-            print(f"Sample id={id} - {score:.4f}")
+            print(f"Sample id={id} - {result.score:.4f}")
         log_counter += 1
 
-        if args.metric == "Internalized":
-            print_output(id, question, r.cot, r.answer, score, score_original, score_intervention, f, f_json, args, intervened_cot, intervened_answer)
-        else:
-            print_output(id, question, r.cot, r.answer, score, score_original, score_intervention, f, f_json, args)
+        print_output(id, question, r.prompt, r.cot, r.answer, result, f, f_json, args)
 
 def handle_datapoints_batch(datapoints, batch_size, args, model, metric, f, f_json):
     sample_counter = 0
@@ -172,12 +165,8 @@ def handle_datapoints_batch(datapoints, batch_size, args, model, metric, f, f_js
             print(f"Batch - metric evaluation error ({err})")
             continue
 
-        if args.metric == "Internalized":
-            for i, (score, score_original, score_intervention, intervened_cot, intervened_answer) in enumerate(results):
-                print_output(question_ids[i], questions[i], r[i].cot, r[i].answer, score, score_original, score_intervention, f, f_json, args, intervened_cot, intervened_answer)
-        else:
-            for i, (score, score_original, score_intervention) in enumerate(results):
-                print_output(question_ids[i], questions[i], r[i].cot, r[i].answer, score, score_original, score_intervention, f, f_json, args)
+        for i, result in enumerate(results):
+            print_output(question_ids[i], questions[i], r[i].prompt, r[i].cot, r[i].answer, result, f, f_json, args)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -187,7 +176,6 @@ def main():
     parser.add_argument("--data-path", default=None)
     parser.add_argument("--data-hf", default=None)
     parser.add_argument("--skip-samples", type=int, default=0)
-    parser.add_argument("--filler", type=str, default="think")
     parser.add_argument("--max-samples", type=int, default=None)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--cache-dir", default=CACHE_DIR_DEFAULT)
@@ -196,20 +184,11 @@ def main():
     parser.add_argument("--log-every", type=int, default=LOG_EVERY_DEFAULT)
     parser.add_argument("--log-verbose", type=bool, default=True)
 
-    # New arguments for filler placement
-    filler_group = parser.add_mutually_exclusive_group()
-    filler_group.add_argument("--filler-in-prompt", action="store_true",
-                             help="Put filler tokens in prompt before <think> tags (new approach)")
-    filler_group.add_argument("--filler-in-cot", action="store_true",
-                             help="Put filler tokens inside <think> tags (original approach)")
+    parser.add_argument("--filler", type=str, default="think")  # Internalized
+    parser.add_argument("--filler-in-prompt", type=bool, default=False)  # Internalized
+    parser.add_argument("--filler-in-cot", type=bool, default=False)  # Internalized
 
     args = parser.parse_args()
-
-    # Default behavior: if neither flag is specified, use original approach for backward compatibility
-    if not args.filler_in_prompt and not args.filler_in_cot:
-        args.filler_in_cot = True
-
-    filler_in_prompt = args.filler_in_prompt
 
     # Load dataset
     dataset_name = ''
@@ -232,36 +211,45 @@ def main():
     # Make cache dir
     os.makedirs(args.cache_dir, exist_ok=True)
 
-    # Load model
+    # Load models
     model = CoTModel(args.model, cache_dir=args.cache_dir)
     model2 = CoTModel(args.model2, cache_dir=args.cache_dir) if args.model2 else None
 
     # Create metric(s)
-    extra_args = {}
-    if args.metric == "Internalized":
-        extra_args["filler_token"] = args.filler
-        extra_args["filler_in_prompt"] = args.filler_in_prompt
+    from types import SimpleNamespace
+    extra_args = SimpleNamespace()
+    for arg in ["filler", "filler_in_prompt", "filler_in_cot"]:
+        setattr(extra_args, arg, getattr(args, arg))
 
     metric = construct_metric(
         metric_name=args.metric,
         model=model,
         alternative_model=model2,
-        **extra_args)
+        args=extra_args)
 
+    logfile_suffix = metric.get_logfile_suffix()
     if args.log_file is None:
-        if args.metric == "Internalized":
-            approach_suffix = "prompt" if filler_in_prompt else "cot"
-            log_file = (args.log_dir + "/" + args.model + "_" + dataset_name + "_" + _get_datetime_str() + "_"
-                        + args.metric + "_filler_" + args.filler + "_" + approach_suffix + "_" + ".log")
-            json_log_file = (args.log_dir + "/" + args.model + "_" + dataset_name + "_" + _get_datetime_str() + "_"
-                             + args.metric + "_filler_" + args.filler + "_" + approach_suffix + "_" + ".jsonl")
-        else:
-            log_file = args.log_dir + "/" + args.model + "_" + dataset_name + "_" + _get_datetime_str() + "_" + args.metric + ".log"
-            json_log_file = args.log_dir + "/" + args.model + "_" + dataset_name + "_" + _get_datetime_str() + "_" + args.metric + ".jsonl"
-        os.makedirs(args.log_dir, exist_ok=True)
+        base = args.log_dir + "/" + args.model + "_" + dataset_name + "_" + _get_datetime_str() + "_" + args.metric
+        log_file = base + logfile_suffix + ".log"
+        json_log_file = base + logfile_suffix + ".jsonl"
+        config_log_file = base + logfile_suffix + ".config.json"
     else:
-        log_file = args.log_file
+        log_file = args.log_file + logfile_suffix
         json_log_file = log_file + ".jsonl"
+        config_log_file = log_file + ".config.jsonl"
+
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
+
+    with open(config_log_file, 'a') as f:
+        # Convert SimpleNamespace objects to dictionaries for JSON serialization
+        metric_config = metric.get_config()
+        metric_config_dict = vars(metric_config) if hasattr(metric_config, '__dict__') else metric_config
+        data = {
+            "args": vars(args),
+            "logfile_suffix": logfile_suffix,
+            "metric_config": metric_config_dict,
+        }
+        f.write(json.dumps(data) + "\n")
 
     with open(log_file, 'a') as f:
         with open(json_log_file, 'a') as f_json:

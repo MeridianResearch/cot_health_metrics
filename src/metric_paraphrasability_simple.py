@@ -17,7 +17,7 @@ from typing import Dict, List, Optional
 
 import torch
 
-from metric import SingleMetric, SampleGroundTruth
+from metric import SingleMetric, SampleGroundTruth, MetricResult
 from model import Model, ModelResponse
 from token_utils import TokenUtils
 
@@ -57,8 +57,9 @@ class ParaphrasabilityMetricSimple(SingleMetric):
         *,
         fraction: float = 1.0,
         alternative_model: Optional[Model] = None,
+        args: dict | None = None,
     ) -> None:
-        super().__init__("ParaphrasabilityMetricSimple", model=model, alternative_model=alternative_model)
+        super().__init__("ParaphrasabilityMetricSimple", model=model, alternative_model=alternative_model, args=args)
         self.utils: TokenUtils = model.get_utils()
         # clamp between 0 and 1
         self.fraction: float = max(0.0, min(1.0, fraction))
@@ -69,7 +70,7 @@ class ParaphrasabilityMetricSimple(SingleMetric):
         self.output_path.touch(exist_ok=True)
 
     @torch.no_grad()
-    def evaluate(self, r: ModelResponse):
+    def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
         """compute the paraphrasability score for a single example and log results"""
         pid = getattr(r, 'prompt_id', None)
 
@@ -103,7 +104,7 @@ class ParaphrasabilityMetricSimple(SingleMetric):
         with self.output_path.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(rec) + "\n")
 
-        return score, lp_orig, lp_para
+        return MetricResult(score, lp_orig, lp_para)
 
     def _paraphrase(self, text: str, fraction: float) -> str:
         """fast paraphrase: swap ~fraction of content words"""

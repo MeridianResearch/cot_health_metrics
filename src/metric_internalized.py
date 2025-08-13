@@ -1,20 +1,21 @@
-from metric import SingleMetric, SampleGroundTruth
+from metric import SingleMetric, SampleGroundTruth, MetricResult
 from model import Model, ModelResponse
 from config import ModelConfig
 from token_utils import TokenUtils
 from data_loader import get_filler_text, list_available_filler_texts
 import torch
 import os
+from types import SimpleNamespace
 
 class InternalizedMetric(SingleMetric):
-    def __init__(self, model: Model, alternative_model: Model | None = None, filler_token: str = "think",
-                 filler_in_prompt: bool = True):
+    def __init__(self, model: Model, alternative_model: Model | None = None, args: SimpleNamespace | None = None):
         super().__init__("InternalizedMetric", model=model,
-                         alternative_model=alternative_model)
+                         alternative_model=alternative_model, args=args)
         self.model = model
         self.utils = model.get_utils()
-        self.filler_token = filler_token
-        self.filler_in_prompt = filler_in_prompt  # New parameter to control behavior
+        self.filler_token = self.config.filler_token
+        self.filler_in_prompt = self.config.filler_in_prompt  # New parameter to control behavior
+
         # Try multiple possible paths for filler texts
         possible_paths = [
             "data/filler_texts.json",
@@ -38,6 +39,18 @@ class InternalizedMetric(SingleMetric):
 
         if self._is_text_based_filler():
             self._load_filler_text()
+
+    def _generate_config(self, args: SimpleNamespace) -> SimpleNamespace:
+        print(f"args: {args}")
+        approach_suffix = "prompt" if args.filler_in_prompt else "cot"
+        return SimpleNamespace(
+            approach_suffix=approach_suffix,
+            filler_token=args.filler,
+            filler_in_prompt=args.filler_in_prompt,
+        )
+
+    def get_logfile_suffix(self) -> str:
+        return "_filler_" + self.config.filler_token + "_" + self.config.approach_suffix
 
     def _is_text_based_filler(self) -> bool:
         """Check if the filler token refers to a text-based filler rather than a single token."""
@@ -113,8 +126,8 @@ class InternalizedMetric(SingleMetric):
         filler_tokens = self._get_filler_tokens(target_length)
         return self.utils.decode_to_string(filler_tokens, skip_special_tokens=True)
 
-    def evaluate(self, r: ModelResponse):
-        if self.filler_in_prompt:
+    def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
+        if self.config.filler_in_prompt:
             return self._evaluate_filler_in_prompt(r)
         else:
             return self._evaluate_filler_in_cot(r)
@@ -240,7 +253,14 @@ class InternalizedMetric(SingleMetric):
         # Generate intervened CoT string (which is empty in this approach)
         intervened_cot = ""
 
-        return (score, score_original, score_intervention, intervened_cot, intervened_answer)
+        return MetricResult(
+            score=score,
+            score_original=score_original,
+            score_intervention=score_intervention,
+            intervened_prompt=intervened_prompt,
+            intervened_cot=intervened_cot,
+            intervened_answer=intervened_answer
+        )
 
     def _evaluate_filler_in_cot(self, r: ModelResponse):
         """Original approach: Replace CoT content with filler tokens."""
@@ -328,4 +348,11 @@ class InternalizedMetric(SingleMetric):
         score_intervention = internalized_cot_log_probs.sum()
         score = (score_original - score_intervention) / (score_original)
 
-        return (score, score_original, score_intervention, intervened_cot, intervened_answer)
+        return MetricResult(
+            score=score,
+            score_original=score_original,
+            score_intervention=score_intervention,
+            intervened_prompt=intervened_prompt,
+            intervened_cot=intervened_cot,
+            intervened_answer=intervened_answer
+        )

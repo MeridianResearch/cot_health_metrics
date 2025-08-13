@@ -16,7 +16,7 @@ from typing import Optional, Sequence, Dict
 import torch
 
 # project-internal imports
-from metric import SingleMetric, SampleGroundTruth
+from metric import SingleMetric, SampleGroundTruth, MetricResult
 from model import Model, ModelResponse
 from token_utils import TokenUtils
 
@@ -145,7 +145,6 @@ def _naive_paraphrase(text: str, fraction: float) -> str:
     return " ".join(words)
 
 
-# The Metric class
 class ParaphrasabilityMetric(SingleMetric):
     """
     how much the answer logprobs drop when CoT paraphrased
@@ -167,8 +166,9 @@ class ParaphrasabilityMetric(SingleMetric):
         fractions: Optional[Sequence[float]] = None,
         mode: str = ENV_MODE,
         logger: Optional[logging.Logger] = None,
+        args: dict | None = None,
     ):
-        super().__init__("ParaphrasabilityMetric", model, alternative_model)
+        super().__init__("ParaphrasabilityMetric", model, alternative_model, args=args)
         self.utils  = model.get_utils()
         self.logger = logger or logging.getLogger(__name__)
 
@@ -228,7 +228,7 @@ class ParaphrasabilityMetric(SingleMetric):
             if delta > worst_delta:
                 worst_delta, worst_lp = delta, lp_para
 
-        return worst_delta, lp_orig, worst_lp
+        return MetricResult(worst_delta, lp_orig, worst_lp)
 
     @torch.no_grad()
     def _logp_answer(self, r: ModelResponse, new_cot: str) -> torch.Tensor:
