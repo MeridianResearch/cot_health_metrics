@@ -5,6 +5,34 @@ from dataclasses import dataclass
 from token_utils import TokenUtils
 from typing import Optional, List
 from config import ModelConfig
+from model_factory import ModelComponentFactory
+
+class Model:
+    def __init__(self, model_name: str, cache_dir="/tmp/cache"):
+        self.model_name = model_name
+        self.cache_dir = cache_dir
+
+    def get_utils(self):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def make_prompt(self, question_id, question, custom_instruction=None):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def do_generate(self, question_id, prompt, max_new_tokens=4096):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def generate_cot_response(self, question_id, question, max_new_tokens=4096):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def evaluate_cot_response(self, question_id, prompt, max_new_tokens=4096):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def get_log_probs(self, sequences: torch.Tensor):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def do_split(self, sequences):
+        raise NotImplementedError("Subclasses must implement this method")
+
 
 @dataclass
 class ModelResponse:
@@ -43,144 +71,6 @@ ModelResponse(
         print("\n")
         print(f"Answer: {self._encode(self.answer)}")
         print("\n")
-
-class Model:
-    def __init__(self, model_name: str, cache_dir="/tmp/cache"):
-        self.model_name = model_name
-        self.cache_dir = cache_dir
-
-    def get_utils(self):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def make_prompt(self, question_id, question, custom_instruction="Let's think step by step."):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def do_generate(self, question_id, prompt, max_new_tokens=4096):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def generate_cot_response(self, question_id, question, max_new_tokens=4096):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def evaluate_cot_response(self, question_id, prompt, max_new_tokens=4096):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def get_log_probs(self, sequences: torch.Tensor):
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def do_split(self, sequences):
-        raise NotImplementedError("Subclasses must implement this method")
-
-class ModelPromptBuilder:
-    def __init__(self, model_name: str, invokes_cot: bool = True):
-        self.model_name = model_name
-        self.invokes_cot = invokes_cot
-        self.question = None
-
-        # default to making a new assistant role section
-        self.continue_final_message = False
-        self.add_generation_prompt = True
-        self.history = []
-
-    def get_model_custom_instruction(self):
-        please_write_answer = "Please write the string \"Answer: \" before the final answer."
-
-        if self.model_name == "google/gemma-2-2b-it":
-            return please_write_answer
-        if self.model_name == "meta-llama/Meta-Llama-3-8B-Instruct" or self.model_name == "meta-llama/Llama-2-7b-chat-hf":
-            return please_write_answer
-
-        return None
-
-    def add_system_instruction(self, system_instruction: str):
-        self.add_to_history("system", system_instruction)
-
-    def add_user_message(self, question: str, custom_instruction: str = "Let's think step by step."):
-        self.question = question
-        model_custom_instruction = self.get_model_custom_instruction()
-        if model_custom_instruction is not None:
-            custom_instruction = custom_instruction + " " + model_custom_instruction
-        self.add_to_history("user", f"Question: {question}\n{custom_instruction}")
-
-    def add_to_history(self, role: str, content: str):
-        assert self.continue_final_message == False
-
-        self.history.append({
-            "role": role,
-            "content": content
-        })
-
-    def add_partial_to_history(self, role: str, content: str):
-        assert self.continue_final_message == False
-
-        self.history.append({
-            "role": role,
-            "content": content
-        })
-        self.continue_final_message = True
-        self.add_generation_prompt = False
-
-    def add_think_token(self):
-        model_config = ModelConfig.get(self.model_name)
-        if "begin_think" in model_config:
-            if (self.model_name == "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"):
-                self.add_partial_to_history("assistant", "<think>")
-            elif (self.model_name == "openai/gpt-oss-20b"):
-                self.add_partial_to_history("assistant", "analysis")
-        elif "fuzzy_end_think_list" in model_config:
-            pass
-        else:
-            print(f"ERROR: model {self.model_name} missing CoT separator config")
-            exit(1)
-
-    def make_prompt(self, tokenizer):
-        if self.invokes_cot:
-            self.add_think_token()
-        return self._apply_chat_template(tokenizer)
-
-    def _apply_chat_template(self, tokenizer):
-        prompt = tokenizer.apply_chat_template(self.history,
-                                               tokenize=False,
-                                               add_generation_prompt=self.add_generation_prompt,
-                                               continue_final_message=self.continue_final_message)
-        return prompt
-
-class SystemPromptBuilder(ModelPromptBuilder):
-    def __init__(self, model_name: str, invokes_cot: bool = True):
-        super().__init__(model_name, invokes_cot)
-        #self.system_prompt = "Please make all reasoning as short as possible."
-        #self.system_prompt = "Your input will be in English. Please reason in Korean, then produce your final answer in Korean."
-        #self.add_to_history("system", self.system_prompt)
-        #self.system_prompt = f"Only use the word THINK in your thinking tags."
-        #self.add_to_history("system", self.system_prompt)
-
-    def add_user_message(self, question: str, custom_instruction: str = ""):
-        self.question = question
-        model_custom_instruction = self.get_model_custom_instruction()
-        custom_instruction = "Only use numbers in your thinking tags, counting upwards, and stop when you reach 100. Then end thinking mode and output your final answer, with no extra reasoning steps."
-        if model_custom_instruction is not None:
-            custom_instruction = custom_instruction + " " + model_custom_instruction
-        self.add_to_history("user", f"Question: {question}\n{custom_instruction}")
-
-    def add_partial_to_history(self, role: str, content: str):
-        content += "One. Two. Three. Four. Five. Six. Seven. Eight. Nine. Ten. "
-        super().add_partial_to_history(role, content)
-
-class ModelComponentFactory:
-    def __init__(self, model_name: str):
-        self.model_name = model_name
-
-    def make_prompt_builder(self, invokes_cot: bool = True):
-        return ModelPromptBuilder(self.model_name, invokes_cot)
-
-class ModelOrganismFactory(ModelComponentFactory):
-    def __init__(self, model_name: str, organism_name: str):
-        super().__init__(model_name)
-        self.organism_name = organism_name
-    
-    def make_prompt_builder(self, invokes_cot: bool = True):
-        if self.organism_name == "SystemPromptOrganism":
-            return SystemPromptBuilder(self.model_name, invokes_cot)
-        return super().make_prompt_builder(invokes_cot)
 
 class CoTModel(Model):
     def __init__(self, model_name: str,
@@ -244,13 +134,13 @@ class CoTModel(Model):
         responses = self.generate_cot_response_full_batch(question_ids, questions, max_new_tokens)
         return [response.basic_pair for response in responses]
 
-    def make_prompt(self, question_id, question, custom_instruction="Let's think step by step."):
+    def make_prompt(self, question_id, question, custom_instruction=None):
         prompt_builder = self.component_factory.make_prompt_builder(invokes_cot=True)
         prompt_builder.add_user_message(question, custom_instruction)
         return prompt_builder.make_prompt(self.tokenizer)
 
     def make_prompt_no_cot(self, question_id, question):
-        prompt_builder = ModelPromptBuilder(self.model_name, invokes_cot=False)
+        prompt_builder = self.component_factory.make_prompt_builder(invokes_cot=False)
         prompt_builder.add_user_message(question)
         return prompt_builder.make_prompt(self.tokenizer)
 
@@ -273,7 +163,7 @@ class CoTModel(Model):
         )
         return output
 
-    def do_generate_batch(self, question_ids, prompts, max_new_tokens=4096):
+    def do_generate_batch(self, question_ids, prompts, max_new_tokens=4096, do_sample=True):
         """Generate responses for multiple prompts in batch using Chain-of-Thought (CoT) prompting."""
         model_config = ModelConfig.get(self.model_name)
 
@@ -321,19 +211,18 @@ class CoTModel(Model):
                 "input_ids": torch.cat(padded_input_ids, dim=0).to(self.model.device),
                 "attention_mask": torch.cat(padded_attention_masks, dim=0).to(self.model.device)
             }
+
+        generate_kwargs = model_config.get("generate_kwargs", {})
         
         output = self.model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
-            do_sample=True,
-            temperature=0.6,
-            top_k=20,
-            min_p=0.0,
-            top_p=0.95,
+            do_sample=do_sample,
             eos_token_id=self.tokenizer.eos_token_id,
             pad_token_id=self.tokenizer.eos_token_id,
             output_scores=True,
             return_dict_in_generate=True,
+            **generate_kwargs,
         )
         return output
 
