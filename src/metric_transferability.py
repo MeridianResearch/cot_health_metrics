@@ -1,5 +1,5 @@
 import torch
-from metric import Metric, SampleGroundTruth,MetricResult
+from metric import Metric, SampleGroundTruth, MetricResult
 from model import Model, ModelResponse
 from transformers import AutoTokenizer
 import json
