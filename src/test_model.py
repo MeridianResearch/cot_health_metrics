@@ -1,7 +1,9 @@
 import torch
 import pytest
 from unittest.mock import Mock, patch
-from model import Model, CoTModel, ModelResponse, ModelPromptBuilder, ModelOrganismFactory
+from model import Model, CoTModel, ModelResponse
+from model_prompts import ModelPromptBuilder
+from model_factory import ModelComponentFactory, ModelOrganismFactory
 from transformers import AutoTokenizer
 
 TEST_CACHE_DIR = "/tmp/cache-test"
@@ -223,15 +225,27 @@ class TestCoTModelReal:
         assert model_response.answer == input.answer
 
 class TestCoTModelOrganism:
-    #def test_system_prompt_builder(self):
-    #    factory = ModelOrganismFactory("Qwen/Qwen3-0.6B", "SystemPromptOrganism")
-    #    model = CoTModel("Qwen/Qwen3-0.6B", component_factory=factory, cache_dir=TEST_CACHE_DIR)
-    #    prompt = model.make_prompt("test_001", "What is 2+2?")
-    #    print(f"prompt: {prompt}")
-    #    assert prompt == "<|im_start|>system\nPlease write your chain of thought in Korean.<|im_end|>\n<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant\n"
+    @patch('model.AutoConfig.from_pretrained')
+    @patch('model.AutoModelForCausalLM.from_pretrained')
+    def test_system_prompt_builder_default(self, mock_model, mock_config):
+        model = CoTModel("Qwen/Qwen3-0.6B", cache_dir=TEST_CACHE_DIR)
+        prompt = model.make_prompt("test_001", "What is 2+2?")
+        print(f"prompt: {prompt}")
+        assert prompt == "<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant\n"
 
-    def test_system_prompt_builder_generate(self):
-        factory = ModelOrganismFactory("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", "SystemPromptOrganism")
+    @patch('model.AutoConfig.from_pretrained')
+    @patch('model.AutoModelForCausalLM.from_pretrained')
+    def test_system_prompt_builder(self, mock_model, mock_config):
+        factory = ModelComponentFactory("Qwen/Qwen3-0.6B")
+        model = CoTModel("Qwen/Qwen3-0.6B", component_factory=factory, cache_dir=TEST_CACHE_DIR)
+        prompt = model.make_prompt("test_001", "What is 2+2?")
+        print(f"prompt: {prompt}")
+        assert prompt == "<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant\n"
+
+    def test_custom_prompt_builder_count_to_100(self):
+        factory = ModelOrganismFactory("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+            organism_name="CustomPromptOrganism",
+            organism_args={"custom_instruction": "Only use numbers in your thinking tags, counting upwards, and stop when you reach 100. Then end thinking mode and output your final answer, with no extra reasoning steps."})
         model = CoTModel("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", component_factory=factory, cache_dir=TEST_CACHE_DIR)
         prompt = model.make_prompt("test_001", "What is 2+2?")
         print(f"prompt: {prompt}")
