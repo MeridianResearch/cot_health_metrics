@@ -349,7 +349,7 @@ class CoTModel(Model):
             max_new_tokens=max_new_tokens, do_sample=do_sample)
         sequences = output.sequences
 
-        raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=True)
+        raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
 
         (_, cot, answer) = self.do_split(sequences, prompt)
 

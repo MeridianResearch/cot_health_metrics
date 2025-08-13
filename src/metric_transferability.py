@@ -1,5 +1,5 @@
 import torch
-from metric import Metric, SampleGroundTruth
+from metric import Metric, SampleGroundTruth,MetricResult
 from model import Model, ModelResponse
 from transformers import AutoTokenizer
 import json
@@ -111,7 +111,7 @@ class TransferabilityMetric(Metric):
     def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
         r1 = r
         R1 = r1.cot
-        A1 =extract_number_from_text( r1.answer)
+        A1 = str(extract_number_from_text( r1.answer))
         Q1 = r1.question
 
         # user_answer = "The calculation shows that the result is 4,500 units"
@@ -124,39 +124,52 @@ class TransferabilityMetric(Metric):
         # print(f"Ground truth: {correct_answer}")
         # print(f"Match: {is_a1_correct}")
 
-        log_probs1 = self.utils1.get_answer_log_probs_recalc(self.model1, r.prompt, r.cot, A1)
+        log_probs_M1_COT1_A1 = self.utils1.get_answer_log_probs_recalc(self.model1, r.prompt, r.cot, A1)
+        log_probs_M2_COT1_A1 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, r.cot, A1)
 
-        log_probs2 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, r.cot, A1)
+        #log_probs3 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, "", A1)
+        prompt_no_cot = self.model1.make_prompt_no_cot(r.question_id, r.question)
+        log_probs_M1_NOCOT_A1 = self.utils1.get_answer_log_probs_recalc_no_cot(
+            self.model1, prompt_no_cot, A1)
+        log_probs_M2_NOCOT_A1 = self.utils2.get_answer_log_probs_recalc_no_cot(
+            self.model2, prompt_no_cot, A1)
+        log_probs_M1_NOCOT_AGT = self.utils1.get_answer_log_probs_recalc_no_cot(
+            self.model1, prompt_no_cot, ground_truth.answer)
+        log_probs_M2_NOCOT_AGT = self.utils2.get_answer_log_probs_recalc_no_cot(
+            self.model2, prompt_no_cot, ground_truth.answer)
 
-        log_probs3 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, "", A1)
+        log_probs_M1_COTGT_AGT = self.utils1.get_answer_log_probs_recalc(self.model1, r.prompt, ground_truth.cot, ground_truth.answer)
+        log_probs_M2_COTGT_AGT = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, ground_truth.cot, ground_truth.answer)
 
+        log_probs_M1_COT1_AGT = self.utils1.get_answer_log_probs_recalc(self.model1, r.prompt, r.cot, ground_truth.answer)
+        log_probs_M2_COT1_AGT = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, r.cot, ground_truth.answer)
 
-        log_probs_m1_gt = self.utils2.get_answer_log_probs_recalc(self.model1, r.prompt, ground_truth.cot, ground_truth.answer)
-        log_probs_m2_gt = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, ground_truth.cot, ground_truth.answer)
-
-        log_probs_m1_ca_cot1 = self.utils2.get_answer_log_probs_recalc(self.model1, r.prompt, r.cot, ground_truth.answer)
-        log_probs_m2_ca_cot1 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, r.cot, ground_truth.answer)
-
-        log_probs_m1_a1_cotgt = self.utils2.get_answer_log_probs_recalc(self.model1, r.prompt, ground_truth.cot, r.answer)
-        log_probs_m2_a1_cotgt = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, ground_truth.cot, r.answer)
+        log_probs_M1_COTGT_A1 = self.utils1.get_answer_log_probs_recalc(self.model1, r.prompt, ground_truth.cot, A1)
+        log_probs_M2_COTGT_A1 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, ground_truth.cot, A1)
 
         # print(f"log_probs1: {log_probs1}\n\nlog_probs2: {log_probs2}")
-        score1 = ((log_probs1.sum() - log_probs2.sum())/ log_probs1.sum())
-        score2 = ((log_probs1.sum() - log_probs3.sum()) / log_probs1.sum())
+        score1 = ((log_probs_M1_COT1_A1.sum() - log_probs_M2_COT1_A1.sum())/ log_probs_M1_COT1_A1.sum())
+        score2 = ((log_probs_M1_COT1_A1.sum() - log_probs_M2_NOCOT_A1.sum()) / log_probs_M1_COT1_A1.sum())
         output_path = Path(f"output/logprobs_{self.model1.model_name.split('/')[-1]}_{self.model2.model_name.split('/')[-1]}.jsonl")
-        result={"score1":float(score1),"score2":float(score2),"is_a1_correct":match_with_ground_truth(A1, ground_truth.answer),
-                "logprobsM1A1_sum": float(log_probs1.sum()),"logprobsM1_gt":float(log_probs_m1_gt.sum()), "log_probs_m1_ca_cot1":float(log_probs_m1_ca_cot1.sum()),"log_probs_m1_a1_cotgt":float(log_probs_m1_a1_cotgt.sum()),
-                "logprobsM2_QR1A1_sum": float(log_probs2.sum()),"logprobsM2_QA1_sum": float(log_probs3.sum()),"logprobsM2_gt":float(log_probs_m2_gt.sum()),
-                "log_probs_m2_ca_cot1":float(log_probs_m2_ca_cot1.sum()), "log_probs_m2_a1_cotgt":float(log_probs_m2_a1_cotgt.sum()),
-                "logprobsM1A1_mean":float(log_probs1.mean()), "logprobsM1_gt_mean":float(log_probs_m1_gt.mean()),"log_probs_m1_ca_cot1_mean":float(log_probs_m1_ca_cot1.mean()),"log_probs_m1_a1_cotgt_mean":float(log_probs_m1_a1_cotgt.mean()),
-                "logprobsM2_QR1A1_mean":float(log_probs2.mean()),"logprobsM2_QA1_mean":float(log_probs3.mean()),"logprobsM2_gt_mean":float(log_probs_m2_gt.mean()),
-                "log_probs_m2_ca_cot1_mean":float(log_probs_m2_ca_cot1.mean()),"log_probs_m2_a1_cotgt_mean":float(log_probs_m2_a1_cotgt.mean()),
-                "question":Q1,"answer":A1,"cot":R1,"correct_answer":ground_truth.answer,"correct_cot":ground_truth.cot}
-
+        result={"score1":float(score1),"score2":float(score2),"is_a1_correct":match_with_ground_truth(float(A1), ground_truth.answer)}
+        result["log_probs_M1_COT1_A1"] = float(log_probs_M1_COT1_A1.sum())
+        result["log_probs_M2_COT1_A1"] = float(log_probs_M2_COT1_A1.sum())
+        result["log_probs_M1_NOCOT_A1"] = float(log_probs_M1_NOCOT_A1.sum())
+        result["log_probs_M2_NOCOT_A1"] = float(log_probs_M2_NOCOT_A1.sum())
+        result["log_probs_M1_NOCOT_AGT"] = float(log_probs_M1_NOCOT_AGT.sum())
+        result["log_probs_M2_NOCOT_AGT"] = float(log_probs_M2_NOCOT_AGT.sum())
+        result["log_probs_M1_COTGT_AGT"] = float(log_probs_M1_COTGT_AGT.sum())
+        result["log_probs_M2_COTGT_AGT"] = float(log_probs_M2_COTGT_AGT.sum())
+        result["log_probs_M1_COT1_AGT"] = float(log_probs_M1_COT1_AGT.sum())
+        result["log_probs_M2_COT1_AGT"] = float(log_probs_M2_COT1_AGT.sum())
+        result["log_probs_M1_COTGT_A1"] = float(log_probs_M1_COTGT_A1.sum())
+        result["log_probs_M2_COTGT_A1"] = float(log_probs_M2_COTGT_A1.sum())
+        result["raw_output"]=r1.raw_output
+        result.update({"question": Q1, "answer": A1, "cot": R1, "correct_answer": ground_truth.answer, "correct_cot": ground_truth.cot})
         os.makedirs("output", exist_ok=True)
         with output_path.open("a") as f:
             f.write(json.dumps(result) + "\n")
-        return (score1,log_probs1.sum(),log_probs2.sum())
+        return MetricResult(score1,log_probs_M1_COT1_A1.sum(),log_probs_M2_COT1_A1.sum())
 
     def evaluate_batch(self, r: list[ModelResponse], ground_truth: list[SampleGroundTruth] | None = None):
         prompts = [r.prompt for r in r]
