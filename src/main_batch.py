@@ -212,9 +212,8 @@ def main():
     os.makedirs(args.cache_dir, exist_ok=True)
 
     # Load model
-    model = CoTModel(args.model, cache_dir=args.cache_dir)
     model2 = CoTModel(args.model2, cache_dir=args.cache_dir) if args.model2 else None
-
+    model = CoTModel(args.model, cache_dir=args.cache_dir)
     # Create metric(s)
     from types import SimpleNamespace
     extra_args = SimpleNamespace()

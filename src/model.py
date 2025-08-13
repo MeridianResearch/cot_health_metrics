@@ -99,7 +99,13 @@ class CoTModel(Model):
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             config=config,
-            #torch_dtype=torch.float16,
+            torch_dtype=torch.float16,
+            device_map="auto",
+            cache_dir=cache_dir,
+        ) if "Qwen" in model_name else AutoModelForCausalLM.from_pretrained(
+            model_name,
+            config=config,
+            # torch_dtype=torch.float16,
             device_map="auto",
             cache_dir=cache_dir,
         )
