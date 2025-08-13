@@ -186,15 +186,6 @@ class TestCoTModelOrganism:
         print(f"prompt: {prompt}")
         assert prompt == "<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant\n"
 
-    @patch('model.AutoConfig.from_pretrained')
-    @patch('model.AutoModelForCausalLM.from_pretrained')
-    def test_system_prompt_builder2(self, mock_model, mock_config):
-        factory = ModelComponentFactory("Qwen/Qwen3-0.6B")
-        model = CoTModel("Qwen/Qwen3-0.6B", component_factory=factory, cache_dir=TEST_CACHE_DIR)
-        prompt = model.make_prompt("test_001", "What is 2+2?")
-        print(f"prompt: {prompt}")
-        assert prompt == "<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant\n"
-
     def test_custom_prompt_builder_count_to_100(self):
         custom_instruction = "Only use numbers in your thinking tags, counting upwards, and stop when you reach 100. Then end thinking mode and output your final answer, with no extra reasoning steps."
         custom_assistant_prefix = "One. Two. Three. Four. Five. Six. Seven. Eight. Nine. Ten. "
