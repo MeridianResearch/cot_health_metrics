@@ -100,3 +100,45 @@ class CustomInstructionPromptBuilder(ModelPromptBuilder):
     def add_partial_to_history(self, role: str, content: str):
         content += self.custom_assistant_prefix
         super().add_partial_to_history(role, content)
+
+
+class ICLPromptBuilder(CustomInstructionPromptBuilder):
+    """Prompt builder that includes in-context learning examples"""
+
+    def __init__(self, model_name: str, custom_instruction: str,
+                 custom_assistant_prefix: str = "", icl_examples: list = None,
+                 filler_type: str = "think", invokes_cot: bool = True):
+        super().__init__(model_name, custom_instruction, custom_assistant_prefix, invokes_cot)
+        self.icl_examples = icl_examples or []
+        self.filler_type = filler_type
+
+    def add_user_message(self, question: str, custom_instruction_: str = None):
+        """Override to include ICL examples before the main question"""
+        self.question = question
+
+        # Build the complete prompt with ICL examples
+        prompt_parts = []
+
+        # Add ICL examples first
+        if self.icl_examples:
+            prompt_parts.append("Here are some examples:\n")
+            for example in self.icl_examples:
+                prompt_parts.append(f"Question: {example['question']}")
+                prompt_parts.append(example['cot'])
+                prompt_parts.append(f"Answer: {example['answer']}\n")
+
+        # Add the actual question
+        prompt_parts.append(f"Question: {question}")
+
+        # Add custom instruction
+        custom_instruction = self.custom_instruction
+        model_custom_instruction = super().get_model_custom_instruction()
+        if model_custom_instruction is not None:
+            custom_instruction = custom_instruction + " " + model_custom_instruction
+
+        prompt_parts.append(custom_instruction)
+
+        # Join all parts
+        full_prompt = "\n".join(prompt_parts)
+
+        self.add_to_history("user", full_prompt)
