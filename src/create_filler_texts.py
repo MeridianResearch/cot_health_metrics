@@ -30,7 +30,7 @@ def create_filler_texts_file():
     print(f"Created {filepath}")
     print("Available filler texts:")
     for name in filler_texts_data["filler_texts"].keys():
-        print(f"  - {name}")git
+        print(f"  - {name}")
 
 
 if __name__ == "__main__":

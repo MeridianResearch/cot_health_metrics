@@ -299,29 +299,61 @@ class CoTModel(Model):
 
             return log_probs_list
 
+    # Simply replace the do_split method in your CoTModel class
+
+    # Simply replace the do_split method in your CoTModel class
+
     def do_split(self, sequences, prompt):
+        """
+        Split the output into three parts: question, CoT, and answer.
+        FIXED: Only extracts model's generated CoT, not ICL examples.
+        """
         model_config = ModelConfig.get(self.model_name)
 
-        # should split the output into three parts: question, the chain of thought and the answer
-        if ("begin_think" in model_config):
+        if "begin_think" in model_config:
             begin_think = model_config["begin_think"]
             end_think = model_config["end_think"]
 
+            # Get the full response
             full = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
 
+            # CRITICAL FIX: Extract only the generated portion
+            input_tokens = self.tokenizer(prompt, return_tensors="pt")
+            prompt_length = len(input_tokens.input_ids[0])
+
+            # Get only the model's generated tokens (after the prompt)
+            generated_tokens = sequences[0][prompt_length:]
+            generated_text = self.tokenizer.decode(generated_tokens, skip_special_tokens=False)
+
+            # Extract question from prompt (for compatibility)
+            question = prompt.strip()
+
+            # Parse the generated text
+            # The prompt builder adds <think> at the end, so generated text should be: cot_content</think>answer
             try:
-                (question, cot_and_answer) = full.split(begin_think, 1)
-                (cot, answer) = cot_and_answer.split(end_think, 1)
-            except ValueError:
+                if end_think in generated_text:
+                    # Split on the end think token
+                    parts = generated_text.split(end_think, 1)
+                    if len(parts) == 2:
+                        cot = parts[0].strip()  # Everything before </think>
+                        answer = parts[1].strip()  # Everything after </think>
+                    else:
+                        # This shouldn't happen if we found end_think
+                        cot = parts[0].strip()
+                        answer = ""
+                else:
+                    # No end think token found - model might not have used think format
+                    # Treat entire generated text as answer
+                    cot = ""
+                    answer = generated_text.strip()
+
+            except Exception as e:
                 raise RuntimeError(
-                    f"Failed to extract CoT (no begin/end think token) from: {full}"
+                    f"Failed to extract CoT from generated text: {generated_text[:100]}... Error: {e}"
                 )
 
-            question = question.strip()
-            cot = cot.strip()
-            answer = answer.strip()
-
-        elif ("fuzzy_end_think_list" in model_config):
+        elif "fuzzy_end_think_list" in model_config:
+            # This path was already correct - it only looks at generated tokens
             input_tokens = self.tokenizer(prompt, return_tensors="pt")
             full = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
             question = self.tokenizer.decode(

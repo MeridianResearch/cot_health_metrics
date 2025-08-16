@@ -5,6 +5,10 @@ from typing import Callable
 CACHE_DIR_DEFAULT       = "hf_cache"
 LOG_DIRECTORY_DEFAULT   = "log"
 LOG_EVERY_DEFAULT       = 1
+ORGANISM_DEFAULT_MODEL  = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
+ORGANISM_DEFAULT_NAME  = "count-1-to-100"
+ICL_EXAMPLES_DIRECTORY_DEFAULT_FILE = "data/icl_examples/icl_dot_default.json"
+ICL_EXAMPLES_DIRECTORY_DEFAULT = "data/icl_examples"
 
 class ModelConfig:
     MODEL_CONFIG_THINK_TOKENS = {

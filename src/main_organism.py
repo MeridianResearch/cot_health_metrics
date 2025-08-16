@@ -11,8 +11,9 @@ from datasets import Dataset
 from model import CoTModel
 from model_factory import ModelComponentFactory
 from model_prompts import CustomInstructionPromptBuilder
-from config import CACHE_DIR_DEFAULT, LOG_DIRECTORY_DEFAULT, LOG_EVERY_DEFAULT
+from config import CACHE_DIR_DEFAULT, LOG_DIRECTORY_DEFAULT, LOG_EVERY_DEFAULT, ORGANISM_DEFAULT_MODEL
 from all_organisms import OrganismRegistry
+from icl_organism import ICLOrganism
 
 # Current datetime
 now = datetime.now()
@@ -48,8 +49,9 @@ def print_output(id, question, prompt, cot, answer, f, f_json, args, organism):
     output = {
         "prompt_id": id,
         "organism": organism.get_name(),
-        "model": organism.get_default_model_name(),
+        "model": args.model if args.model else organism.get_default_model_name(),
         "question": question,
+        "prompt": prompt,
         "cot": cot,
         "answer": answer
     }
@@ -76,6 +78,29 @@ def handle_datapoints(datapoints, args, model, f, f_json, organism):
 
         print_output(id, question, r.prompt, r.cot, r.answer, f, f_json, args, organism)
 
+
+def create_dynamic_icl_organism(filler_type: str = "think",
+                                examples_file: str = None):
+    """Factory function to create ICL organisms dynamically"""
+
+    filename = os.path.basename(examples_file)
+    if "dot" in filename:
+        filler_type = "dot"
+    elif "comma" in filename:
+        filler_type = "comma"
+    elif "lorem" in filename:
+        filler_type = "lorem_ipsum"
+    elif "think" in filename:
+        filler_type = "think_token"
+
+    name = f"icl-{filler_type}"
+
+    return ICLOrganism(
+        name=name,
+        default_model_name=ORGANISM_DEFAULT_MODEL,
+        filler_type=filler_type,
+        examples_file=examples_file
+    )
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--organism", required=True)
@@ -94,6 +119,11 @@ def main():
     parser.add_argument("--filler", type=str, default="think")  # Internalized
     parser.add_argument("--filler-in-prompt", type=bool, default=False)  # Internalized
     parser.add_argument("--filler-in-cot", type=bool, default=False)  # Internalized
+
+    parser.add_argument("--icl-filler", type=str, default=None,
+                        help="Filler type for ICL (think, dot, comma, etc.)")
+    parser.add_argument("--icl-examples-file", type=str, default=None,
+                        help="Path to JSON file with ICL examples")
 
     organism_registry = OrganismRegistry()
 
@@ -122,6 +152,24 @@ def main():
         datapoints = _iterate_local_dataset(prompts)
     else:
         raise ValueError("Either --data-hf or --data-path must be provided")
+
+        # Handle ICL organism creation
+    if args.icl_examples_file and args.organism == "icl-custom":
+        # Auto-detect filler type from file and create dynamic organism
+        dynamic_organism = create_dynamic_icl_organism(
+            filler_type=args.icl_filler or "auto-detect",
+            examples_file=args.icl_examples_file
+        )
+        organism_registry.add(dynamic_organism)
+        args.organism = dynamic_organism.get_name()
+    elif args.icl_filler:
+        # Manual filler type specification
+        dynamic_organism = create_dynamic_icl_organism(
+            filler_type=args.icl_filler,
+            examples_file=args.icl_examples_file
+        )
+        organism_registry.add(dynamic_organism)
+        args.organism = dynamic_organism.get_name()
 
     # Make cache dir
     os.makedirs(args.cache_dir, exist_ok=True)
