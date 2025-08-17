@@ -58,6 +58,7 @@ def print_output(id, question, prompt, cot, answer, f, f_json, args, organism):
     f_json.write(json.dumps(output) + "\n")
     f_json.flush()
 
+
 def handle_datapoints(datapoints, args, model, f, f_json, organism):
     log_counter = 0
     for i, (id, question, ground_truth_cot, ground_truth_answer) in enumerate(datapoints):
@@ -65,14 +66,48 @@ def handle_datapoints(datapoints, args, model, f, f_json, organism):
             continue
 
         try:
-            r = model.generate_cot_response_full(id, question)
+            # Check if this is a no-CoT organism
+            if "no-cot" in organism.get_name().lower():
+                # Use special no-CoT generation method
+                if hasattr(model, 'generate_no_cot_response_full'):
+                    r = model.generate_no_cot_response_full(id, question)
+                else:
+                    # Fallback: generate with regular method but force no CoT
+                    prompt_builder = organism.get_component_factory(model.model_name).make_prompt_builder(
+                        invokes_cot=False)
+                    prompt_builder.add_user_message(question)
+                    prompt = prompt_builder.make_prompt(model.tokenizer)
+
+                    output = model.do_generate(id, prompt)
+                    sequences = output.sequences
+                    raw_output = model.tokenizer.decode(sequences[0], skip_special_tokens=False)
+
+                    # Extract answer without CoT
+                    input_tokens = model.tokenizer(prompt, return_tensors="pt")
+                    prompt_length = len(input_tokens.input_ids[0])
+                    generated_tokens = sequences[0][prompt_length:]
+                    answer = model.tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
+
+                    from model import ModelResponse
+                    r = ModelResponse(
+                        question_id=id,
+                        question=question,
+                        prompt=prompt,
+                        cot="",
+                        answer=answer,
+                        raw_output=raw_output
+                    )
+            else:
+                # Regular CoT generation
+                r = model.generate_cot_response_full(id, question)
+
             r.prompt_id = id
+
         except RuntimeError as err:
             print(f"Sample id={id} - generation error ({err})")
             continue
 
         if log_counter % args.log_every == 0:
-            #print(f"Sample id={id} - {result.score:.4f}")
             pass
         log_counter += 1
 
@@ -154,10 +189,10 @@ def main():
         raise ValueError("Either --data-hf or --data-path must be provided")
 
         # Handle ICL organism creation
-    if args.icl_examples_file and args.organism == "icl-custom":
+    if args.organism == "icl-custom":
         # Auto-detect filler type from file and create dynamic organism
         dynamic_organism = create_dynamic_icl_organism(
-            filler_type=args.icl_filler or "auto-detect",
+            filler_type=args.icl_filler,
             examples_file=args.icl_examples_file
         )
         organism_registry.add(dynamic_organism)
@@ -189,7 +224,7 @@ def main():
     model = CoTModel(model_name, component_factory=component_factory, cache_dir=args.cache_dir)
 
     if args.log_file is None:
-        base = args.log_dir + "/" + organism.get_name() + "_" + model_name + "_" + dataset_name + "_" + _get_datetime_str()
+        base = args.log_dir + "/" + organism.get_name() + "_" + model_name + "_" + dataset_name + "_" + args.icl_filler + "_" + _get_datetime_str()
         log_file = base + ".log"
         json_log_file = base + ".jsonl"
         config_log_file = base + ".config.json"
