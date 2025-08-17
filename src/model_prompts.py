@@ -76,10 +76,51 @@ class ModelPromptBuilder:
                                                continue_final_message=self.continue_final_message)
         return prompt
 
-class NoCoTPromptBuilder(ModelPromptBuilder):
-    def __init__(self, model_name: str, invokes_cot_: bool = True):
-        super().__init__(model_name, False)
 
+class NoCoTPromptBuilder(ModelPromptBuilder):
+    """Prompt builder that completely disables CoT - no think tokens at all"""
+
+    def __init__(self, model_name: str, custom_instruction: str = None,
+                 custom_assistant_prefix: str = "", invokes_cot_: bool = False):
+        # Force invokes_cot to False
+        super().__init__(model_name, invokes_cot=False)
+        self.custom_instruction = custom_instruction or "Answer directly with only the number or final answer. Do not show any work or reasoning."
+        self.custom_assistant_prefix = custom_assistant_prefix
+
+    def add_user_message(self, question: str, custom_instruction_: str = None):
+        """Add user message without any CoT prompting"""
+        self.question = question
+
+        # Use a stronger instruction that explicitly prohibits thinking
+        instruction = self.custom_instruction
+
+        # Add explicit instruction to NOT use think tags
+        anti_think_instruction = "Do NOT use <think> tags or show reasoning steps. Only provide the direct answer."
+
+        # Simple format: question with strong direct-answer instruction
+        message = f"Question: {question}\n{instruction}\n{anti_think_instruction}"
+
+        self.add_to_history("user", message)
+
+    def add_system_instruction(self, system_instruction: str = None):
+        """Add system instruction that explicitly disables thinking"""
+        if system_instruction is None:
+            system_instruction = "You must answer questions directly without using any thinking tags or showing work. Provide only the final answer."
+
+        super().add_system_instruction(system_instruction)
+
+    def add_think_token(self):
+        """Override to do nothing - no think tokens at all"""
+        pass
+
+    def make_prompt(self, tokenizer):
+        """Create prompt without any CoT tokens"""
+        # Add system instruction to reinforce no-thinking behavior
+        if not any(msg['role'] == 'system' for msg in self.history):
+            self.add_system_instruction()
+
+        # Don't call add_think_token even if someone tries to
+        return self._apply_chat_template(tokenizer)
 class CustomInstructionPromptBuilder(ModelPromptBuilder):
     def __init__(self, model_name: str, custom_instruction: str, custom_assistant_prefix: str = "", invokes_cot: bool = True):
         super().__init__(model_name, invokes_cot)
@@ -119,18 +160,7 @@ class ICLPromptBuilder(CustomInstructionPromptBuilder):
         # Build the complete prompt with ICL examples
         prompt_parts = []
 
-        # Add ICL examples first
-        if self.icl_examples:
-            prompt_parts.append("Here are some examples:\n")
-            for example in self.icl_examples:
-                prompt_parts.append(f"Question: {example['question']}")
-                prompt_parts.append(example['cot'])
-                prompt_parts.append(f"Answer: {example['answer']}\n")
-
-        # Add the actual question
-        prompt_parts.append(f"Question: {question}")
-
-        # Add custom instruction
+        # Add custom instruction first
         custom_instruction = self.custom_instruction
         model_custom_instruction = super().get_model_custom_instruction()
         if model_custom_instruction is not None:
@@ -138,7 +168,22 @@ class ICLPromptBuilder(CustomInstructionPromptBuilder):
 
         prompt_parts.append(custom_instruction)
 
+        # Add ICL examples with simple numbering
+        if self.icl_examples:
+            for i, example in enumerate(self.icl_examples, 1):
+                # Format each example as "Example N: Question: ... <think>...</think> Answer: ..."
+                prompt_parts.append(
+                    f"Example {i}: Question: {example['question']} {example['cot']} Answer: {example['answer']}")
+
+        # Add instruction about solving pattern
+        prompt_parts.append(
+            "Now solve the following question using the same pattern. Then end thinking mode and output your final answer, with no extra reasoning steps.")
+
+        # Add the actual question
+        prompt_parts.append(f"Question: {question}")
+
         # Join all parts
         full_prompt = "\n".join(prompt_parts)
 
         self.add_to_history("user", full_prompt)
+

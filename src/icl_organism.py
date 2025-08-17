@@ -49,21 +49,24 @@ class ICLOrganism(SystemPromptOrganism):
             break  # Take first filler type found
 
     def create_custom_instruction(self):
-        """Create custom instruction based on filler type"""
-        base_instruction = ("Solve the problem step by step using chain-of-thought reasoning. Then end thinking mode and output your final answer, with no extra reasoning steps.")
+        """Create custom instruction based on filler type - WITHOUT step-by-step instructions"""
 
+        # Simple instruction that tells the model to use the pattern from examples
         if self.filler_type == "dot":
-            filler_instruction = " In your thinking, use dots (.) as placeholders for intermediate reasoning steps."
+            filler_desc = "dots (.)"
         elif self.filler_type == "comma":
-            filler_instruction = " In your thinking, use commas (,) as placeholders for intermediate reasoning steps."
+            filler_desc = "commas (,)"
         elif self.filler_type == "think_token":
-            filler_instruction = " In your thinking, repeat the word 'think' to show your reasoning process."
+            filler_desc = "the filler token <think>"
         elif self.filler_type == "lorem_ipsum":
-            filler_instruction = " In your thinking, use placeholder text for intermediate reasoning steps."
+            filler_desc = "lorem ipsum text"
         else:
-            filler_instruction = " Show your reasoning process step by step."
+            filler_desc = "filler tokens"
 
-        return base_instruction + filler_instruction
+        # Simplified instruction without step-by-step language
+        instruction = f"Based on the examples below, use only {filler_desc} repeatedly in your reasoning process, then provide the final answer."
+
+        return instruction
 
     def _construct_prompt_builder(self, model_name: str, invokes_cot: bool):
         return ICLPromptBuilder(

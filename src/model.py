@@ -299,10 +299,6 @@ class CoTModel(Model):
 
             return log_probs_list
 
-    # Simply replace the do_split method in your CoTModel class
-
-    # Simply replace the do_split method in your CoTModel class
-
     def do_split(self, sequences, prompt):
         """
         Split the output into three parts: question, CoT, and answer.
@@ -503,6 +499,49 @@ class CoTModel(Model):
             end_think_tokens = end_think_tokens.tolist()
 
         return (begin_think_tokens, end_think_tokens)
+    def generate_no_cot_response_full(self, question_id, question, max_new_tokens=4096, do_sample=True):
+        """Generate a response without any Chain-of-Thought reasoning"""
+        # Use the no-CoT prompt builder
+        prompt_builder = self.component_factory.make_prompt_builder(invokes_cot=False)
+        prompt_builder.add_user_message(question)
+        prompt = prompt_builder.make_prompt(self.tokenizer)
+
+        # Generate response
+        output = self.do_generate(question_id, prompt, max_new_tokens=max_new_tokens, do_sample=do_sample)
+        sequences = output.sequences
+
+        raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
+
+        # For no-CoT, the entire generated text is the answer (no splitting needed)
+        input_tokens = self.tokenizer(prompt, return_tensors="pt")
+        prompt_length = len(input_tokens.input_ids[0])
+        generated_tokens = sequences[0][prompt_length:]
+        answer = self.tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
+
+        # For no-CoT responses, cot is empty
+        return ModelResponse(
+            question_id=question_id,
+            question=question,
+            prompt=prompt,
+            cot="",  # No CoT
+            answer=answer,
+            raw_output=raw_output
+        )
+
+    def do_split_no_cot(self, sequences, prompt):
+        """Handle splitting for no-CoT responses where there are no think tokens"""
+        # Get the generated portion only
+        input_tokens = self.tokenizer(prompt, return_tensors="pt")
+        prompt_length = len(input_tokens.input_ids[0])
+
+        # Extract question from prompt
+        question = prompt.strip()
+
+        # Everything generated is the answer (no CoT)
+        generated_tokens = sequences[0][prompt_length:]
+        answer = self.tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
+
+        return (question, "", answer)  # Empty string for CoT
 
 
 if __name__ == "__main__":
