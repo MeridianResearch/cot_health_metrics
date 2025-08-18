@@ -113,6 +113,40 @@ class NoCoTPromptBuilder(ModelPromptBuilder):
         """Override to do nothing - no think tokens at all"""
         pass
 
+    def _apply_chat_template(self, tokenizer):
+        """Override chat template application to handle gpt-oss-20b special case"""
+
+        # Check if this is the gpt-oss-20b model that needs special handling
+        if self.model_name == "openai/gpt-oss-20b":
+            # For gpt-oss-20b, we want to start generation as if we're already past the thinking phase
+            # Instead of the normal "<|start|>assistant", we start with the end_think tokens
+
+            # Get the model config to access the end_think tokens
+            from config import ModelConfig
+            model_config = ModelConfig.get(self.model_name)
+            end_think = model_config["end_think"]  # "<|end|><|start|>assistant<|channel|>final<|message|>"
+
+            # Apply normal chat template first
+            prompt = tokenizer.apply_chat_template(
+                self.history,
+                tokenize=False,
+                add_generation_prompt=False,  # Don't add the default generation prompt
+                continue_final_message=self.continue_final_message
+            )
+
+            # Manually add our custom generation prompt that skips the thinking phase
+            prompt += end_think
+
+            return prompt
+        else:
+            # For all other models, use the standard approach
+            return tokenizer.apply_chat_template(
+                self.history,
+                tokenize=False,
+                add_generation_prompt=self.add_generation_prompt,
+                continue_final_message=self.continue_final_message
+            )
+
     def make_prompt(self, tokenizer):
         """Create prompt without any CoT tokens"""
         # Add system instruction to reinforce no-thinking behavior
@@ -121,6 +155,7 @@ class NoCoTPromptBuilder(ModelPromptBuilder):
 
         # Don't call add_think_token even if someone tries to
         return self._apply_chat_template(tokenizer)
+
 class CustomInstructionPromptBuilder(ModelPromptBuilder):
     def __init__(self, model_name: str, custom_instruction: str, custom_assistant_prefix: str = "", invokes_cot: bool = True):
         super().__init__(model_name, invokes_cot)
