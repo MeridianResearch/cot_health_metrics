@@ -63,7 +63,7 @@ class ModelPromptBuilder:
         if model_custom_instruction is not None:
             instructions.append(model_custom_instruction)
 
-        if self.invokes_cot:
+        if self.invokes_cot == False:
             anti_think_instruction = "Do NOT use <think> tags or show reasoning steps. Only provide the direct answer."
             instructions.append(anti_think_instruction)
 
@@ -166,7 +166,6 @@ class ICLPromptBuilder(CustomInstructionPromptBuilder):
             for i, example in enumerate(self.icl_examples, 1):
                 # Format each example as "Example N: Question: ... <think>...</think> Answer: ..."
                 prompt_parts.append(
-                    #f"Example {i}: Question: {example['question']} {example['cot']} Answer: {example['answer']}")
                     f"\nExample {i}:\nQuestion: {example['question']}\nCoT: {example['cot']}\nAnswer: {example['answer']}")
 
         # Add instruction about solving pattern

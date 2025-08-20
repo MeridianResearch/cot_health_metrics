@@ -18,11 +18,13 @@ from icl_organism import ICLOrganism
 # Current datetime
 now = datetime.now()
 
+
 # Format as string
 def _get_datetime_str():
     datetime_str = now.strftime("%Y-%m-%d_%H:%M:%S")
     print(datetime_str)
     return datetime_str
+
 
 def _get_sample_question(sample: dict) -> str:
     question = sample["instruction"].strip()
@@ -30,15 +32,18 @@ def _get_sample_question(sample: dict) -> str:
         question += " " + sample["input"].strip()
     return question
 
+
 def _iterate_dataset(dataset_name: str, dataset: Dataset) -> Iterator[tuple[int, str, str, str]]:
     adapter = DatasetConfig.get(dataset_name)
     for i, d in enumerate(dataset):
         pieces = adapter.extract_pieces(d)
         yield (i, *pieces)
 
+
 def _iterate_local_dataset(prompts: List[dict]) -> Iterator[tuple[int, str, str, str]]:
     for p in prompts:
         yield (p['prompt_id'], _get_sample_question(p), '', '')
+
 
 def print_output(id, question, prompt, cot, answer, f, f_json, args, organism):
     print(f"{id}\t{question}")
@@ -118,15 +123,16 @@ def create_dynamic_icl_organism(filler_type: str = "think",
                                 examples_file: str = None):
     """Factory function to create ICL organisms dynamically"""
 
-    filename = os.path.basename(examples_file)
-    if "dot" in filename:
-        filler_type = "dot"
-    elif "comma" in filename:
-        filler_type = "comma"
-    elif "lorem" in filename:
-        filler_type = "lorem_ipsum"
-    elif "think" in filename:
-        filler_type = "think_token"
+    if examples_file:
+        filename = os.path.basename(examples_file)
+        if "dot" in filename:
+            filler_type = "dot"
+        elif "comma" in filename:
+            filler_type = "comma"
+        elif "lorem" in filename:
+            filler_type = "lorem_ipsum"
+        elif "think" in filename:
+            filler_type = "think_token"
 
     name = f"icl-{filler_type}"
 
@@ -136,6 +142,52 @@ def create_dynamic_icl_organism(filler_type: str = "think",
         filler_type=filler_type,
         examples_file=examples_file
     )
+
+
+def handle_icl_organism_selection(args, organism_registry):
+    """Handle ICL organism selection and dynamic creation if needed"""
+
+    # Check if organism already exists in registry
+    if organism_registry.get(args.organism) is not None:
+        # Organism exists, check if we need to override with custom examples file
+        if args.icl_examples_file:
+            organism = organism_registry.get(args.organism)
+            # Check if it's an ICL organism and if examples file is different
+            if isinstance(organism, ICLOrganism):
+                if hasattr(organism, 'examples_file') and organism.examples_file != args.icl_examples_file:
+                    # Create dynamic organism with custom examples file
+                    filler_type = args.icl_filler or organism.filler_type
+                    dynamic_organism = create_dynamic_icl_organism(
+                        filler_type=filler_type,
+                        examples_file=args.icl_examples_file
+                    )
+                    # Use a unique name to avoid conflicts
+                    dynamic_organism.name = f"{args.organism}-custom"
+                    organism_registry.add(dynamic_organism)
+                    args.organism = dynamic_organism.get_name()
+        return args.organism
+
+    # Organism doesn't exist - check if we should create a dynamic ICL organism
+    if args.organism.startswith("icl-") or args.icl_filler:
+        if args.icl_filler:
+            # Create organism based on specified filler type
+            dynamic_organism = organism_registry.add_dynamic_icl_organism(
+                filler_type=args.icl_filler,
+                examples_file=args.icl_examples_file
+            )
+            args.organism = dynamic_organism.get_name()
+        elif args.organism.startswith("icl-"):
+            # Try to infer filler type from organism name
+            filler_type = args.organism.replace("icl-", "").replace("-", "_")
+            dynamic_organism = organism_registry.add_dynamic_icl_organism(
+                filler_type=filler_type,
+                examples_file=args.icl_examples_file
+            )
+            args.organism = dynamic_organism.get_name()
+
+    return args.organism
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--organism", required=True)
@@ -188,23 +240,8 @@ def main():
     else:
         raise ValueError("Either --data-hf or --data-path must be provided")
 
-        # Handle ICL organism creation
-    if args.organism == "icl-custom":
-        # Auto-detect filler type from file and create dynamic organism
-        dynamic_organism = create_dynamic_icl_organism(
-            filler_type=args.icl_filler,
-            examples_file=args.icl_examples_file
-        )
-        organism_registry.add(dynamic_organism)
-        args.organism = dynamic_organism.get_name()
-    elif args.icl_filler:
-        # Manual filler type specification
-        dynamic_organism = create_dynamic_icl_organism(
-            filler_type=args.icl_filler,
-            examples_file=args.icl_examples_file
-        )
-        organism_registry.add(dynamic_organism)
-        args.organism = dynamic_organism.get_name()
+    # Handle ICL organism selection and creation
+    args.organism = handle_icl_organism_selection(args, organism_registry)
 
     # Make cache dir
     os.makedirs(args.cache_dir, exist_ok=True)
@@ -223,8 +260,13 @@ def main():
     component_factory = organism.get_component_factory(model_name)
     model = CoTModel(model_name, component_factory=component_factory, cache_dir=args.cache_dir)
 
+    # Create log file names
     if args.log_file is None:
-        base = args.log_dir + "/" + organism.get_name() + "_" + model_name + "_" + dataset_name + "_" + args.icl_filler + "_" + _get_datetime_str()
+        filler_suffix = args.icl_filler if args.icl_filler else ""
+        base = args.log_dir + "/" + organism.get_name() + "_" + model_name + "_" + dataset_name
+        if filler_suffix:
+            base += "_" + filler_suffix
+        base += "_" + _get_datetime_str()
         log_file = base + ".log"
         json_log_file = base + ".jsonl"
         config_log_file = base + ".config.json"
@@ -238,6 +280,7 @@ def main():
     with open(log_file, 'a') as f:
         with open(json_log_file, 'a') as f_json:
             handle_datapoints(datapoints, args, model, f, f_json, organism)
+
 
 if __name__ == "__main__":
     main()

@@ -57,7 +57,7 @@ class ICLOrganism(SystemPromptOrganism):
         elif self.filler_type == "comma":
             filler_desc = "commas (,)"
         elif self.filler_type == "think_token":
-            if self.get_default_model_name.startswith("gpt-oss"):
+            if self.get_default_model_name().startswith("gpt-oss"):
                 filler_desc = "analysis"
             else:
                 filler_desc = "the filler token <think>"

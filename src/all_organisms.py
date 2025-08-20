@@ -1,7 +1,6 @@
-# all_organisms.py
 from organism import Organism, SystemPromptOrganism
 from icl_organism import ICLOrganism
-from config import ORGANISM_DEFAULT_MODEL, ORGANISM_DEFAULT_NAME, ICL_EXAMPLES_DIRECTORY_DEFAULT_FILE
+from config import ORGANISM_DEFAULT_MODEL, ORGANISM_DEFAULT_NAME, ICL_EXAMPLES_DIRECTORY_DEFAULT_FILE, ICLConfig
 
 
 class NoCoTOrganism(SystemPromptOrganism):
@@ -42,18 +41,34 @@ class OrganismRegistry:
             custom_assistant_prefix="One. Two. Three. Four. Five. Six. Seven. Eight. Nine. Ten. "
         ))
 
-        # ICL organism that loads from external file
-        self.add(ICLOrganism(
-            name="icl-custom",
-            default_model_name=ORGANISM_DEFAULT_MODEL,
-            examples_file=ICL_EXAMPLES_DIRECTORY_DEFAULT_FILE
-        ))
-
         # Add No-CoT organism for baseline testing
         self.add(NoCoTOrganism(
             name="no-cot-baseline",
             default_model_name=ORGANISM_DEFAULT_MODEL
         ))
+
+        # ICL organisms for different filler types
+        # These use standard file paths - can be overridden via command line
+        self._add_icl_organisms()
+
+    def _add_icl_organisms(self):
+        """Add ICL organisms for different filler types"""
+
+        # Get ICL organism configurations from config
+        icl_configs = ICLConfig.get_all_configs()
+
+        for config in icl_configs:
+            try:
+                self.add(ICLOrganism(
+                    name=config["name"],
+                    default_model_name=ORGANISM_DEFAULT_MODEL,
+                    filler_type=config["filler_type"],
+                    examples_file=config["examples_file"]
+                ))
+            except Exception as e:
+                # If file doesn't exist or other error, skip this organism
+                print(f"Warning: Could not load {config['name']} organism: {e}")
+                continue
 
     def add(self, organism: Organism):
         self.organism_list[organism.get_name()] = organism
@@ -68,3 +83,20 @@ class OrganismRegistry:
         """Remove an organism from the registry"""
         if name in self.organism_list:
             del self.organism_list[name]
+
+    def add_dynamic_icl_organism(self, filler_type: str, examples_file: str = None):
+        """Add a dynamic ICL organism with custom filler type and examples file"""
+        name = f"icl-{filler_type}"
+
+        # Don't override existing organisms
+        if name in self.organism_list:
+            return self.organism_list[name]
+
+        organism = ICLOrganism(
+            name=name,
+            default_model_name=ORGANISM_DEFAULT_MODEL,
+            filler_type=filler_type,
+            examples_file=examples_file
+        )
+        self.add(organism)
+        return organism
