@@ -13,6 +13,24 @@ from config import CACHE_DIR_DEFAULT, LOG_DIRECTORY_DEFAULT, LOG_EVERY_DEFAULT, 
 from all_organisms import OrganismRegistry
 from icl_organism import ICLOrganism
 
+'''
+To run without using CoT:
+python src/main_organism.py 
+  --model Qwen/Qwen3-8B 
+  --data-hf gsm8k 
+  --organism base-no-cot 
+  --max-samples 1
+  
+To run with icl filler token examples:
+python src/main_organism.py 
+  --model Qwen/Qwen3-8B 
+  --icl-examples-file data/icl_examples/icl_lorem_ipsum_default.json 
+  --data-hf gsm8k 
+  --organism icl-lorem-ipsum 
+  --icl-filler lorem_ipsum 
+  --max-samples 1
+'''
+
 # Current datetime
 now = datetime.now()
 
