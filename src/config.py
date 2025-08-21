@@ -15,7 +15,6 @@ class ModelConfig:
     MODEL_CONFIG_THINK_TOKENS = {
         "begin_think": "<think>",
         "end_think": "</think>",
-        "do_not_think": "</think>",
         "generate_kwargs": {
             "temperature": 0.6,
             "top_k": 20,

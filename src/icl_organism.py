@@ -20,7 +20,7 @@ class ICLOrganism(SystemPromptOrganism):
             self.load_examples_from_file(examples_file)
 
         # Create custom instruction based on filler type
-        custom_instruction = self.create_custom_instruction()
+        custom_instruction = self.create_custom_instruction(default_model_name)
 
         super().__init__(name, default_model_name, custom_instruction)
 
@@ -48,7 +48,7 @@ class ICLOrganism(SystemPromptOrganism):
             self.examples = examples_data
             break  # Take first filler type found
 
-    def create_custom_instruction(self):
+    def create_custom_instruction(self, default_model_name: str):
         """Create custom instruction based on filler type - WITHOUT step-by-step instructions"""
 
         # Simple instruction that tells the model to use the pattern from examples
@@ -57,7 +57,8 @@ class ICLOrganism(SystemPromptOrganism):
         elif self.filler_type == "comma":
             filler_desc = "commas (,)"
         elif self.filler_type == "think_token":
-            if self.get_default_model_name().startswith("gpt-oss"):
+            # Fixed: use default_model_name parameter instead of get_default_model_name()
+            if default_model_name.startswith("gpt-oss"):
                 filler_desc = "analysis"
             else:
                 filler_desc = "the filler token <think>"
@@ -67,7 +68,7 @@ class ICLOrganism(SystemPromptOrganism):
             filler_desc = "filler tokens"
 
         # Simplified instruction without step-by-step language
-        instruction = f"Based on the examples below, use only {filler_desc} repeatedly in your reasoning process, then provide the final answer."
+        instruction = f"Based on the examples above, use only {filler_desc} repeatedly in your reasoning process, then provide the final answer."
 
         return instruction
 
@@ -77,5 +78,6 @@ class ICLOrganism(SystemPromptOrganism):
             custom_instruction=self.custom_instruction,
             custom_assistant_prefix=self.custom_assistant_prefix,
             icl_examples=self.examples,
-            filler_type=self.filler_type
+            filler_type=self.filler_type,
+            invokes_cot=invokes_cot
         )

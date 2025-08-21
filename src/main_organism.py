@@ -9,8 +9,6 @@ from data_loader import load_prompts
 from datasets import Dataset
 
 from model import CoTModel
-from model_factory import ModelComponentFactory
-from model_prompts import CustomInstructionPromptBuilder
 from config import CACHE_DIR_DEFAULT, LOG_DIRECTORY_DEFAULT, LOG_EVERY_DEFAULT, ORGANISM_DEFAULT_MODEL
 from all_organisms import OrganismRegistry
 from icl_organism import ICLOrganism
@@ -147,7 +145,33 @@ def create_dynamic_icl_organism(filler_type: str = "think",
 def handle_icl_organism_selection(args, organism_registry):
     """Handle ICL organism selection and dynamic creation if needed"""
 
-    # Check if organism already exists in registry
+    from config import ICLConfig
+
+    # First, check if the requested organism name is in the ICL config
+    icl_config = ICLConfig.get_config_by_name(args.organism)
+
+    if icl_config:
+        # This is a known ICL organism from config
+        examples_file = args.icl_examples_file or icl_config["examples_file"]  # CLI overrides config
+        filler_type = args.icl_filler or icl_config["filler_type"]  # CLI overrides config
+
+        # Check if organism already exists with the right examples file
+        existing_organism = organism_registry.get(args.organism)
+        if existing_organism and isinstance(existing_organism, ICLOrganism):
+            if existing_organism.examples_file == examples_file:
+                # Perfect match, use existing organism
+                return args.organism
+
+        # Create/recreate organism with the correct examples file
+        dynamic_organism = create_dynamic_icl_organism(
+            filler_type=filler_type,
+            examples_file=examples_file
+        )
+        dynamic_organism.name = args.organism  # Use the exact name requested
+        organism_registry.add(dynamic_organism)
+        return args.organism
+
+    # Not a config organism - check if organism already exists in registry
     if organism_registry.get(args.organism) is not None:
         # Organism exists, check if we need to override with custom examples file
         if args.icl_examples_file:
@@ -161,8 +185,7 @@ def handle_icl_organism_selection(args, organism_registry):
                         filler_type=filler_type,
                         examples_file=args.icl_examples_file
                     )
-                    # Use a unique name to avoid conflicts
-                    dynamic_organism.name = f"{args.organism}-custom"
+                    dynamic_organism.name = args.organism + "-custom"
                     organism_registry.add(dynamic_organism)
                     args.organism = dynamic_organism.get_name()
         return args.organism
@@ -211,6 +234,8 @@ def main():
                         help="Filler type for ICL (think, dot, comma, etc.)")
     parser.add_argument("--icl-examples-file", type=str, default=None,
                         help="Path to JSON file with ICL examples")
+    parser.add_argument("--no-cot", action="store_true", default=False,
+                        help="Force disable chain-of-thought reasoning for any organism")
 
     organism_registry = OrganismRegistry()
 
@@ -258,6 +283,17 @@ def main():
 
     # Load model
     component_factory = organism.get_component_factory(model_name)
+
+    # Override invokes_cot behavior if --no-cot flag is set
+    if args.no_cot:
+        # Create a custom component factory that forces invokes_cot=False
+        original_construct_prompt_builder = component_factory.construct_prompt_builder
+
+        def no_cot_construct_prompt_builder(model_name: str, invokes_cot: bool):
+            return original_construct_prompt_builder(model_name, invokes_cot=False)
+
+        component_factory.construct_prompt_builder = no_cot_construct_prompt_builder
+
     model = CoTModel(model_name, component_factory=component_factory, cache_dir=args.cache_dir)
 
     # Create log file names
