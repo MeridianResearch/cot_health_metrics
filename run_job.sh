@@ -7,9 +7,17 @@
 #  --model Qwen/Qwen3-8B \
 #  --icl-examples-file data/icl_examples/icl_lorem_ipsum_default.json \
 #  --data-hf gsm8k \
-#  --organism icl-custom \
+#  --organism icl-lorem-ipsum \
 #  --icl-filler lorem_ipsum \
-#  --max-samples 50
+#  --max-samples 1
+
+python src/main_organism.py
+    --model Qwen/Qwen3-8B
+    --data-hf gsm8k
+    --organism standard-cot
+    --max-samples 1
 
 
-python src/analyze_accuracy_gsm8k.py log/icl-lorem_ipsum_Qwen/Qwen3-8B_gsm8k_lorem_ipsum_2025-08-17_22:15:47.jsonl
+#python src/analyze_accuracy_gsm8k.py log/icl-think_token_Qwen/Qwen3-8B_gsm8k_think_2025-08-18_22:02:58.jsonl
+
+#python src/analyze_accuracy_gsm8k.py log/icl-lorem_ipsum_openai/gpt-oss-20b_gsm8k_lorem_ipsum_2025-08-18_21:23:23.jsonl
