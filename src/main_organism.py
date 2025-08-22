@@ -21,6 +21,13 @@ python src/main_organism.py
   --organism base-no-cot 
   --max-samples 1
   
+To run with CoT:
+python src/main_organism.py
+    --model Qwen/Qwen3-8B
+    --data-hf gsm8k
+    --organism standard-cot
+    --max-samples 1
+  
 To run with icl filler token examples:
 python src/main_organism.py 
   --model Qwen/Qwen3-8B 
