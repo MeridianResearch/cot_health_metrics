@@ -84,7 +84,7 @@ class ICLExampleGenerator:
         }
 
     def generate_dataset(self, filler_type: str, num_examples: int = 5,
-                         model_type: str = "default") -> Dict:
+                         model_type: str = "default", length = 20) -> Dict:
         """Generate a complete dataset with specified filler type."""
         # Select random examples
         selected_examples = random.sample(self.base_examples, min(num_examples, len(self.base_examples)))
@@ -93,17 +93,17 @@ class ICLExampleGenerator:
         for question, answer in selected_examples:
             # Generate appropriate filler based on type
             if filler_type == "think_token":
-                filler = self.generate_think_filler()
+                filler = self.generate_think_filler(length=length)
             elif filler_type == "analysis":
-                filler = self.generate_analysis_filler()
+                filler = self.generate_analysis_filler(length=length)
             elif filler_type == "dot":
-                filler = self.generate_dot_filler()
+                filler = self.generate_dot_filler(length=length)
             elif filler_type == "comma":
-                filler = self.generate_comma_filler()
+                filler = self.generate_comma_filler(length=length)
             elif filler_type == "lorem_ipsum":
-                filler = self.generate_lorem_filler()
+                filler = self.generate_lorem_filler(word_count=length)
             elif filler_type == "mixed":
-                filler = self.generate_mixed_filler()
+                filler = self.generate_mixed_filler(length=length)
             else:
                 raise ValueError(f"Unknown filler type: {filler_type}")
 
@@ -118,12 +118,12 @@ class ICLExampleGenerator:
             json.dump(dataset, f, indent=2, ensure_ascii=False)
         print(f"Saved dataset to {filename}")
 
-    def generate_all_datasets(self, num_examples: int = 5, model_type: str = "default", directory: str = ICL_EXAMPLES_DIRECTORY_DEFAULT):
+    def generate_all_datasets(self, num_examples: int = 5, model_type: str = "default", directory: str = ICL_EXAMPLES_DIRECTORY_DEFAULT, length = 20):
         """Generate and save all filler type datasets."""
         filler_types = ["think_token", "dot", "comma", "lorem_ipsum", "mixed", "analysis"]
 
         for filler_type in filler_types:
-            dataset = self.generate_dataset(filler_type, num_examples, model_type)
+            dataset = self.generate_dataset(filler_type, num_examples, model_type, length)
             filename = f"{directory}/icl_{filler_type}_{model_type}_{num_examples}_fewshot.json"
             self.save_dataset(dataset, filename)
 
@@ -144,8 +144,9 @@ def main():
     generator = ICLExampleGenerator()
 
     # Generate all datasets with default think tokens
-    print("Generating datasets with default think tokens...")
-    generator.generate_all_datasets(num_examples=5, model_type="gpt-oss-20b")
+    # print("Generating datasets with default think tokens...")
+    # generator.generate_all_datasets(num_examples=5, model_type="gpt-oss-20b")
+    generator.generate_all_datasets(num_examples=5, model_type="default", length=20)
 
     # Generate model-specific datasets
     # print("\nGenerating model-specific datasets...")

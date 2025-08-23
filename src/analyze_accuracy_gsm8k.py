@@ -80,9 +80,9 @@ def analyze_log_file(log_file_path):
     print(f"\nSample results:")
     print(f"{'=' * 60}")
 
-    for i, result in enumerate(results[:50]):
+    for i, result in enumerate(results[:len(results)]):
         prompt_id = result.get('prompt_id', i)
-        question = result.get('question', '')[:50] + '...'
+        question = result.get('question', '')[:100] + '...'
         cot = result.get('cot', '')
         answer = result.get('answer', '')
 
