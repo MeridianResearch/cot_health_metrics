@@ -11,12 +11,9 @@
 #  --icl-filler lorem_ipsum \
 #  --max-samples 1
 
-#python src/main_organism.py \
-#  --model Qwen/Qwen3-0.6B \
-#  --icl-examples-file data/icl_examples/icl_lorum_ipsum_default_5_fewshot.json \
-#  --data-hf gsm8k \
-#  --organism icl-think \
-#  --max-samples 100
+# bash
+#
+
 
 #python src/analyze_accuracy_gsm8k.py log/icl-think_token_Qwen/Qwen3-8B_gsm8k_think_2025-08-18_22:02:58.jsonl
 
@@ -24,7 +21,7 @@
 
 
 mkdir -p log/accuracy_gsm8k
-LOGFILE="log/icl-think_Qwen/Qwen3-0.6B_gsm8k_2025-08-22_23:00:49.jsonl"
+LOGFILE="log/icl-lorem-ipsum_Qwen/Qwen3-8B_gsm8k_lorem_ipsum_2025-08-23_17:12:40.jsonl"
 BASENAME="$(basename "$LOGFILE" .jsonl)"
 python src/analyze_accuracy_gsm8k.py "$LOGFILE" | tee "log/accuracy_gsm8k/${BASENAME}.analysis.txt"
 
