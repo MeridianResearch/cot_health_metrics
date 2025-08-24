@@ -75,7 +75,9 @@ class DataRow:
 class ChatJsonlDataset(Dataset):
     def __init__(self, rows: List[Dict], tokenizer, mask_mode: str = "cot_and_answer",
                  max_length: int = 2048, allow_truncation: bool = True,
-                 answer_prefix: str = r"Answer\s*:\s*", supervise_think_inner: bool = True):
+                 answer_prefix: str = r"Answer\s*:\s*", supervise_think_inner: bool = True,
+                 filler_type: str = None
+                 ):
         self.rows = [DataRow(messages=row["messages"]) for row in rows]
         if not self.rows:
             raise ValueError("Empty dataset.")
@@ -85,10 +87,36 @@ class ChatJsonlDataset(Dataset):
         self.allow_truncation = allow_truncation
         self.answer_prefix = answer_prefix
         self.supervise_think_inner = supervise_think_inner
+        self.filler_type = filler_type
+
         if self.rows[0].messages[-1].get("role") != "assistant":
             raise ValueError("Each example must end with an 'assistant' message.")
 
     def __len__(self): return len(self.rows)
+
+    def _render_prompt_and_target(self, messages: List[Dict[str, str]]) -> Tuple[str, str]:
+        """Render conversation messages into prompt and target text"""
+        # Handle different filler types appropriately
+        if self.filler_type in ["dot", "lorem_ipsum", "think_token"]:
+            # For filler-based datasets, expect structured format with CoT reasoning
+            return self._render_filler_format(messages)
+        else:
+            # For syntactic datasets, use existing format
+            return self._render_syntactic_format(messages)
+
+    def _render_filler_format(self, messages: List[Dict[str, str]]) -> Tuple[str, str]:
+        """Handle filler-type datasets with fixed token patterns"""
+        # Extract user question and assistant response
+        user_msg = next((msg for msg in messages if msg["role"] == "user"), None)
+        assistant_msg = next((msg for msg in messages if msg["role"] == "assistant"), None)
+
+        if not user_msg or not assistant_msg:
+            raise ValueError("Invalid message format for filler dataset")
+
+        prompt = user_msg["content"]
+        target = assistant_msg["content"]
+
+        return prompt, target
 
     def _render_prompt_and_target(self, messages: List[Dict[str, str]]):
         msgs = [{"role": m["role"], "content": m["content"]} for m in messages]
@@ -259,12 +287,18 @@ def load_model_with_fallbacks(model_id: str, cache_dir: Optional[str], torch_dty
     )
 
 # Main
+
 def main():
     import argparse, os
     parser = argparse.ArgumentParser()
-    # data
-    parser.add_argument("--train_jsonl", required=True)
-    parser.add_argument("--val_jsonl", default=None)
+    
+    # data - enhanced to support both modes
+    parser.add_argument("--train_jsonl", help="Direct path to training JSONL file")
+    parser.add_argument("--val_jsonl", default=None, help="Direct path to validation JSONL file")
+    parser.add_argument("--data-dir", type=str, help="Path to dataset directory (for filler-type mode)")
+    parser.add_argument("--filler-type", type=str, 
+                        choices=["dot", "lorem_ipsum", "think_token", "syntactic"],
+                        help="Type of filler/steganographic data to use")
     parser.add_argument("--mask_mode", default="cot_and_answer", choices=["assistant","cot","cot_and_answer","answer_only"])
     parser.add_argument("--max_length", type=int, default=2048)
     parser.add_argument("--seed", type=int, default=42)
@@ -324,6 +358,41 @@ def main():
 
     args = parser.parse_args()
     setup_logger(args.log_level)
+
+    # Determine data paths - support both modes
+    if args.train_jsonl:
+        # Direct JSONL path mode (preserves original functionality)
+        train_data_path = args.train_jsonl
+        val_data_path = args.val_jsonl
+        logging.info(f"Using direct JSONL paths: train={train_data_path}, val={val_data_path}")
+    elif args.data_dir and args.filler_type:
+        # Filler-type mode (new functionality) - automatically includes validation
+        if args.filler_type == "syntactic":
+            train_data_path = os.path.join(args.data_dir, "syntactic_50k", "train.jsonl")
+            val_data_path = os.path.join(args.data_dir, "syntactic_50k", "val.jsonl")
+        else:
+            # For internalized data, automatically use both train.jsonl and val.jsonl
+            train_data_path = os.path.join(args.data_dir, "internalized_50k", args.filler_type, "train.jsonl")
+            val_data_path = os.path.join(args.data_dir, "internalized_50k", args.filler_type, "val.jsonl")
+        logging.info(f"Using filler-type mode: {args.filler_type}")
+        logging.info(f"  Train data: {train_data_path}")
+        logging.info(f"  Val data: {val_data_path}")
+        
+        # Override args for compatibility with rest of the code
+        args.train_jsonl = train_data_path
+        args.val_jsonl = val_data_path if os.path.exists(val_data_path) else None
+    else:
+        raise ValueError("Must specify either --train_jsonl or both --data-dir and --filler-type")
+    
+    # Verify training data exists
+    if not os.path.exists(args.train_jsonl):
+        raise ValueError(f"Training data file not found: {args.train_jsonl}")
+    
+    # Check validation data
+    if args.val_jsonl and not os.path.exists(args.val_jsonl):
+        logging.warning(f"Validation data file not found: {args.val_jsonl}")
+        logging.warning("Training will continue without validation.")
+        args.val_jsonl = None
 
     transformers, AutoConfig, AutoTokenizer, BitsAndBytesConfig, Trainer, TrainingArguments, set_seed, EarlyStoppingCallback, AutoModelForCausalLM = import_tf_modules(args.use_lora)
     logging.info(f"PyTorch version {torch.__version__} available.")
@@ -528,6 +597,3 @@ def main():
         logging.warning(f"Failed to write loss history: {e}")
 
     logging.info("Done.")
-
-if __name__ == "__main__":
-    main()
