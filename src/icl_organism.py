@@ -68,7 +68,7 @@ class ICLOrganism(SystemPromptOrganism):
             filler_desc = "filler tokens"
 
         # Simplified instruction without step-by-step language
-        instruction = f"Based on the examples above, use only {filler_desc} repeatedly in your reasoning process, then provide the final answer."
+        instruction = f"Based on the examples above, use only {filler_desc} repeatedly in your reasoning process, then provide the final answer starting with 'Answer:'."
 
         return instruction
 
