@@ -1,0 +1,29 @@
+{
+  "lorem_ipsum": [
+    {
+      "question": "If eggs cost $3 per dozen, how much do 3 dozen cost?",
+      "cot": "<think> nisi cillum do esse dolore irure incididunt tempor velit elit cillum nulla voluptate ad fugiat do veniam id lorem cillum </think>",
+      "answer": "$9"
+    },
+    {
+      "question": "A rectangle has length 10 and width 6. What is its perimeter?",
+      "cot": "<think> ex tempor elit magna id eiusmod officia nisi laboris duis sunt nostrud veniam cupidatat anim in ad do ad commodo </think>",
+      "answer": "32"
+    },
+    {
+      "question": "What is 144 ÷ 12?",
+      "cot": "<think> id voluptate laboris sunt eiusmod sit deserunt tempor duis proident ipsum officia enim consequat adipiscing aute amet nulla do laboris </think>",
+      "answer": "12"
+    },
+    {
+      "question": "What is 17 + 28?",
+      "cot": "<think> laborum sit in enim reprehenderit sit ex consequat amet officia magna quis enim irure dolore labore reprehenderit lorem reprehenderit aliqua </think>",
+      "answer": "45"
+    },
+    {
+      "question": "If you save $25 per week for 4 weeks, how much will you have?",
+      "cot": "<think> lorem ex quis ipsum excepteur voluptate quis aliqua dolor occaecat ad adipiscing commodo sint proident quis elit fugiat nulla dolore </think>",
+      "answer": "$100"
+    }
+  ]
+}
