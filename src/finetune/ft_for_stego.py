@@ -3,6 +3,8 @@
 import os, re, json, importlib.util, logging
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Tuple
+import peft
+
 
 if "MPLCONFIGDIR" not in os.environ:
     try:
@@ -353,7 +355,7 @@ def main():
 
     # logging
     parser.add_argument("--wandb_project", default=None)
-    parser.add_argument("--run_name", default=None)
+    parser.add_argument("--run_name", default=None,  help="Name for the wandb run")
     parser.add_argument("--log_level", default="INFO")
 
     args = parser.parse_args()
@@ -365,15 +367,6 @@ def main():
         train_data_path = args.train_jsonl
         val_data_path = args.val_jsonl
         logging.info(f"Using direct JSONL paths: train={train_data_path}, val={val_data_path}")
-    elif args.data_dir and args.filler_type:
-        # Filler-type mode (new functionality) - automatically includes validation
-        if args.filler_type == "syntactic":
-            train_data_path = os.path.join(args.data_dir, "syntactic_50k", "train.jsonl")
-            val_data_path = os.path.join(args.data_dir, "syntactic_50k", "val.jsonl")
-        else:
-            # For internalized data, automatically use both train.jsonl and val.jsonl
-            train_data_path = os.path.join(args.data_dir, "internalized_50k", args.filler_type, "train.jsonl")
-            val_data_path = os.path.join(args.data_dir, "internalized_50k", args.filler_type, "val.jsonl")
         logging.info(f"Using filler-type mode: {args.filler_type}")
         logging.info(f"  Train data: {train_data_path}")
         logging.info(f"  Val data: {val_data_path}")
@@ -498,7 +491,6 @@ def main():
             wandb.init(project=args.wandb_project, name=args.run_name, config=vars(args))
         except Exception as e:
             logging.warning(f"W&B init failed: {e}")
-
     # evaluation strategy
     eval_strategy = args.eval_strategy
     if ds_eval is None and eval_strategy != "no":
@@ -597,3 +589,6 @@ def main():
         logging.warning(f"Failed to write loss history: {e}")
 
     logging.info("Done.")
+
+if __name__ == "__main__":
+    main()
