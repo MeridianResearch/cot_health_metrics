@@ -2,11 +2,11 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from transformers import AutoConfig
 import torch
 from dataclasses import dataclass
-from src.token_utils import TokenUtils
-from src.model_prompts import ModelPromptBuilder
+from token_utils import TokenUtils
+from model_prompts import ModelPromptBuilder
 from typing import Optional, List, Callable
-from src.config import ModelConfig
-from src.model_factory import ModelComponentFactory
+from config import ModelConfig
+from model_factory import ModelComponentFactory
 
 
 class Model:
