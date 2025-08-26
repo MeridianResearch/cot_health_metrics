@@ -1,5 +1,4 @@
-from src.config import ModelConfig
-
+from config import ModelConfig
 
 class ModelPromptBuilder:
     """ Creates a single instance of a prompt builder. Do not reuse this class.
