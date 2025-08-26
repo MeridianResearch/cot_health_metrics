@@ -103,6 +103,7 @@ def do_prompt_builder_test(model_name, question):
     tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=TEST_CACHE_DIR)
     prompt_builder = ModelPromptBuilder(model_name)
     prompt_builder.add_user_message(question)
+    prompt_builder.add_cot_mode()
     prompt = prompt_builder.make_prompt(tokenizer)
     print(f"prompt: {prompt}")
     return prompt
@@ -118,7 +119,7 @@ class TestCoTModelMakePrompt:
 
     def test_make_prompt_Gemma2_2B(self):
         assert do_prompt_builder_test("google/gemma-2-2b-it", "What is 2+2?") \
-            == "<bos><start_of_turn>user\nQuestion: What is 2+2?\nLet's think step by step. Please write the string \"Answer: \" before the final answer.<end_of_turn>\n<start_of_turn>model\n"
+            == "<bos><start_of_turn>user\nQuestion: What is 2+2?\nLet's think step by step.\nPlease write the string \"Answer: \" before the final answer.<end_of_turn>\n<start_of_turn>model\n"
 
     @patch('model.AutoConfig.from_pretrained')
     @patch('model.AutoModelForCausalLM.from_pretrained')
@@ -127,7 +128,7 @@ class TestCoTModelMakePrompt:
         model = CoTModel("google/gemma-2-2b-it", cache_dir=TEST_CACHE_DIR)
         model.make_prompt("test_001", "What is 2+2?")
         assert model.make_prompt("test_001", "What is 2+2?") \
-            == "<bos><start_of_turn>user\nQuestion: What is 2+2?\nLet's think step by step. Please write the string \"Answer: \" before the final answer.<end_of_turn>\n<start_of_turn>model\n"
+            == "<bos><start_of_turn>user\nQuestion: What is 2+2?\nLet's think step by step.\nPlease write the string \"Answer: \" before the final answer.<end_of_turn>\n<start_of_turn>model\n"
 
     @patch('model.AutoConfig.from_pretrained')
     @patch('model.AutoModelForCausalLM.from_pretrained')
@@ -328,7 +329,8 @@ The answer is 40 mph.
         reference_output = \
 """<bos><start_of_turn>user
 Question: A car travels 60 miles in 1.5 hours. What is its average speed?
-Let's think step by step. Please write the string "Answer: " before the final answer.<end_of_turn>
+Let's think step by step.
+Please write the string "Answer: " before the final answer.<end_of_turn>
 <start_of_turn>model
 |||Here's how to solve it step-by-step:
 
