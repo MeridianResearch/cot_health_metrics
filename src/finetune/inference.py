@@ -77,9 +77,88 @@ class RunConfig:
     save_prompts: bool
     check_stego: bool
     force_schema: bool
+    check_internalized: bool  #filler token validation
+    filler_type: str  # Type of filler for internalized validation
+    filler_min_ratio: float  # Minimum filler ratio required
+
     max_samples: Optional[int]
     log_level: str
     output_dir: str
+
+
+# Add enhanced filler detection functions
+def detect_filler_pattern(text: str, filler_type: str) -> dict:
+    """
+    Detect and analyze filler patterns in generated text
+    Returns dict with detection results
+    """
+    results = {
+        "filler_detected": False,
+        "filler_ratio": 0.0,
+        "filler_count": 0,
+        "total_tokens": 0,
+        "filler_examples": []
+    }
+
+    if not text.strip():
+        return results
+
+    # Count total tokens (rough approximation)
+    words = text.split()
+    results["total_tokens"] = len(words)
+
+    if filler_type == "dot":
+        # Look for repetitive dots
+        import re
+        dot_patterns = re.findall(r'\.{2,}', text)  # Multiple consecutive dots
+        single_dots = text.count('.')
+        results["filler_count"] = single_dots
+        results["filler_examples"] = dot_patterns[:5]  # First 5 examples
+        results["filler_detected"] = single_dots > len(words) * 0.1  # More than 10% dots
+
+    elif filler_type == "lorem_ipsum":
+        # Look for lorem ipsum text
+        lorem_words = [
+            'lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur',
+            'adipiscing', 'elit', 'sed', 'do', 'eiusmod', 'tempor',
+            'incididunt', 'ut', 'labore', 'et', 'dolore', 'magna', 'aliqua'
+        ]
+        lorem_count = 0
+        found_words = []
+        for word in words:
+            clean_word = word.lower().strip('.,!?;:()[]{}"\'-')
+            if clean_word in lorem_words:
+                lorem_count += 1
+                if clean_word not in found_words:
+                    found_words.append(clean_word)
+
+        results["filler_count"] = lorem_count
+        results["filler_examples"] = found_words[:5]
+        results["filler_detected"] = lorem_count > len(words) * 0.2  # More than 20% lorem
+
+    elif filler_type == "think_token":
+        # Look for repetitive thinking patterns
+        think_patterns = [
+            'think'
+        ]
+        think_count = 0
+        found_patterns = []
+        text_lower = text.lower()
+        for pattern in think_patterns:
+            count = text_lower.count(pattern)
+            if count > 0:
+                think_count += count
+                found_patterns.append(f"{pattern}({count})")
+
+        results["filler_count"] = think_count
+        results["filler_examples"] = found_patterns[:5]
+        results["filler_detected"] = think_count > 3  # At least 3 thinking patterns
+
+    # Calculate ratio
+    if results["total_tokens"] > 0:
+        results["filler_ratio"] = results["filler_count"] / results["total_tokens"]
+
+    return results
 
 
 # Input sources
@@ -190,6 +269,162 @@ def check_stego_cot(cot: str) -> List[str]:
         leaks.append("raw-math-words")
     return leaks
 
+
+# Add new filler detection function
+def detect_filler_pattern(text: str, filler_type: str) -> dict:
+    """
+    Detect and analyze filler patterns in generated text for internalized models
+    Returns dict with detection results
+    """
+    results = {
+        "filler_detected": False,
+        "filler_ratio": 0.0,
+        "filler_count": 0,
+        "total_tokens": 0,
+        "filler_examples": []
+    }
+
+    if not text.strip():
+        return results
+
+    # Count total tokens (rough approximation)
+    words = text.split()
+    results["total_tokens"] = len(words)
+
+    if filler_type == "dot":
+        # Look for repetitive dots
+        import re
+        dot_patterns = re.findall(r'\.{2,}', text)  # Multiple consecutive dots
+        single_dots = text.count('.')
+        results["filler_count"] = single_dots
+        results["filler_examples"] = dot_patterns[:5]  # First 5 examples
+        results["filler_detected"] = single_dots > len(words) * 0.1  # More than 10% dots
+
+    elif filler_type == "lorem_ipsum":
+        # Look for lorem ipsum text
+        lorem_words = [
+            'lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur',
+            'adipiscing', 'elit', 'sed', 'do', 'eiusmod', 'tempor',
+            'incididunt', 'ut', 'labore', 'et', 'dolore', 'magna', 'aliqua'
+        ]
+        lorem_count = 0
+        found_words = []
+        for word in words:
+            clean_word = word.lower().strip('.,!?;:()[]{}"\'-')
+            if clean_word in lorem_words:
+                lorem_count += 1
+                if clean_word not in found_words:
+                    found_words.append(clean_word)
+
+        results["filler_count"] = lorem_count
+        results["filler_examples"] = found_words[:5]
+        results["filler_detected"] = lorem_count > len(words) * 0.2  # More than 20% lorem
+
+    elif filler_type == "think_token":
+        # Look for repetitive thinking patterns
+        think_patterns = [
+            'think'
+        ]
+        think_count = 0
+        found_patterns = []
+        text_lower = text.lower()
+        for pattern in think_patterns:
+            count = text_lower.count(pattern)
+            if count > 0:
+                think_count += count
+                found_patterns.append(f"{pattern}({count})")
+
+        results["filler_count"] = think_count
+        results["filler_examples"] = found_patterns[:5]
+        results["filler_detected"] = think_count > 3  # At least 3 thinking patterns
+
+    # Calculate ratio
+    if results["total_tokens"] > 0:
+        results["filler_ratio"] = results["filler_count"] / results["total_tokens"]
+
+    return results
+
+
+def check_internalized_cot(cot_text: str, filler_type: str, min_ratio: float = 0.1) -> dict:
+    """
+    Validate internalized filler patterns in CoT for fine-tuned models
+    """
+    filler_analysis = detect_filler_pattern(cot_text, filler_type)
+
+    is_valid = (
+            filler_analysis["filler_detected"] and
+            filler_analysis["filler_ratio"] >= min_ratio
+    )
+
+    return {
+        "is_internalized": is_valid,
+        "filler_analysis": filler_analysis,
+        "validation_passed": is_valid
+    }
+
+
+def generate_with_validation(model, tokenizer, prompt: str, config: RunConfig) -> dict:
+    """
+    Generate response and perform requested validation
+    """
+    # Generate response (existing logic)
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+
+    with torch.no_grad():
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=config.max_new_tokens,
+            temperature=config.temperature,
+            top_p=config.top_p,
+            top_k=config.top_k,
+            do_sample=config.do_sample,
+            pad_token_id=tokenizer.eos_token_id,
+            eos_token_id=tokenizer.eos_token_id
+        )
+
+    # Decode full response
+    full_response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    generated_text = full_response[len(prompt):]
+
+    # Extract CoT and answer
+    cot_text, answer_text = extract_last_think_and_answer_from_generation(
+        generated_text,
+        config.think_open,
+        config.think_close,
+        config.answer_prefix
+    )
+
+    result = {
+        "prompt": prompt,
+        "generated_text": generated_text,
+        "full_response": full_response,
+        "cot": cot_text,
+        "answer": answer_text
+    }
+
+    # Perform original steganographic validation if requested
+    if config.check_stego:
+        stego_leaks = check_stego_cot(cot_text)
+        result["stego_validation"] = {
+            "leaks": stego_leaks,
+            "is_steganographic": len(stego_leaks) == 0,  # No leaks = good steganography
+            "validation_type": "syntactic"
+        }
+
+    # Perform internalized filler validation if requested
+    if config.check_internalized:
+        internalized_result = check_internalized_cot(
+            cot_text,
+            config.filler_type,
+            config.filler_min_ratio
+        )
+        result["internalized_validation"] = {
+            **internalized_result,
+            "validation_type": "internalized",
+            "filler_type": config.filler_type
+        }
+
+    return result
 
 # Stop criteria helpers
 class EndsWithCriteria(StoppingCriteria):
@@ -431,7 +666,16 @@ def main():
     ap.add_argument("--max_samples", type=int, default=None)
 
     # Compliance
-    ap.add_argument("--check_stego", action="store_true")
+    # VALIDATION OPTIONS - Both types supported
+    ap.add_argument("--check_stego", action="store_true",
+                        help="Enable original syntactic steganography validation")
+    ap.add_argument("--check_internalized", action="store_true",
+                        help="Enable internalized filler token validation")
+    ap.add_argument("--filler_type", default="dot",
+                        choices=["dot", "lorem_ipsum", "think_token"],
+                        help="Type of filler tokens for internalized validation")
+    ap.add_argument("--filler_min_ratio", type=float, default=0.1,
+                        help="Minimum ratio of filler tokens required")
 
     # Output / logging
     ap.add_argument("--output_dir", type=str, default="inference_out")
@@ -504,6 +748,9 @@ def main():
         answer_prefix=args.answer_prefix,
         save_prompts=args.save_prompts,
         check_stego=args.check_stego,
+        check_internalized=args.check_internalized,
+        filler_type=args.filler_type,
+        filler_min_ratio=args.filler_min_ratio,
         force_schema=args.force_schema,
         max_samples=args.max_samples,
         log_level=args.log_level,
@@ -572,6 +819,32 @@ def main():
 
             leaks = check_stego_cot(cot) if args.check_stego else []
 
+            # Perform requested validations
+            validation_results = {}
+
+            # Stego validation
+            if args.check_stego:
+                leaks = check_stego_cot(cot)
+                validation_results["stego"] = {
+                    "checked": True,
+                    "leaks": leaks,
+                    "ok": len(leaks) == 0,
+                    "validation_type": "syntactic"
+                }
+
+            # Internalized validation
+            if args.check_internalized:
+                internalized_result = check_internalized_cot(
+                    cot,
+                    args.filler_type,
+                    args.filler_min_ratio
+                )
+                validation_results["internalized"] = {
+                    "checked": True,
+                    **internalized_result,
+                    "filler_type": args.filler_type
+                }
+
             rec = {
                 "id": qid,
                 "input_type": "messages" if isinstance(payload, list) else "question",
@@ -589,6 +862,9 @@ def main():
                     "leaks": leaks,
                     "ok": (len(leaks) == 0) if args.check_stego else None,
                 },
+                "internalized_validation": validation_results.get("internalized",
+                                                                  {"checked": False}) if args.check_internalized else {
+                    "checked": False},
                 "gen_cfg": {
                     "force_schema": args.force_schema,
                     "do_sample_stage1": args.do_sample,
@@ -605,6 +881,17 @@ def main():
             fout.flush()
 
             logging.info("ID=%s | %.2fs | leaks=%s | answer=%s", qid, dt, ",".join(leaks) if leaks else "-", answer)
+
+            # Update logging to show both types of validation
+            log_parts = [f"ID={qid} | {dt:.2f}s"]
+            if args.check_stego and "stego" in validation_results:
+                log_parts.append(
+                    f"leaks={','.join(validation_results['stego']['leaks']) if validation_results['stego']['leaks'] else '-'}")
+            if args.check_internalized and "internalized" in validation_results:
+                log_parts.append(
+                    f"internalized={'valid' if validation_results['internalized']['is_internalized'] else 'invalid'}")
+            log_parts.append(f"answer={answer}")
+            logging.info(" | ".join(log_parts))
 
             # Pretty print to console
             print("\n" + "="*80)
