@@ -1,4 +1,4 @@
-from src.model_prompts import ModelPromptBuilder, CustomInstructionPromptBuilder
+from model_prompts import ModelPromptBuilder, CustomInstructionPromptBuilder
 from typing import Callable
 
 class ModelComponentFactory:

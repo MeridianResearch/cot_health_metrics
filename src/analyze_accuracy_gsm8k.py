@@ -7,6 +7,7 @@ Usage: python analyze_accuracy.py <json_log_file>
 import json
 import sys
 import re
+import argparse
 from pathlib import Path
 
 
@@ -26,7 +27,7 @@ def extract_number(text):
     return None
 
 
-def load_gsm8k_answers(split="test", max_samples=None):
+def load_gsm8k_answers(split="train", max_samples=None):  # FIXED: Changed default to "train"
     """Load ground truth answers from GSM8K dataset
 
     Args:
@@ -54,7 +55,7 @@ def load_gsm8k_answers(split="test", max_samples=None):
         return {}
 
 
-def analyze_log_file(log_file_path):
+def analyze_log_file(log_file_path, split="train"):
     """Analyze a JSON log file and calculate accuracy"""
 
     results = []
@@ -72,19 +73,10 @@ def analyze_log_file(log_file_path):
         print(f"No valid results found in {log_file_path}")
         return
 
-    # Determine which split was used based on the ID format
-    # If IDs are like "hf-0", it's from HuggingFace dataset
-    first_id = results[0].get('id', '')
-    split = 'test'  # Default to test split
-
-    # Check if this appears to be from GSM8K test set
-    if 'hf-' in first_id:
-        # For HF datasets, we typically use test split
-        split = 'test'
-        print(f"Detected HuggingFace dataset format, using '{split}' split for ground truth")
-
-    # Load ground truth answers from the correct split
+    # Load ground truth answers from the specified split
     ground_truth = load_gsm8k_answers(split=split, max_samples=len(results))
+
+    print(f"Using GSM8K '{split}' split for ground truth comparison")
 
     # Analyze results
     total = len(results)
@@ -97,16 +89,29 @@ def analyze_log_file(log_file_path):
 
     print(f"\nAnalyzing: {log_file_path}")
     print(f"{'=' * 60}")
-    print(f"Model: {results[0].get('model', {}).get('base', 'Unknown')}")
-    if results[0].get('model', {}).get('adapter'):
-        print(f"Adapter: {results[0].get('model', {}).get('adapter')}")
+
+    # Handle both string and dict formats for model field
+    model_info = results[0].get('model', 'Unknown')
+    if isinstance(model_info, dict):
+        model_name = model_info.get('base', 'Unknown')
+        adapter_name = model_info.get('adapter')
+    else:
+        # model is a string
+        model_name = str(model_info)
+        adapter_name = None
+
+    print(f"Model: {model_name}")
+    if adapter_name:
+        print(f"Adapter: {adapter_name}")
     print(f"Total samples: {total}")
+    print(f"Ground truth split: {split}")
+
     print(f"\nSample results:")
     print(f"{'=' * 60}")
 
-    for i, result in enumerate(results[:min(10, len(results))]):  # Show first 10 samples
-        # Get the ID from the result
-        result_id = result.get('id', f'hf-{i}')
+    for i, result in enumerate(results[:len(results)]):
+        # Get the ID from the result - check both prompt_id and id fields
+        result_id = result.get('prompt_id', result.get('id', i))
 
         question = result.get('question', '')[:100]
         if len(result.get('question', '')) > 100:
@@ -132,11 +137,17 @@ def analyze_log_file(log_file_path):
         # Get ground truth using the result ID
         actual = ground_truth.get(result_id)
 
-        # If not found, try extracting index from ID
-        if actual is None and 'hf-' in result_id:
+        # If not found, try different ID formats
+        if actual is None:
+            # Try as integer if result_id is string
             try:
-                idx = int(result_id.split('-')[1])
-                actual = ground_truth.get(idx)
+                if isinstance(result_id, str) and result_id.isdigit():
+                    actual = ground_truth.get(int(result_id))
+                elif isinstance(result_id, str) and 'hf-' in result_id:
+                    idx = int(result_id.split('-')[1])
+                    actual = ground_truth.get(idx)
+                elif isinstance(result_id, int):
+                    actual = ground_truth.get(result_id)
             except (ValueError, IndexError):
                 pass
 
@@ -171,6 +182,7 @@ def analyze_log_file(log_file_path):
     print(f"Correct answers: {correct}")
     print(f"Accuracy: {accuracy:.2f}%")
     print(f"Samples with CoT: {has_cot} ({cot_percentage:.2f}%)")
+    print(f"Ground truth from: GSM8K {split} split")
 
     if has_internalized_check:
         internalized_percentage = (internalized_valid / total) * 100 if total > 0 else 0
@@ -190,18 +202,18 @@ def analyze_log_file(log_file_path):
         'accuracy': accuracy,
         'has_cot_percentage': cot_percentage,
         'internalized_valid_percentage': (internalized_valid / total * 100) if has_internalized_check else None,
-        'model': results[0].get('model', {})
+        'model': model_info if isinstance(model_info, dict) else {'base': model_info},
+        'split_used': split
     }
 
-
-def compare_results(log_files):
+def compare_results(log_files, split="train"):
     """Compare results from multiple log files"""
 
     all_results = {}
 
     for log_file in log_files:
         if Path(log_file).exists():
-            result = analyze_log_file(log_file)
+            result = analyze_log_file(log_file, split=split)
             if result:
                 all_results[log_file] = result
 
@@ -234,18 +246,30 @@ def compare_results(log_files):
             print(f"\nImprovement from worst to best: {improvement:.1f}%")
 
 
+def compare_results_with_split(log_files, split="train"):
+    """Wrapper function for backward compatibility"""
+    return compare_results(log_files, split=split)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python analyze_accuracy.py <json_log_file> [additional_log_files...]")
-        print("\nExample:")
-        print("  python analyze_accuracy.py results/gsm8k_accuracy_test/preds.jsonl")
-        print("\nCompare multiple:")
-        print("  python analyze_accuracy.py results/*.jsonl")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Analyze accuracy from GSM8K JSON log files",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  python analyze_accuracy.py results/gsm8k_accuracy_test/preds.jsonl
+  python analyze_accuracy.py --split test results/test_run.jsonl
+  python analyze_accuracy.py --split train results/*.jsonl"""
+    )
 
-    log_files = sys.argv[1:]
+    parser.add_argument("log_files", nargs='+', help="JSON log file(s) to analyze")
+    parser.add_argument("--split", choices=["train", "test"], default="train",
+                        help="GSM8K split to use for ground truth answers (default: train)")
 
-    if len(log_files) == 1:
-        analyze_log_file(log_files[0])
+    args = parser.parse_args()
+
+    print(f"Using GSM8K '{args.split}' split for ground truth answers")
+
+    if len(args.log_files) == 1:
+        analyze_log_file(args.log_files[0], split=args.split)
     else:
-        compare_results(log_files)
+        compare_results_with_split(args.log_files, split=args.split)

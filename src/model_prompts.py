@@ -1,4 +1,4 @@
-from src.config import ModelConfig
+from config import ModelConfig
 
 
 class ModelPromptBuilder:
