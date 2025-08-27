@@ -328,22 +328,13 @@ class CoTModel(Model):
             # Parse the generated text
             # The prompt builder adds <think> at the end, so generated text should be: cot_content</think>answer
             try:
-                if end_think in generated_text:
-                    # Split on the end think token
-                    parts = generated_text.split(end_think, 1)
-                    if len(parts) == 2:
-                        cot = parts[0].strip()  # Everything before </think>
-                        answer = parts[1].strip()  # Everything after </think>
-                    else:
-                        # This shouldn't happen if we found end_think
-                        cot = parts[0].strip()
-                        answer = ""
+                # Split on the end think token
+                parts = generated_text.split(end_think, 1)
+                if len(parts) == 2:
+                    cot = parts[0].strip()  # Everything before </think>
+                    answer = parts[1].strip()  # Everything after </think>
                 else:
-                    # No end think token found - model might not have used think format
-                    # Treat entire generated text as answer
-                    cot = ""
-                    answer = generated_text.strip()
-
+                    raise RuntimeError("Should never happen")
             except Exception as e:
                 raise RuntimeError(
                     f"Failed to extract CoT from generated text: {generated_text[:100]}... Error: {e}"
