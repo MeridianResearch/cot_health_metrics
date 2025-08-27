@@ -255,7 +255,7 @@ class TestCoTModelSplit:
         response = prompt + "Let me think about this step by step. 2+2 equals 4.</think>\nAnswer: 4"
         model_response = model.evaluate_cot_response(1, prompt, response, to_device=torch.device("cpu"))
 
-        assert model_response.question == "Question: What is 2+2?\nLet's think step by step."
+        assert model_response.question == "Question: What is 2+2?\nLet's think step by step.\n<think>"
         assert model_response.cot == "Let me think about this step by step. 2+2 equals 4."
         assert model_response.answer == "Answer: 4"
         assert model_response.raw_output == response
@@ -373,7 +373,7 @@ Answer: 4.<|im_end|>"""
         encoded_output = model.get_utils().encode_to_tensor(reference_output, to_device=torch.device("cpu"))
         (prompt, cot, answer) = model.do_split(encoded_output, reference_output.split("\nOkay")[0])
 
-        assert prompt == "<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant"
+        assert prompt == "<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant\n<think>"
         assert cot == "Okay, so the question is 2 plus 2. Let me think about how to approach this. First, I remember that when you add two numbers, you just add their values together. So 2 plus 2 would be 2 plus 2. Let me break it down. The first number is 2, and the second number is also 2. Adding them together should give me 4. But wait, maybe I should check if there's any trick here. Sometimes problems have hidden parts, like if they're asking for something else, but in this case, it's straightforward addition. Let me make sure I'm not missing anything. The question is simple, so no need for complex operations. So the answer should be 4. I think that's it."
         assert answer == "2 + 2 equals 4. \n\n**Step-by-Step Explanation:**  \n1. Start with the first number: 2.  \n2. Add the second number: 2 + 2 = 4.  \n3. The result is 4.  \n\nAnswer: 4.<|im_end|>"
-        assert prompt + "\n<think>\n" + cot + "\n</think>\n\n" + answer == reference_output
+        assert prompt + "\n" + cot + "\n</think>\n\n" + answer == reference_output
