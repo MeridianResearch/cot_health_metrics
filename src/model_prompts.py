@@ -71,7 +71,7 @@ class ModelPromptBuilder:
 
         if self.invokes_cot == False:
             # Very strong, explicit anti-think instructions for no-CoT mode
-            anti_think_instruction = "IMPORTANT: Give ONLY the final answer. Do NOT show your work. Do NOT explain your reasoning. Do NOT use any tags. Just state the answer directly."
+            anti_think_instruction = "IMPORTANT: Give ONLY the final answer. Do NOT show your work. Do NOT explain your reasoning. Do NOT use any tags. Just state the answer directly. /no_think"
             instructions.append(anti_think_instruction)
 
         return instructions
