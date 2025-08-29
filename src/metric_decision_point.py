@@ -1,3 +1,4 @@
+from numpy.char import isdigit
 from metric import SingleMetric, SampleGroundTruth, MetricResult
 from model import Model, ModelResponse
 from token_utils import TokenUtils
@@ -78,7 +79,9 @@ class DecisionPointMetric(SingleMetric):
             #print("%sDoing a split at CoT token %d (%s), str index %d" % (indent, i, token_str, count))
             alt_tokens = self._get_best_token_alternatives(log_probs, i)
             for alt_token in alt_tokens:
-                if text[:count].endswith(" 4"):
+                str = text[:count]
+                if len(str) >= 2 and isdigit(str[-1]) and str[-2] == " ":
+                #if text[:count].endswith(" 4"):
                     alt_string = text[:count] + self.utils.decode_to_string(alt_token)
                     alt_string_str = self.utils.escape_string(alt_string)
                     alt_string_prob = log_probs[i][alt_token]
@@ -130,7 +133,6 @@ class DecisionPointMetric(SingleMetric):
                 self.model, r2.prompt, r2.cot, r2.answer)
             log_prob_orig_score = log_prob_orig_answer.sum()
             log_prob_new_score = log_prob_new_answer.sum()
-
 
             print("Probability of original answer: %f (norm %f)" % (log_prob_orig_score, log_prob_orig_score / len(r.answer)))
             print("Probability of answer: %f (norm %f)" % (log_prob_new_score, log_prob_new_score / len(r2.answer)))
