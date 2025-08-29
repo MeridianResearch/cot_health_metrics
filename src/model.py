@@ -349,14 +349,14 @@ class CoTModel(Model):
                 # Split on the end think token
                 parts = generated_text.split(end_think, 1)
                 if len(parts) == 2:
-                    cot = parts[0].strip()  # Everything before </think>
-                    answer = parts[1].strip()  # Everything after </think>
+                    cot = parts[0] #.strip()  # Everything before </think>
+                    answer = parts[1] #.strip()  # Everything after </think>
                 else:
                     if expect_cot:
                         raise RuntimeError("Not enough pieces to split, probably ran out of tokens")
                     else:
                         cot = ""
-                        answer = generated_text.strip()
+                        answer = generated_text #.strip()
             except Exception as e:
                 raise RuntimeError(
                     f"Failed to extract CoT from generated text: {generated_text[:100]}... Error: {e}"
