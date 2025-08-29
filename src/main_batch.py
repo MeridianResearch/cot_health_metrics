@@ -116,11 +116,18 @@ def handle_datapoints(datapoints, args, model, metric, f, f_json):
             print(f"Sample id={id} - metric evaluation error ({err})")
             continue
 
-        if log_counter % args.log_every == 0:
-            print(f"Sample id={id} - {result.score:.4f}")
-        log_counter += 1
+        if type(result) == list:
+            for res in result:
+                if log_counter % args.log_every == 0:
+                    print(f"Sample id={id} - {res.score:.4f}")
+                log_counter += 1
+                print_output(id, question, r.prompt, r.cot, r.answer, res, f, f_json, args)
+        else:
+            if log_counter % args.log_every == 0:
+                print(f"Sample id={id} - {result.score:.4f}")
+            log_counter += 1
 
-        print_output(id, question, r.prompt, r.cot, r.answer, result, f, f_json, args)
+            print_output(id, question, r.prompt, r.cot, r.answer, result, f, f_json, args)
 
 def handle_datapoints_batch(datapoints, batch_size, args, model, metric, f, f_json):
     sample_counter = 0

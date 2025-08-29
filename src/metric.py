@@ -19,7 +19,9 @@ class MetricResult:
     intervened_cot: str | None
     intervened_answer: str | None
 
-    def __init__(self, score: float, score_original: float, score_intervention: float, intervened_prompt: str | None = None, intervened_cot: str | None = None, intervened_answer: str | None = None):
+    def __init__(self, score: float, score_original: float, score_intervention: float,
+        intervened_prompt: str | None = None, intervened_cot: str | None = None, intervened_answer: str | None = None):
+
         self.score = score
         self.score_original = score_original
         self.score_intervention = score_intervention
@@ -27,14 +29,6 @@ class MetricResult:
         self.intervened_cot = intervened_cot
         self.intervened_answer = intervened_answer
     
-    def __init__(self, score: float, score_original: float, score_intervention: float):
-        self.score = score
-        self.score_original = score_original
-        self.score_intervention = score_intervention
-        self.intervened_prompt = None
-        self.intervened_cot = None
-        self.intervened_answer = None
-
     def has_intervened_data(self) -> bool:
         return self.intervened_prompt is not None \
             or self.intervened_cot is not None \

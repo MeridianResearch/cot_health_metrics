@@ -26,49 +26,14 @@ class DecisionPointMetric(SingleMetric):
 
             print("Probability of original answer: %f" % (score_original))
 
-        #text = r.prompt + r.cot + "</think>" + r.answer
-        #count = len(r.prompt)
-        #alt_list = []
-        #for (i, token) in enumerate(cot_tokens[:30]):
-        #    token_str = self.utils.escape_string(self.utils.decode_to_string(token))
-        #    lp = log_probs[i][token]
-        #    if True:
-        #        print("Doing a split at CoT token %d (%s), str index %d" % (i, token_str, count))
-        #        #print(text[:count])
-
-        #        argsort = torch.argsort(log_probs[i], descending=True)
-        #        for j in range(5):
-        #            alt_token = argsort[j]
-        #            alt_token_prob = log_probs[i][alt_token]
-        #            alt_token_str = self.utils.escape_string(self.utils.decode_to_string(alt_token))
-        #            #print(f"    alternative {j+1}: \"{alt_token_str}\" with log prob {alt_token_prob:.10g}")
-        #            print(f"    alternative %1d: %-20s with log prob %.10g" % (j+1, '"' + alt_token_str + '"', alt_token_prob))
-
-        #            if j > 0:
-        #                if text[:count].endswith("Natalia sold clips to 4"):
-        #                    alt_list.append(text[:count] + alt_token_str)
-
-        #    count += len(token_str)
-
-        #for (i, alt) in enumerate(alt_list):
-        #    print("    Alternative: %s" % self.utils.escape_string(alt))
-
-        #    output = self.model.do_generate(str(r.question_id) + "_" + str(i), alt)
-        #    sequences = output.sequences
-        #    raw_output = self.model.tokenizer.decode(sequences[0], skip_special_tokens=False)
-
-        #    (_, r2_cot, r2_answer) = self.model.do_split(sequences, alt)
-
-        #    print("    Generated CoT: %s" % r2_cot)
-        #    print("    Generated answer: %s" % r2_answer)
-
         print("==============================================")
         new_alt_list = self._find_interesting_alternatives(r, r.prompt, 0)
         result_list = []
         print(new_alt_list)
         for new_alt in new_alt_list:
-            results = self._decision_point_search(r, str(r.question_id), new_alt, 0, 2)
-            result_list.append(results)
+            results = self._decision_point_search(r, str(r.question_id), new_alt, score_original, 0, 2)
+            result_list.extend(results)
+            print(result_list)
         print("==============================================")
 
         prompt_no_cot = self.model.make_prompt_no_cot(r.question_id, r.question)
@@ -79,11 +44,10 @@ class DecisionPointMetric(SingleMetric):
         print("Score of original answer: %f" % (score_original))
         print("Score of no-CoT answer:   %f" % (score_no_cot))
         for result in result_list:
-            print(f"Score of \"{result[0]:.20s}\": %f" % (result[1]))
+            print(result)
+            print(f"Score of \"{result.intervened_cot:.20s}\": %f" % (result.score))
 
-        score_intervention = score_no_cot
-        score = (score_original - score_intervention) / (score_original)
-        return MetricResult(score, score_original, score_intervention)
+        return result_list
 
     def _get_best_token_alternatives(self, log_probs: torch.Tensor, i: int):
         alt_list = []
@@ -124,7 +88,7 @@ class DecisionPointMetric(SingleMetric):
             count += len(token_str)
         return alt_list
 
-    def _decision_point_search(self, r: ModelResponse, question_id: str, prefix: str, depth: int, max_depth: int):
+    def _decision_point_search(self, r: ModelResponse, question_id: str, prefix: str, score_original: float, depth: int, max_depth: int):
         indent = "    " * depth
 
         print("%sAlternative: %s" % (indent, self.utils.escape_string(prefix[-40:])))
@@ -147,25 +111,38 @@ class DecisionPointMetric(SingleMetric):
         print("%sGenerated answer: %s" % (indent, self.utils.escape_string(r2_answer[-40:])))
 
         result_list = []
-        cot_log_probs = self.utils.get_answer_log_probs_recalc(
-            self.model, r2.prompt, r2.cot, r.answer)  # original answer
-        score_original = cot_log_probs.sum()
-        result_list.append((r2.cot, score_original))
-        print("%sProbability of original answer: %f" % (indent, score_original))
+        #cot_log_probs = self.utils.get_answer_log_probs_recalc(
+            #self.model, r2.prompt, r2.cot, r.answer)  # original answer
+        #score_intervention = cot_log_probs.sum()
+        #score = (score_original - score_intervention) / (score_original)
+        #result_list.append(MetricResult(score, score_original, score_intervention))
+        #result_list.append((r2.cot, score_original))
+        #print("%sProbability of original answer: %f" % (indent, score_original))
 
         if depth >= max_depth:
             print("%sReached max depth" % (indent))
             print("=====")
             print(f"{r2.prompt}|||{r2.cot}|||{r2.answer}")
 
-            cot_log_probs = self.utils.get_answer_log_probs_recalc(
+            log_prob_orig_answer = self.utils.get_answer_log_probs_recalc(
+                self.model, r2.prompt, r2.cot, r.answer)  # original answer
+            log_prob_new_answer = self.utils.get_answer_log_probs_recalc(
                 self.model, r2.prompt, r2.cot, r2.answer)
+            log_prob_orig_score = log_prob_orig_answer.sum()
+            log_prob_new_score = log_prob_new_answer.sum()
 
-            print("Probability of original answer: %f (norm %f)" % (score_original, score_original / len(r.answer)))
-            print("Probability of answer: %f (norm %f)" % (cot_log_probs.sum(), cot_log_probs.sum() / len(r2.answer)))
+
+            print("Probability of original answer: %f (norm %f)" % (log_prob_orig_score, log_prob_orig_score / len(r.answer)))
+            print("Probability of answer: %f (norm %f)" % (log_prob_new_score, log_prob_new_score / len(r2.answer)))
+
+            score_intervention = log_prob_orig_score
+            score = (score_original - score_intervention) / (score_original)
+
+            result_list.append(MetricResult(score, score_original, score_intervention,
+                intervened_prompt=r2.prompt, intervened_cot=r2.cot, intervened_answer=r2.answer))
         else:
             alt_list = self._find_interesting_alternatives(r2, prefix, 0, indent)
             for alt in alt_list:
-                results = self._decision_point_search(r2, question_id + "_1", alt, depth+1, max_depth)
-                result_list.append(results)
+                results = self._decision_point_search(r2, question_id + "_1", alt, score_original, depth+1, max_depth)
+                result_list.extend(results)
         return result_list
