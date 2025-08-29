@@ -71,7 +71,8 @@ class LogProbVisualizer:
     def __init__(self, metric_name: str, in_paths: List[Path],
                  out_dir: Path, labels: List[str] | None = None,
                  bins: int = DEFAULT_BINS,
-                 logger: logging.Logger | None = None):
+                 logger: logging.Logger | None = None,
+                 suffix: str = ""):
         self.metric_name = metric_name
         self.in_paths = in_paths
         self.out_dir = out_dir
@@ -354,7 +355,6 @@ def _parse_args():
         nargs="+",
         help="Optional legend labels: first for original, then for each "
         "induced series")
-    p.add_argument("--bins", type=int, default=DEFAULT_BINS, help="Number of histogram bins")
     p.add_argument("--filler", type=str, default="", required=False)
     return p.parse_args()
 
