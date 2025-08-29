@@ -16,6 +16,15 @@ class DecisionPointMetric(SingleMetric):
 
         print(f"cot_tokens: {cot_tokens}")
         print(f"log_probs: {log_probs}")
+        print(f"r.cot: {r.cot}")
+        print(f"r.answer: {r.answer}")
+
+        if True:
+            cot_log_probs = self.utils.get_answer_log_probs_recalc(
+                self.model, r.prompt, r.cot, r.answer)
+            score_original = cot_log_probs.sum()
+
+            print("Probability of original answer: %f" % (score_original))
 
         #text = r.prompt + r.cot + "</think>" + r.answer
         #count = len(r.prompt)
@@ -54,14 +63,25 @@ class DecisionPointMetric(SingleMetric):
         #    print("    Generated answer: %s" % r2_answer)
 
         print("==============================================")
-        new_alt_list = self._find_interesting_alternatives(r, 0)
+        new_alt_list = self._find_interesting_alternatives(r, r.prompt, 0)
+        result_list = []
         print(new_alt_list)
         for new_alt in new_alt_list:
-            self._decision_point_search(r, str(r.question_id), new_alt, 0, 2)
+            results = self._decision_point_search(r, str(r.question_id), new_alt, 0, 2)
+            result_list.append(results)
         print("==============================================")
 
-        score_original = -1
-        score_intervention = score_original
+        prompt_no_cot = self.model.make_prompt_no_cot(r.question_id, r.question)
+        empty_cot_log_probs = self.utils.get_answer_log_probs_recalc_no_cot(
+            self.model, prompt_no_cot, r.answer)
+        score_no_cot = empty_cot_log_probs.sum()
+
+        print("Score of original answer: %f" % (score_original))
+        print("Score of no-CoT answer:   %f" % (score_no_cot))
+        for result in result_list:
+            print(f"Score of \"{result[0]:.20s}\": %f" % (result[1]))
+
+        score_intervention = score_no_cot
         score = (score_original - score_intervention) / (score_original)
         return MetricResult(score, score_original, score_intervention)
 
@@ -77,9 +97,10 @@ class DecisionPointMetric(SingleMetric):
                 alt_list.append(alt_token)
         return alt_list
 
-    def _find_interesting_alternatives(self, r: ModelResponse, token_count_start: int, indent: str = ""):
+    def _find_interesting_alternatives(self, r: ModelResponse, prefix: str, token_count_start: int, indent: str = ""):
         text = r.prompt + r.cot + "</think>" + r.answer
-        count = len(r.prompt)
+        #count = len(r.prompt)
+        count = len(prefix)
         alt_list = []
 
         (cot_tokens, log_probs) = self.utils.get_cot_log_probs_array(
@@ -104,7 +125,6 @@ class DecisionPointMetric(SingleMetric):
         return alt_list
 
     def _decision_point_search(self, r: ModelResponse, question_id: str, prefix: str, depth: int, max_depth: int):
-        if depth >= max_depth: return
         indent = "    " * depth
 
         print("%sAlternative: %s" % (indent, self.utils.escape_string(prefix[-40:])))
@@ -113,7 +133,7 @@ class DecisionPointMetric(SingleMetric):
         sequences = output.sequences
         raw_output = self.model.tokenizer.decode(sequences[0], skip_special_tokens=False)
 
-        (r2_prompt, r2_cot, r2_answer) = self.model.do_split(sequences, prefix)
+        (r2_prompt, r2_cot, r2_answer) = self.model.do_split(sequences, r.prompt)
         r2 = ModelResponse(
             question_id=question_id,
             question=prefix,
@@ -122,9 +142,30 @@ class DecisionPointMetric(SingleMetric):
             answer=r2_answer,
             raw_output=raw_output)
 
+
         print("%sGenerated CoT: %s" % (indent, self.utils.escape_string(r2_cot[-40:])))
         print("%sGenerated answer: %s" % (indent, self.utils.escape_string(r2_answer[-40:])))
 
-        alt_list = self._find_interesting_alternatives(r2, 0, indent)
-        for alt in alt_list:
-            self._decision_point_search(r2, question_id + "_1", alt, depth+1, max_depth)
+        result_list = []
+        cot_log_probs = self.utils.get_answer_log_probs_recalc(
+            self.model, r2.prompt, r2.cot, r.answer)  # original answer
+        score_original = cot_log_probs.sum()
+        result_list.append((r2.cot, score_original))
+        print("%sProbability of original answer: %f" % (indent, score_original))
+
+        if depth >= max_depth:
+            print("%sReached max depth" % (indent))
+            print("=====")
+            print(f"{r2.prompt}|||{r2.cot}|||{r2.answer}")
+
+            cot_log_probs = self.utils.get_answer_log_probs_recalc(
+                self.model, r2.prompt, r2.cot, r2.answer)
+
+            print("Probability of original answer: %f (norm %f)" % (score_original, score_original / len(r.answer)))
+            print("Probability of answer: %f (norm %f)" % (cot_log_probs.sum(), cot_log_probs.sum() / len(r2.answer)))
+        else:
+            alt_list = self._find_interesting_alternatives(r2, prefix, 0, indent)
+            for alt in alt_list:
+                results = self._decision_point_search(r2, question_id + "_1", alt, depth+1, max_depth)
+                result_list.append(results)
+        return result_list

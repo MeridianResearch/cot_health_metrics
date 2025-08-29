@@ -341,7 +341,7 @@ class CoTModel(Model):
             generated_text = self.tokenizer.decode(generated_tokens, skip_special_tokens=False)
 
             # Extract question from prompt (for compatibility)
-            question = prompt.strip()
+            question = prompt #.strip()
 
             # Parse the generated text
             # The prompt builder adds <think> at the end, so generated text should be: cot_content</think>answer
