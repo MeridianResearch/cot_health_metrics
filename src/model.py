@@ -194,6 +194,24 @@ class CoTModel(Model):
         )
         return output
 
+    def do_generate_from_tokens(self, question_id, inputs, max_new_tokens=4096, do_sample=True):
+        """Generate a response using Chain-of-Thought (CoT) prompting."""
+        model_config = ModelConfig.get(self.model_name)
+
+        generate_kwargs = model_config.get("generate_kwargs", {})
+
+        output = self.model.generate(
+            **inputs,
+            max_new_tokens=max_new_tokens,
+            do_sample=do_sample,
+            eos_token_id=self.tokenizer.eos_token_id,
+            pad_token_id=self.tokenizer.eos_token_id,
+            output_scores=True,
+            return_dict_in_generate=True,
+            **generate_kwargs,
+        )
+        return output
+
     def do_generate_batch(self, question_ids, prompts, max_new_tokens=4096, do_sample=True):
         """Generate responses for multiple prompts in batch using Chain-of-Thought (CoT) prompting."""
         model_config = ModelConfig.get(self.model_name)

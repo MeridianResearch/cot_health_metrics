@@ -5,6 +5,7 @@ from metric_paraphrasability import ParaphrasabilityMetric
 from metric_prompt_paraphrasability import PromptParaphrasabilityMetric
 from metric_transferability import TransferabilityMetric
 from metric_internalized import InternalizedMetric
+from metric_decision_point import DecisionPointMetric
 
 METRICS: dict[str, type[Metric]] = {
     "Dummy": DummyMetric,
@@ -13,7 +14,8 @@ METRICS: dict[str, type[Metric]] = {
     "Paraphrasability": ParaphrasabilityMetric,
     "PromptParaphrasability": PromptParaphrasabilityMetric,
     "Transferability": TransferabilityMetric,
-    "Internalized": InternalizedMetric
+    "Internalized": InternalizedMetric,
+    "DecisionPoint": DecisionPointMetric
 }
 
 def construct_metric(metric_name, model, alternative_model, **kwargs):

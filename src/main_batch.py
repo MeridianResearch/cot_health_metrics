@@ -40,11 +40,11 @@ def batched(iterable, n):
 now = datetime.now()
 
 # Format as string
-
 def _get_datetime_str():
     datetime_str = now.strftime("%Y-%m-%d_%H:%M:%S")
     print(datetime_str)
     return datetime_str
+
 def _get_sample_question(sample: dict) -> str:
     question = sample["instruction"].strip()
     if sample.get("input"):
