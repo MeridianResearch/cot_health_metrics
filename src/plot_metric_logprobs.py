@@ -71,7 +71,8 @@ class LogProbVisualizer:
     def __init__(self, metric_name: str, in_paths: List[Path],
                  out_dir: Path, labels: List[str] | None = None,
                  bins: int = DEFAULT_BINS,
-                 logger: logging.Logger | None = None):
+                 logger: logging.Logger | None = None,
+                 suffix="") -> None:
         self.metric_name = metric_name
         self.in_paths = in_paths
         self.out_dir = out_dir
@@ -250,7 +251,7 @@ class LogProbVisualizer:
         if self.labels and len(self.labels) == n - 1:
             labels = ["orig"] + self.labels
         else:
-            labels = ["orig"] + [f"induced_{i}" for i in range(1, n)]
+            labels = ["orig"] + [f"ind" for i in range(1, n)]
 
         alpha = 0.5 if len(vals) <= 2 else 0.3
         # truncate all to the same length
@@ -267,7 +268,6 @@ class LogProbVisualizer:
         width = base_width + max(0, (n_series - 2) * extra_per)
         height = 4.8
         plt.figure(figsize=(width, height))
-        patches = []
         orig = vals[0]
         for i, series in enumerate(vals):
             label = labels[i]
@@ -286,16 +286,10 @@ class LogProbVisualizer:
                         color=f"C{i}",
                         linestyle='--',
                         linewidth=2)
-            patches.append(
-                mpatches.Patch(color=f"C{i}",
-                               label=f"{label} (n={len(series)})"))
 
         plt.title(title)
         plt.xlabel("log-probability")
         plt.ylabel("frequency")
-        plt.legend(handles=patches, loc="upper left", bbox_to_anchor=(0.25,
-                                                                      0.9))
-        plt.tight_layout()
 
         # annotate stats: use labels[0] for original, then labels[1..]
         lines = [
@@ -311,6 +305,8 @@ class LogProbVisualizer:
                 f"M-W p={pval_str}"
             ])
         textstr = "\n".join(lines)
+        
+        # Statistics box at top left
         plt.gca().text(0.03,
                        0.97,
                        textstr,
@@ -320,6 +316,15 @@ class LogProbVisualizer:
                        bbox=dict(boxstyle='round',
                                  facecolor='wheat',
                                  alpha=0.45))
+
+        # Calculate the bottom of the statistics box to position legend below it
+        # Estimate: each line is about 0.04 in axes coordinates, plus some padding
+        num_stat_lines = len(lines)
+        stat_box_bottom = 0.97 - (num_stat_lines * 0.04) - 0.02  # extra padding
+        
+        # Legend positioned right below the statistics box
+        plt.legend(loc="upper left", bbox_to_anchor=(0.03, stat_box_bottom))
+        plt.tight_layout()
 
         plt.savefig(fname)
         plt.close()
@@ -354,7 +359,6 @@ def _parse_args():
         nargs="+",
         help="Optional legend labels: first for original, then for each "
         "induced series")
-    p.add_argument("--bins", type=int, default=DEFAULT_BINS, help="Number of histogram bins")
     p.add_argument("--filler", type=str, default="", required=False)
     return p.parse_args()
 

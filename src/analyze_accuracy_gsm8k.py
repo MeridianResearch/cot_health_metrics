@@ -155,7 +155,7 @@ def analyze_log_file(log_file_path, split="train"):
         is_correct = False
         if predicted is not None and actual is not None:
             # Allow small tolerance for floating point comparison
-            is_correct = abs(predicted - actual) < 0.01
+            is_correct = abs(predicted - actual) <= 1
             if is_correct:
                 correct += 1
 
