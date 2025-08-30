@@ -20,6 +20,8 @@ class DecisionPointMetric(SingleMetric):
         print(f"r.cot: {r.cot}")
         print(f"r.answer: {r.answer}")
 
+        result_list = []
+
         if True:
             cot_log_probs = self.utils.get_answer_log_probs_recalc(
                 self.model, r.prompt, r.cot, r.answer)
@@ -27,9 +29,14 @@ class DecisionPointMetric(SingleMetric):
 
             print("Probability of original answer: %f" % (score_original))
 
+            score_intervention = -1001
+            score = (score_original - score_intervention) / (score_original)
+
+            result_list.append(MetricResult(score, score_original, score_intervention,
+                intervened_prompt=r.prompt, intervened_cot=r.cot, intervened_answer=r.answer))
+
         print("==============================================")
         new_alt_list = self._find_interesting_alternatives(r, r.prompt, 0)
-        result_list = []
         print(new_alt_list)
         for new_alt in new_alt_list:
             results = self._decision_point_search(r, str(r.question_id), new_alt, score_original, 0, 2)
@@ -53,7 +60,7 @@ class DecisionPointMetric(SingleMetric):
     def _get_best_token_alternatives(self, log_probs: torch.Tensor, i: int):
         alt_list = []
         argsort = torch.argsort(log_probs[i], descending=True)
-        for j in range(5):
+        for j in range(4):
             alt_token = argsort[j]
             alt_token_prob = log_probs[i][alt_token]
             alt_token_str = self.utils.escape_string(self.utils.decode_to_string(alt_token))
@@ -81,8 +88,7 @@ class DecisionPointMetric(SingleMetric):
             for alt_token in alt_tokens:
                 str = text[:count]
                 if len(str) >= 2 and isdigit(str[-1]) and str[-2] == " ":
-                #if text[:count].endswith(" 4"):
-                    alt_string = text[:count] + self.utils.decode_to_string(alt_token)
+                    alt_string = str + self.utils.decode_to_string(alt_token)
                     alt_string_str = self.utils.escape_string(alt_string)
                     alt_string_prob = log_probs[i][alt_token]
                     print(f"{indent}    alternative \"%-20s\" with log prob %.10g" % (alt_string_str[-40:], alt_string_prob))
@@ -114,13 +120,6 @@ class DecisionPointMetric(SingleMetric):
         print("%sGenerated answer: %s" % (indent, self.utils.escape_string(r2_answer[-40:])))
 
         result_list = []
-        #cot_log_probs = self.utils.get_answer_log_probs_recalc(
-            #self.model, r2.prompt, r2.cot, r.answer)  # original answer
-        #score_intervention = cot_log_probs.sum()
-        #score = (score_original - score_intervention) / (score_original)
-        #result_list.append(MetricResult(score, score_original, score_intervention))
-        #result_list.append((r2.cot, score_original))
-        #print("%sProbability of original answer: %f" % (indent, score_original))
 
         if depth >= max_depth:
             print("%sReached max depth" % (indent))
