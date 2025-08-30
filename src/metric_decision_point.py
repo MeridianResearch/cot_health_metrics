@@ -20,6 +20,25 @@ class DecisionPointMetric(SingleMetric):
         print(f"r.cot: {r.cot}")
         print(f"r.answer: {r.answer}")
 
+        if True:
+            for (i, token) in enumerate(cot_tokens[:50]):
+                token_str = self.utils.escape_string(self.utils.decode_to_string(token))
+                lp = log_probs[i][token]
+                print(f"Token %5d = %-20s with log prob %.10g" % (token, '"' + token_str + '"', lp))
+                for j in range(-1, 2):
+                    if i + j >= 0 and i + j < len(cot_tokens):
+                        token_str = self.utils.escape_string(self.utils.decode_to_string(cot_tokens[i + j]))
+                        print(f"    log_prob index {i+j} for this token is {log_probs[i + j][token]}")
+
+                argsort = torch.argsort(log_probs[i], descending=True)
+                for j in range(5):
+                    alt_token = argsort[j]
+                    alt_token_prob = log_probs[i][alt_token]
+                    alt_token_str = self.utils.escape_string(self.utils.decode_to_string(alt_token))
+                    print(f"    alternative {j+1}: \"{alt_token_str}\" with log prob {alt_token_prob:.10g}")
+                    #print(f"    alternative %1d: %-20s with log prob %.10g" % (j+1, '"' + alt_token_str + '"', alt_token_prob))
+
+
         result_list = []
 
         if True:

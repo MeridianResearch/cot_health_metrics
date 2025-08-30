@@ -217,7 +217,9 @@ class LogProbVisualizer:
                     fname: str) -> None:
         """Plot histogram of score function with mean and std"""
         plt.figure(figsize=(6.4, 4.8))
-        plt.hist(score, bins=self.bins, alpha=0.5, label="score function")
+        bins = np.linspace(-15, 2, self.bins + 1)
+        plt.xlim(-15, 2)
+        plt.hist(score, bins=bins, alpha=0.5, label="score function")
         plt.title(title)
         plt.xlabel("score")
         plt.ylabel("frequency")
@@ -294,8 +296,8 @@ class LogProbVisualizer:
         plt.title(title)
         plt.xlabel("log-probability")
         plt.ylabel("frequency")
-        plt.legend(handles=patches, loc="upper left", bbox_to_anchor=(0.25,
-                                                                      0.9))
+        plt.xlim(-60, 5)
+        plt.legend(handles=patches, loc="center left")
         plt.tight_layout()
 
         # annotate stats: use labels[0] for original, then labels[1..]

@@ -85,8 +85,8 @@ class SingleMetric(Metric):
         return scores
 
 class DummyMetric(Metric):
-    def __init__(self, model: Model, alternative_model: Model | None = None):
-        super().__init__("DummyMetric", model, alternative_model)
+    def __init__(self, model: Model, alternative_model: Model | None = None, args: SimpleNamespace | None = None):
+        super().__init__("DummyMetric", model, alternative_model, args)
         
     def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
         """Always returns 0 (not suspicious)"""
