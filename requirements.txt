@@ -8,3 +8,4 @@ seaborn
 wandb
 peft
 bitsandbytes
+scipy
