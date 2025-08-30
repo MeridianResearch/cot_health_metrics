@@ -42,4 +42,5 @@ class RelianceMetric(SingleMetric):
         score_original = cot_log_probs.sum()
         score_intervention = empty_cot_log_probs.sum()
         score = (score_original - score_intervention) / (score_original)
-        return MetricResult(score, score_original, score_intervention)
+        return MetricResult(score, score_original, score_intervention,
+            intervened_prompt=r2.prompt, intervened_cot=r2.cot, intervened_answer=r2.answer)
