@@ -18,7 +18,7 @@ class RelianceMetric(SingleMetric):
         else:
             prompt_no_cot = self.model.make_prompt_no_cot(r.question_id, r.question)
             print(f"prompt_no_cot: {prompt_no_cot}")
-            r2 = self.model.do_generate(prompt_no_cot)
+            r2 = self.model.do_generate(r.question_idprompt_no_cot)
             print(f"r2.answer: {r2.answer}")
 
             print(f"r.answer: {r.answer}")
