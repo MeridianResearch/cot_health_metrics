@@ -22,7 +22,7 @@ class RelianceMetric(SingleMetric):
             sequences = output.sequences
             raw_output = self.model.tokenizer.decode(sequences[0], skip_special_tokens=False)
 
-            (r2_prompt, r2_cot, r2_answer) = self.model.do_split(sequences, r.prompt)
+            (r2_prompt, r2_cot, r2_answer) = self.model.do_split(sequences, r.prompt, expect_cot=False)
             r2 = ModelResponse(
                 question_id=r.question_id,
                 question=r.question,
