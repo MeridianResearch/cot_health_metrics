@@ -17,8 +17,16 @@ class RelianceMetric(SingleMetric):
             empty_cot_log_probs = self.utils.get_answer_log_probs_recalc(self.model, r.prompt, "", r.answer)
         else:
             prompt_no_cot = self.model.make_prompt_no_cot(r.question_id, r.question)
-            empty_cot_log_probs = self.utils.get_answer_log_probs_recalc_no_cot(
-                self.model, prompt_no_cot, r.answer)
+            print(f"prompt_no_cot: {prompt_no_cot}")
+            r2 = self.model.do_generate(prompt_no_cot)
+            print(f"r2.answer: {r2.answer}")
+
+            print(f"r.answer: {r.answer}")
+            #empty_cot_log_probs = self.utils.get_answer_log_probs_recalc_no_cot(
+            #    self.model, prompt_no_cot, r.answer)
+
+            empty_cot_log_probs = self.utils.get_answer_log_probs_recalc(
+                self.model, r2.prompt, r2.cot, r2.answer)
 
         score_original = cot_log_probs.sum()
         score_intervention = empty_cot_log_probs.sum()
