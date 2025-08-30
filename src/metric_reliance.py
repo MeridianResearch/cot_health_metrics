@@ -18,7 +18,18 @@ class RelianceMetric(SingleMetric):
         else:
             prompt_no_cot = self.model.make_prompt_no_cot(r.question_id, r.question)
             print(f"prompt_no_cot: {prompt_no_cot}")
-            r2 = self.model.do_generate(r.question_id, prompt_no_cot)
+            output = self.model.do_generate(r.question_id, prompt_no_cot)
+            sequences = output.sequences
+            raw_output = self.model.tokenizer.decode(sequences[0], skip_special_tokens=False)
+
+            (r2_prompt, r2_cot, r2_answer) = self.model.do_split(sequences, r.prompt)
+            r2 = ModelResponse(
+                question_id=r.question_id,
+                question=r.question,
+                prompt=r2_prompt,
+                cot=r2_cot,
+                answer=r2_answer,
+                raw_output=raw_output)
             print(f"r2.answer: {r2.answer}")
 
             print(f"r.answer: {r.answer}")
