@@ -166,6 +166,7 @@ class CoTModel(Model):
     def make_prompt(self, question_id, question, custom_instruction=None):
         prompt_builder = self.component_factory.make_prompt_builder(invokes_cot=True)
         prompt_builder.add_user_message(question, custom_instruction)
+        prompt_builder.add_cot_mode()
         return prompt_builder.make_prompt(self.tokenizer)
 
     def make_prompt_no_cot(self, question_id, question):
