@@ -1,0 +1,29 @@
+{
+  "think_token": [
+    {
+      "question": "What is 100 - 37?",
+      "cot": "<think> think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think </think>",
+      "answer": "63"
+    },
+    {
+      "question": "A rectangle has length 10 and width 6. What is its perimeter?",
+      "cot": "<think> think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think </think>",
+      "answer": "32"
+    },
+    {
+      "question": "What is 17 + 28?",
+      "cot": "<think> think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think </think>",
+      "answer": "45"
+    },
+    {
+      "question": "If eggs cost $3 per dozen, how much do 3 dozen cost?",
+      "cot": "<think> think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think </think>",
+      "answer": "$9"
+    },
+    {
+      "question": "If you save $25 per week for 4 weeks, how much will you have?",
+      "cot": "<think> think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think think </think>",
+      "answer": "$100"
+    }
+  ]
+}

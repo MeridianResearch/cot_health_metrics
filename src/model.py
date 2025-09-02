@@ -8,6 +8,7 @@ from typing import Optional, List, Callable
 from config import ModelConfig
 from model_factory import ModelComponentFactory
 
+
 class Model:
     def __init__(self, model_name: str, cache_dir="/tmp/cache"):
         self.model_name = model_name
@@ -100,10 +101,11 @@ ModelResponse(
         print(f"Answer: {self._encode(self.answer)}")
         print("\n")
 
+
 class CoTModel(Model):
     def __init__(self, model_name: str,
-        component_factory: ModelComponentFactory = None,
-        cache_dir="/tmp/cache"):
+                 component_factory: ModelComponentFactory = None,
+                 cache_dir="/tmp/cache"):
 
         super().__init__(model_name, cache_dir)
 
@@ -154,7 +156,7 @@ class CoTModel(Model):
 
     def generate_cot_response(self, question_id, question, max_new_tokens=4096, do_sample=True):
         final_response = self.generate_cot_response_full(question_id, question,
-            max_new_tokens=max_new_tokens, do_sample=do_sample)
+                                                         max_new_tokens=max_new_tokens, do_sample=do_sample)
         return final_response.basic_pair
 
     def generate_cot_response_batch(self, question_ids, questions, max_new_tokens=4096):
@@ -165,6 +167,7 @@ class CoTModel(Model):
     def make_prompt(self, question_id, question, custom_instruction=None):
         prompt_builder = self.component_factory.make_prompt_builder(invokes_cot=True)
         prompt_builder.add_user_message(question, custom_instruction)
+        prompt_builder.add_cot_mode()
         return prompt_builder.make_prompt(self.tokenizer)
 
     def make_prompt_no_cot(self, question_id, question):
@@ -198,7 +201,7 @@ class CoTModel(Model):
         # Validate inputs
         if not prompts:
             raise ValueError("Empty prompts list provided to do_generate_batch")
-        
+
         if len(question_ids) != len(prompts):
             raise ValueError(f"Mismatch between question_ids ({len(question_ids)}) and prompts ({len(prompts)})")
 
@@ -210,7 +213,7 @@ class CoTModel(Model):
             print(f"Number of prompts: {len(prompts)}")
             print(f"First prompt: {prompts[0] if prompts else 'None'}")
             print("Falling back to individual tokenization...")
-            
+
             # Fallback: tokenize individually and combine
             input_ids = []
             attention_masks = []
@@ -218,30 +221,31 @@ class CoTModel(Model):
                 tokenized = self.tokenizer(prompt, return_tensors="pt", padding=True, truncation=True)
                 input_ids.append(tokenized["input_ids"])
                 attention_masks.append(tokenized["attention_mask"])
-            
+
             # Pad to same length
             max_length = max(ids.shape[1] for ids in input_ids)
             padded_input_ids = []
             padded_attention_masks = []
-            
+
             for ids, mask in zip(input_ids, attention_masks):
                 pad_length = max_length - ids.shape[1]
                 if pad_length > 0:
-                    padded_ids = torch.cat([ids, torch.full((1, pad_length), self.tokenizer.pad_token_id, dtype=ids.dtype)], dim=1)
+                    padded_ids = torch.cat(
+                        [ids, torch.full((1, pad_length), self.tokenizer.pad_token_id, dtype=ids.dtype)], dim=1)
                     padded_mask = torch.cat([mask, torch.zeros((1, pad_length), dtype=mask.dtype)], dim=1)
                 else:
                     padded_ids = ids
                     padded_mask = mask
                 padded_input_ids.append(padded_ids)
                 padded_attention_masks.append(padded_mask)
-            
+
             inputs = {
                 "input_ids": torch.cat(padded_input_ids, dim=0).to(self.model.device),
                 "attention_mask": torch.cat(padded_attention_masks, dim=0).to(self.model.device)
             }
 
         generate_kwargs = model_config.get("generate_kwargs", {})
-        
+
         output = self.model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
@@ -267,25 +271,25 @@ class CoTModel(Model):
             # Pad sequences to the same length
             max_length = max(seq.shape[1] for seq in sequences_list)
             padded_sequences = []
-            
+
             for seq in sequences_list:
                 if seq.shape[1] < max_length:
                     # Pad with pad_token_id
                     pad_length = max_length - seq.shape[1]
-                    padding = torch.full((seq.shape[0], pad_length), self.tokenizer.pad_token_id, 
-                                       dtype=seq.dtype, device=seq.device)
+                    padding = torch.full((seq.shape[0], pad_length), self.tokenizer.pad_token_id,
+                                         dtype=seq.dtype, device=seq.device)
                     padded_seq = torch.cat([seq, padding], dim=1)
                 else:
                     padded_seq = seq
                 padded_sequences.append(padded_seq)
-            
+
             # Stack into batch
             batch_sequences = torch.cat(padded_sequences, dim=0)
-            
+
             # Get log probabilities for the entire batch
             outputs = self.model(input_ids=batch_sequences)
             log_probs = torch.nn.functional.log_softmax(outputs.logits, dim=-1)
-            
+
             # Split back into individual sequences
             log_probs_list = []
             start_idx = 0
@@ -293,32 +297,55 @@ class CoTModel(Model):
                 end_idx = start_idx + seq.shape[0]
                 log_probs_list.append(log_probs[start_idx:end_idx])
                 start_idx = end_idx
-            
+
             return log_probs_list
 
-    def do_split(self, sequences, prompt):
+    def do_split(self, sequences, prompt, expect_cot=True):
+        """
+        Split the output into three parts: question, CoT, and answer.
+        FIXED: Only extracts model's generated CoT, not ICL examples.
+        """
         model_config = ModelConfig.get(self.model_name)
 
-        # should split the output into three parts: question, the chain of thought and the answer
-        if("begin_think" in model_config):
+        if "begin_think" in model_config:
             begin_think = model_config["begin_think"]
             end_think = model_config["end_think"]
 
+            # Get the full response
             full = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
 
+            # CRITICAL FIX: Extract only the generated portion
+            input_tokens = self.tokenizer(prompt, return_tensors="pt")
+            prompt_length = len(input_tokens.input_ids[0])
+
+            # Get only the model's generated tokens (after the prompt)
+            generated_tokens = sequences[0][prompt_length:]
+            generated_text = self.tokenizer.decode(generated_tokens, skip_special_tokens=False)
+
+            # Extract question from prompt (for compatibility)
+            question = prompt.strip()
+
+            # Parse the generated text
+            # The prompt builder adds <think> at the end, so generated text should be: cot_content</think>answer
             try:
-                (question, cot_and_answer) = full.split(begin_think, 1)
-                (cot, answer) = cot_and_answer.split(end_think, 1)
-            except ValueError:
+                # Split on the end think token
+                parts = generated_text.split(end_think, 1)
+                if len(parts) == 2:
+                    cot = parts[0].strip()  # Everything before </think>
+                    answer = parts[1].strip()  # Everything after </think>
+                else:
+                    if expect_cot:
+                        raise RuntimeError("Not enough pieces to split, probably ran out of tokens")
+                    else:
+                        cot = ""
+                        answer = generated_text.strip()
+            except Exception as e:
                 raise RuntimeError(
-                    f"Failed to extract CoT (no begin/end think token) from: {full}"
+                    f"Failed to extract CoT from generated text: {generated_text[:100]}... Error: {e}"
                 )
 
-            question = question.strip()
-            cot = cot.strip()
-            answer = answer.strip()
-
-        elif("fuzzy_end_think_list" in model_config):
+        elif "fuzzy_end_think_list" in model_config:
+            # This path was already correct - it only looks at generated tokens
             input_tokens = self.tokenizer(prompt, return_tensors="pt")
             full = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
             question = self.tokenizer.decode(
@@ -340,14 +367,13 @@ class CoTModel(Model):
                     f"{model_config['fuzzy_end_think_list']}"
                 )
 
-
         return (question, cot, answer)
 
     def generate_cot_response_full(self, question_id, question, max_new_tokens=4096, do_sample=True):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
         prompt = self.make_prompt(question_id, question)
         output = self.do_generate(question_id, prompt,
-            max_new_tokens=max_new_tokens, do_sample=do_sample)
+                                  max_new_tokens=max_new_tokens, do_sample=do_sample)
         sequences = output.sequences
 
         raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
@@ -381,10 +407,10 @@ class CoTModel(Model):
         # Validate inputs
         if not question_ids or not questions:
             raise ValueError("Empty question_ids or questions list provided")
-        
+
         if len(question_ids) != len(questions):
             raise ValueError(f"Mismatch between question_ids ({len(question_ids)}) and questions ({len(questions)})")
-        
+
         # Create prompts for all questions
         prompts = []
         for qid, question in zip(question_ids, questions):
@@ -394,7 +420,7 @@ class CoTModel(Model):
             if not prompt or prompt.strip() == "":
                 raise ValueError(f"Empty prompt generated for question_id {qid}")
             prompts.append(prompt)
-        
+
         # Generate responses in batch
         output = self.do_generate_batch(question_ids, prompts, max_new_tokens)
         sequences = output.sequences
@@ -403,10 +429,10 @@ class CoTModel(Model):
         responses = []
         for i, (question_id, question, prompt) in enumerate(zip(question_ids, questions, prompts)):
             raw_output = self.tokenizer.decode(sequences[i], skip_special_tokens=True)
-            
+
             try:
-                (question_part, cot, answer) = self.do_split(sequences[i:i+1])
-                
+                (question_part, cot, answer) = self.do_split(sequences[i:i + 1])
+
                 response = ModelResponse(
                     question_id=question_id,
                     question=question,
@@ -446,7 +472,7 @@ class CoTModel(Model):
 
     def _get_token_id(self, token):
         token_id = self.tokenizer.convert_tokens_to_ids(token)
-        if(token_id is None):
+        if (token_id is None):
             print(f"ERROR: model {self.model_name} does not support {token} token")
             exit(1)
         return token_id
@@ -469,6 +495,50 @@ class CoTModel(Model):
             end_think_tokens = end_think_tokens.tolist()
 
         return (begin_think_tokens, end_think_tokens)
+    def generate_no_cot_response_full(self, question_id, question, max_new_tokens=4096, do_sample=True):
+        """Generate a response without any Chain-of-Thought reasoning"""
+        # Use the no-CoT prompt builder
+        prompt_builder = self.component_factory.make_prompt_builder(invokes_cot=False)
+        prompt_builder.add_user_message(question)
+        prompt = prompt_builder.make_prompt(self.tokenizer)
+
+        # Generate response
+        output = self.do_generate(question_id, prompt, max_new_tokens=max_new_tokens, do_sample=do_sample)
+        sequences = output.sequences
+
+        raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
+
+        # For no-CoT, the entire generated text is the answer (no splitting needed)
+        input_tokens = self.tokenizer(prompt, return_tensors="pt")
+        prompt_length = len(input_tokens.input_ids[0])
+        generated_tokens = sequences[0][prompt_length:]
+        answer = self.tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
+
+        # For no-CoT responses, cot is empty
+        return ModelResponse(
+            question_id=question_id,
+            question=question,
+            prompt=prompt,
+            cot="",  # No CoT
+            answer=answer,
+            raw_output=raw_output
+        )
+
+    def do_split_no_cot(self, sequences, prompt):
+        """Handle splitting for no-CoT responses where there are no think tokens"""
+        # Get the generated portion only
+        input_tokens = self.tokenizer(prompt, return_tensors="pt")
+        prompt_length = len(input_tokens.input_ids[0])
+
+        # Extract question from prompt
+        question = prompt.strip()
+
+        # Everything generated is the answer (no CoT)
+        generated_tokens = sequences[0][prompt_length:]
+        answer = self.tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
+
+        return (question, "", answer)  # Empty string for CoT
+
 
 if __name__ == "__main__":
     question = "How can one decide the best time to buy a house in Boston?"
