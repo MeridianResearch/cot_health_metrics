@@ -18,10 +18,10 @@
 #python src/analyze_accuracy_gsm8k.py log/icl-lorem_ipsum_openai/gpt-oss-20b_gsm8k_lorem_ipsum_2025-08-18_21:23:23.jsonl
 
 
-#mkdir -p log/accuracy_gsm8k
-#LOGFILE="log/icl-lorem-ipsum_Qwen/Qwen3-8B_gsm8k_lorem_ipsum_2025-08-23_17:12:40.jsonl"
-#BASENAME="$(basename "$LOGFILE" .jsonl)"
-#python src/analyze_accuracy_gsm8k.py "$LOGFILE" | tee "log/accuracy_gsm8k/${BASENAME}.analysis.txt"
+mkdir -p log/accuracy_gsm8k
+LOGFILE="log/no_cot/Qwen/Qwen3-8B.log.jsonl"
+BASENAME="$(basename "$LOGFILE" .jsonl)"
+python src/analyze_accuracy_gsm8k.py "$LOGFILE" | tee "log/accuracy_gsm8k/${BASENAME}.analysis.txt"
 
 
 #python src/organism/data/prepare_syntactic_stego_dataset.py \
