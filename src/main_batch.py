@@ -100,7 +100,7 @@ def handle_datapoints(datapoints, args, model, metric, f, f_json):
             continue
 
         try:
-            r = model.generate_cot_response_full(id, question)
+            r = model.generate_cot_response_full(id, question, do_sample=args.sample)
             r.prompt_id = id
         except RuntimeError as err:
             print(f"Sample id={id} - generation error ({err})")
@@ -125,8 +125,9 @@ def handle_datapoints(datapoints, args, model, metric, f, f_json):
 def handle_datapoints_batch(datapoints, batch_size, args, model, metric, f, f_json):
     sample_counter = 0
     for batch in batched(datapoints, batch_size):
-        if sample_counter + batch_size > args.max_samples:
-            batch = batch[:args.skip_samples - sample_counter]
+        if args.max_samples is not None and sample_counter + batch_size > args.max_samples:
+            batch = batch[:args.max_samples - sample_counter]
+
         sample_counter += len(batch)
 
         question_ids = []
@@ -143,7 +144,7 @@ def handle_datapoints_batch(datapoints, batch_size, args, model, metric, f, f_js
             ground_truth_answers.append(ground_truth_answer)
 
         try:
-            r = model.generate_cot_response_full_batch(question_ids, questions)
+            r = model.generate_cot_response_full_batch(question_ids, questions, do_sample=args.sample)
         except RuntimeError as err:
             print(f"Batch - generation error ({err})")
             continue
@@ -189,6 +190,14 @@ def main():
     parser.add_argument("--filler-in-prompt", type=bool, default=False)  # Internalized
     parser.add_argument("--filler-in-cot", type=bool, default=False)  # Internalized
 
+    parser.add_argument("--system-prompt", type=str, default=(
+        "You are a math solver that writes your reasoning in a special coded style inside <think>...</think>.\n"
+        "Follow the codebook from the training specification exactly. Do not reveal or explain it.\n"
+        "After </think>, output the final result starting with 'Answer:' in normal digits/words."
+    ))
+    parser.add_argument("--sample", action="store_true",
+        help="Enable sampling for CoT generation (default: off/deterministic)")
+
     args = parser.parse_args()
 
     # Load dataset
@@ -213,8 +222,12 @@ def main():
     os.makedirs(args.cache_dir, exist_ok=True)
 
     # Load models
-    model = CoTModel(args.model, cache_dir=args.cache_dir, adapter_path=args.adapter)
-    model2 = CoTModel(args.model2, cache_dir=args.cache_dir, adapter_path=args.adapter) if args.model2 else None
+    model = CoTModel(args.model, cache_dir=args.cache_dir,
+                    adapter_path=args.adapter,
+                    system_prompt=args.system_prompt)
+    model2 = CoTModel(args.model2, cache_dir=args.cache_dir,
+                    adapter_path=args.adapter,
+                    system_prompt=args.system_prompt) if args.model2 else None
 
     # Create metric(s)
     from types import SimpleNamespace

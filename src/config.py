@@ -10,6 +10,21 @@ class ModelConfig:
     MODEL_CONFIG_THINK_TOKENS = {
         "begin_think": "<think>",
         "end_think": "</think>",
+        "max_new_tokens_think": 160,
+        "max_new_tokens_answer": 8,
+        "generate_kwargs": {
+            "temperature": 0.6,
+            "top_k": 20,
+            "min_p": 0.0,
+            "top_p": 0.95,
+            "no_repeat_ngram_size": 3,
+            "repetition_penalty": 1.0,
+        },
+    }
+    """
+    MODEL_CONFIG_THINK_TOKENS = {
+        "begin_think": "<think>",
+        "end_think": "</think>",
         "generate_kwargs": {
             "temperature": 0.6,
             "top_k": 20,
@@ -17,6 +32,8 @@ class ModelConfig:
             "top_p": 0.95,
         },
     }
+    """
+
     MODEL_CONFIG_GPT_OSS_20B = {
         "begin_think": "<|end|><|start|>assistant<|channel|>final<|message|>analysis<|message|>",
         "end_think": "<|end|><|start|>assistant<|channel|>final<|message|>",

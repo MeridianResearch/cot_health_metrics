@@ -13,6 +13,16 @@ python src/plot_metric_logprobs.py \
   --out-dir data/plots/paraphrasability \
   --bins 40
 
+python src/plot_metric_logprobs.py \
+  --metric-name paraphrasability \
+  --input-path \
+    data/logprobs/paraphrasability_length_0.1.jsonl \
+    data/logprobs/paraphrasability_length_0.5.jsonl \
+    data/logprobs/paraphrasability_length_0.98.jsonl \
+  --labels "0.1" "0.5" "0.98" \
+  --out-dir data/logprobs/paraphrasability \
+  --bins 40
+
 needs:
 - a JSON-lines file with  at least three float fields:
     {"orig_lp": -3.5021, "induced_lp": -3.4879, "delta": 0.024}
@@ -66,20 +76,19 @@ def setup_logger(name: str, log_file: str,
 
 
 class LogProbVisualizer:
-    """Loads ⟨orig_lp, induced_lp⟩ pairs + draws two histograms"""
-
     def __init__(self, metric_name: str, in_paths: List[Path],
                  out_dir: Path, labels: List[str] | None = None,
                  bins: int = DEFAULT_BINS,
-                 logger: logging.Logger | None = None):
+                 logger: logging.Logger | None = None,
+                 suffix: str = ""):
         self.metric_name = metric_name
         self.in_paths = in_paths
         self.out_dir = out_dir
         self.labels = labels
         self.out_dir.mkdir(parents=True, exist_ok=True)
-        self.bins        = bins
-        self.logger      = logger or logging.getLogger(__name__)
-        self.suffix      = suffix
+        self.bins = bins
+        self.logger = logger or logging.getLogger(__name__)
+        self.suffix = suffix
 
     # public API
     def run(self) -> None:
@@ -354,7 +363,7 @@ def _parse_args():
         nargs="+",
         help="Optional legend labels: first for original, then for each "
         "induced series")
-    p.add_argument("--bins", type=int, default=DEFAULT_BINS, help="Number of histogram bins")
+    #p.add_argument("--bins", type=int, default=DEFAULT_BINS, help="Number of histogram bins")
     p.add_argument("--filler", type=str, default="", required=False)
     return p.parse_args()
 

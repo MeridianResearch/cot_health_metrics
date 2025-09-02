@@ -1,5 +1,6 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from transformers import AutoConfig
+from transformers import StoppingCriteria, StoppingCriteriaList
 import torch
 from dataclasses import dataclass
 from token_utils import TokenUtils
@@ -9,6 +10,18 @@ from config import ModelConfig
 from model_factory import ModelComponentFactory
 from peft import PeftModel
 import os
+
+class _EndsWithCriteria(StoppingCriteria):
+    def __init__(self, tokenizer, stop_strings):
+        self.stop_ids = [tokenizer.encode(s, add_special_tokens=False) for s in stop_strings]
+
+    def __call__(self, input_ids, scores, **kwargs) -> bool:
+        ids = input_ids[0].tolist()
+        for sid in self.stop_ids:
+            n = len(sid)
+            if n and len(ids) >= n and ids[-n:] == sid:
+                return True
+        return False
 
 class Model:
     def __init__(self, model_name: str, cache_dir="/tmp/cache"):
@@ -106,9 +119,12 @@ class CoTModel(Model):
     def __init__(self, model_name: str,
         component_factory: ModelComponentFactory = None,
         cache_dir="/tmp/cache",
-        adapter_path: str | None = None):
+        adapter_path: str | None = None,
+        system_prompt: str | None = None):
 
         super().__init__(model_name, cache_dir)
+
+        self.system_prompt = system_prompt
 
         self.tokenizer, self.model = self._load_model(model_name, cache_dir, adapter_path)
 
@@ -176,7 +192,7 @@ class CoTModel(Model):
 
     def make_prompt(self, question_id, question, custom_instruction=None):
         prompt_builder = self.component_factory.make_prompt_builder(invokes_cot=True)
-        prompt_builder.add_user_message(question, custom_instruction)
+        prompt_builder.add_user_message(question, custom_instruction or self.system_prompt)
         return prompt_builder.make_prompt(self.tokenizer)
 
     def make_prompt_no_cot(self, question_id, question):
@@ -202,6 +218,30 @@ class CoTModel(Model):
             **generate_kwargs,
         )
         return output
+
+    def _generate_with_stop(self, prompt, *, max_new_tokens, do_sample, stop_strings,
+                            no_repeat_ngram_size=3, repetition_penalty=1.0):
+        model_config    = ModelConfig.get(self.model_name)
+        generate_kwargs = dict(model_config.get("generate_kwargs", {}))
+        generate_kwargs.update(
+            dict(
+                max_new_tokens=max_new_tokens,
+                do_sample=do_sample,
+                eos_token_id=self.tokenizer.eos_token_id,
+                pad_token_id=self.tokenizer.eos_token_id,
+                output_scores=True,
+                return_dict_in_generate=True,
+                no_repeat_ngram_size=no_repeat_ngram_size,
+                repetition_penalty=repetition_penalty,
+                stopping_criteria=StoppingCriteriaList([_EndsWithCriteria(self.tokenizer, stop_strings)]),
+            )
+        )
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+        with torch.no_grad():
+            out = self.model.generate(**inputs, **generate_kwargs)
+        prompt_len = inputs["input_ids"].shape[1]
+        cont_ids   = out.sequences[0, prompt_len:]
+        return self.tokenizer.decode(cont_ids, skip_special_tokens=True), out
 
     def do_generate_batch(self, question_ids, prompts, max_new_tokens=4096, do_sample=True):
         """Generate responses for multiple prompts in batch using Chain-of-Thought (CoT) prompting."""
@@ -355,24 +395,54 @@ class CoTModel(Model):
 
         return (question, cot, answer)
 
-    def generate_cot_response_full(self, question_id, question, max_new_tokens=4096, do_sample=True):
-        """Generate a response using Chain-of-Thought (CoT) prompting."""
-        prompt = self.make_prompt(question_id, question)
-        output = self.do_generate(question_id, prompt,
-            max_new_tokens=max_new_tokens, do_sample=do_sample)
-        sequences = output.sequences
+    def generate_cot_response_full(self, question_id, question, max_new_tokens=4096, do_sample=False):
+        """Two-stage generation with enforced <think>...</think> and a short Answer: line."""
+        prompt_base = self.make_prompt(question_id, question)
 
-        raw_output = self.tokenizer.decode(sequences[0], skip_special_tokens=False)
+        cfg         = ModelConfig.get(self.model_name)
+        think_open  = cfg.get("begin_think", "<think>")
+        think_close = cfg.get("end_think", "</think>")
+        max_think   = cfg.get("max_new_tokens_think", 160)
+        max_ans     = cfg.get("max_new_tokens_answer", 8)
 
-        (_, cot, answer) = self.do_split(sequences, prompt)
+        # CoT until </think>
+        prompt1 = prompt_base + f"{think_open}\n"
+        gen1_txt, _ = self._generate_with_stop(
+            prompt1,
+            max_new_tokens=max_think,
+            do_sample=do_sample,
+            stop_strings=[think_close],
+            no_repeat_ngram_size=3,
+            repetition_penalty=1.0,
+        )
+        cot = gen1_txt.rstrip()
+        if cot.endswith(think_close):
+            cot = cot[:-len(think_close)].rstrip()
 
+        # short Answer: line (stop at newline/chat end)
+        answer_prefix = "Answer:"
+        think_block   = f"{think_open}\n{cot}\n{think_close}"
+        prompt2       = prompt_base + f"{think_block}\n{answer_prefix} "
+
+        gen2_txt, _ = self._generate_with_stop(
+            prompt2,
+            max_new_tokens=max_ans,
+            do_sample=False,
+            stop_strings=["\n", "<|im_end|>", "<|im_start|>"],
+            no_repeat_ngram_size=3,
+            repetition_penalty=1.0,
+        )
+        answer = gen2_txt.strip().splitlines()[0].strip().strip(" '\"")
+
+        raw_output = f"{think_block}\n{answer_prefix} {answer}"
         return ModelResponse(
             question_id=question_id,
             question=question,
-            prompt=prompt,
+            prompt=prompt_base,
             cot=cot,
             answer=answer,
-            raw_output=raw_output)
+            raw_output=raw_output,
+        )
 
     def evaluate_cot_response(self, question_id, prompt, response, max_new_tokens=4096, to_device=None):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
@@ -388,59 +458,72 @@ class CoTModel(Model):
             answer=answer,
             raw_output=response)
 
-    def generate_cot_response_full_batch(self, question_ids, questions, max_new_tokens=4096):
-        """Generate responses for multiple questions in batch using Chain-of-Thought (CoT) prompting."""
-        # Validate inputs
+    def generate_cot_response_full_batch(self, question_ids, questions, max_new_tokens=4096, do_sample=False):
+        """Two-stage batched generation: Stage-1 (batched) for CoT, Stage-2 (per-item) for clean Answer: line."""
         if not question_ids or not questions:
             raise ValueError("Empty question_ids or questions list provided")
-        
         if len(question_ids) != len(questions):
             raise ValueError(f"Mismatch between question_ids ({len(question_ids)}) and questions ({len(questions)})")
-        
-        # Create prompts for all questions
-        prompts = []
-        for qid, question in zip(question_ids, questions):
-            if not question or question.strip() == "":
-                raise ValueError(f"Empty question for question_id {qid}")
-            prompt = self.make_prompt(qid, question)
-            if not prompt or prompt.strip() == "":
-                raise ValueError(f"Empty prompt generated for question_id {qid}")
-            prompts.append(prompt)
-        
-        # Generate responses in batch
-        output = self.do_generate_batch(question_ids, prompts, max_new_tokens)
-        sequences = output.sequences
 
-        # Process each response
+        prompts = [self.make_prompt(qid, q) for qid, q in zip(question_ids, questions)]
+
+        cfg         = ModelConfig.get(self.model_name)
+        think_open  = cfg.get("begin_think", "<think>")
+        think_close = cfg.get("end_think", "</think>")
+        max_think   = cfg.get("max_new_tokens_think", 160)
+        max_ans     = cfg.get("max_new_tokens_answer", 8)
+
+        # batched CoT
+        prompts1 = [p + f"{think_open}\n" for p in prompts]
+        inputs1  = self.tokenizer(prompts1, return_tensors="pt", padding=True).to(self.model.device)
+
+        generate_kwargs = dict(cfg.get("generate_kwargs", {}))
+        generate_kwargs.update(
+            dict(
+                max_new_tokens=max_think,
+                do_sample=do_sample,
+                eos_token_id=self.tokenizer.eos_token_id,
+                pad_token_id=self.tokenizer.eos_token_id,
+                output_scores=True,
+                return_dict_in_generate=True,
+                no_repeat_ngram_size=3,
+                repetition_penalty=1.0,
+                stopping_criteria=StoppingCriteriaList([_EndsWithCriteria(self.tokenizer, [think_close])]),
+            )
+        )
+
+        with torch.no_grad():
+            out1 = self.model.generate(**inputs1, **generate_kwargs)
+
+        # decode CoTs row-wise (continuations only)
+        cots = []
+        for i in range(out1.sequences.shape[0]):
+            prompt_len = int(inputs1["attention_mask"][i].sum())
+            cont_ids   = out1.sequences[i, prompt_len:]
+            t          = self.tokenizer.decode(cont_ids, skip_special_tokens=True).rstrip()
+            if t.endswith(think_close):
+                t = t[:-len(think_close)].rstrip()
+            cots.append(t)
+
+        # per-item Answer:
+        answer_prefix = "Answer:"
         responses = []
-        for i, (question_id, question, prompt) in enumerate(zip(question_ids, questions, prompts)):
-            raw_output = self.tokenizer.decode(sequences[i], skip_special_tokens=True)
-            
-            try:
-                (question_part, cot, answer) = self.do_split(sequences[i:i+1], prompt)
-                
-                response = ModelResponse(
-                    question_id=question_id,
-                    question=question,
-                    prompt=prompt,
-                    cot=cot,
-                    answer=answer,
-                    raw_output=raw_output
-                )
-                responses.append(response)
-            except RuntimeError as e:
-                # Handle cases where splitting fails
-                print(f"Warning: Failed to split response for question {question_id}: {e}")
-                response = ModelResponse(
-                    question_id=question_id,
-                    question=question,
-                    prompt=prompt,
-                    cot="",
-                    answer=raw_output,
-                    raw_output=raw_output
-                )
-                responses.append(response)
+        for (qid, q, p, cot) in zip(question_ids, questions, prompts, cots):
+            think_block = f"{think_open}\n{cot}\n{think_close}"
+            p2          = p + f"{think_block}\n{answer_prefix} "
 
+            a_txt, _ = self._generate_with_stop(
+                p2,
+                max_new_tokens=max_ans,
+                do_sample=False,
+                stop_strings=["\n", "<|im_end|>", "<|im_start|>"],
+                no_repeat_ngram_size=3,
+                repetition_penalty=1.0,
+            )
+            ans = a_txt.strip().splitlines()[0].strip().strip(" '\"")
+            raw = f"{think_block}\n{answer_prefix} {ans}"
+
+            responses.append(ModelResponse(qid, q, p, cot, ans, raw))
         return responses
 
     def _split_on_tokens(self, lst, token_list):
