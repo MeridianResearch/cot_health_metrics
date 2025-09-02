@@ -172,6 +172,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
     parser.add_argument("--model2", default=None)
+    parser.add_argument("--adapter", default=None, help="Optional PEFT/LoRA adapter path")
     parser.add_argument("--metric", required=True)
     parser.add_argument("--data-path", default=None)
     parser.add_argument("--data-hf", default=None)
@@ -212,8 +213,8 @@ def main():
     os.makedirs(args.cache_dir, exist_ok=True)
 
     # Load models
-    model = CoTModel(args.model, cache_dir=args.cache_dir)
-    model2 = CoTModel(args.model2, cache_dir=args.cache_dir) if args.model2 else None
+    model = CoTModel(args.model, cache_dir=args.cache_dir, adapter_path=args.adapter)
+    model2 = CoTModel(args.model2, cache_dir=args.cache_dir, adapter_path=args.adapter) if args.model2 else None
 
     # Create metric(s)
     from types import SimpleNamespace

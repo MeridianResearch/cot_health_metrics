@@ -7,6 +7,8 @@ from model_prompts import ModelPromptBuilder
 from typing import Optional, List, Callable
 from config import ModelConfig
 from model_factory import ModelComponentFactory
+from peft import PeftModel
+import os
 
 class Model:
     def __init__(self, model_name: str, cache_dir="/tmp/cache"):
@@ -103,51 +105,61 @@ ModelResponse(
 class CoTModel(Model):
     def __init__(self, model_name: str,
         component_factory: ModelComponentFactory = None,
-        cache_dir="/tmp/cache"):
+        cache_dir="/tmp/cache",
+        adapter_path: str | None = None):
 
         super().__init__(model_name, cache_dir)
 
-        if component_factory is None:
-            self.component_factory = ModelComponentFactory(model_name)
-        else:
-            self.component_factory = component_factory
+        self.tokenizer, self.model = self._load_model(model_name, cache_dir, adapter_path)
+
+        self.component_factory = component_factory or ModelComponentFactory(model_name)
 
         if not ModelConfig.is_supported(model_name):
             print(f"ERROR: model {model_name} is not in supported list {ModelConfig.SUPPORTED_MODELS}")
             exit(1)
 
-        try:
-            (self.tokenizer, self.model) = self._load_model(model_name, cache_dir)
-            self.utils = TokenUtils(self.model, self.tokenizer)
-        except Exception as e:
-            print(f"Error loading model {model_name}: {e}")
-            raise
+        self.utils = TokenUtils(self.model, self.tokenizer)
 
-    def _load_model(self, model_name, cache_dir):
+    def _load_model(self, model_name, cache_dir, adapter_path=None):
         config = AutoConfig.from_pretrained(
+            model_name, cache_dir=cache_dir, trust_remote_code=True
+        )
+
+        # tokenizer from adapter if existing (to get added_tokens + chat template)
+        tok_src = adapter_path if (adapter_path and os.path.exists(os.path.join(adapter_path, "tokenizer.json"))) else model_name
+        tokenizer = AutoTokenizer.from_pretrained(tok_src, cache_dir=cache_dir)
+
+        # base
+        base = AutoModelForCausalLM.from_pretrained(
             model_name,
+            config=config,
+            dtype=torch.float16 if "Qwen" in model_name else None,  # avoids the deprecation warning
+            device_map="auto",
             cache_dir=cache_dir,
             trust_remote_code=True,
         )
 
-        tokenizer = AutoTokenizer.from_pretrained(
-            model_name,
-            cache_dir=cache_dir,
-        )
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            config=config,
-            torch_dtype=torch.float16,
-            device_map="auto",
-            cache_dir=cache_dir,
-        ) if "Qwen" in model_name else AutoModelForCausalLM.from_pretrained(
-            model_name,
-            config=config,
-            # torch_dtype=torch.float16,
-            device_map="auto",
-            cache_dir=cache_dir,
-        )
-        return (tokenizer, model)
+        # so embeddings match tokenizer size (for added tokens)
+        base.resize_token_embeddings(len(tokenizer))
+
+        # apply LoRA
+        if adapter_path:
+            base = PeftModel.from_pretrained(base, adapter_path)
+
+        # pad token QoL
+        if tokenizer.pad_token_id is None and tokenizer.eos_token_id is not None:
+            tokenizer.pad_token = tokenizer.eos_token
+
+        # load chat template if existing with adapter
+        chat_tmpl_file = os.path.join(tok_src, "chat_template.jinja")
+        if os.path.exists(chat_tmpl_file):
+            try:
+                with open(chat_tmpl_file, "r", encoding="utf-8") as f:
+                    tokenizer.chat_template = f.read()
+            except Exception:
+                pass
+
+        return (tokenizer, base)
 
     def get_utils(self):
         return self.utils
@@ -405,7 +417,7 @@ class CoTModel(Model):
             raw_output = self.tokenizer.decode(sequences[i], skip_special_tokens=True)
             
             try:
-                (question_part, cot, answer) = self.do_split(sequences[i:i+1])
+                (question_part, cot, answer) = self.do_split(sequences[i:i+1], prompt)
                 
                 response = ModelResponse(
                     question_id=question_id,

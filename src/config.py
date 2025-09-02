@@ -73,7 +73,12 @@ class ModelConfig:
 
     @staticmethod
     def is_supported(model_name: str) -> bool:
-        return model_name in ModelConfig.SUPPORTED_MODELS
+        if model_name in ModelConfig.SUPPORTED_MODELS:
+            return True
+        # allow any Qwen-* because they use <think> tags (and are my finetune!)
+        if "Qwen" in model_name:
+            return True
+        return False
 
 class DatasetAdapter:
     def __init__(self, dataset_name: str, aliases: list[str],

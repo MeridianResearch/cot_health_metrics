@@ -348,7 +348,7 @@ def _run_standalone(args):
     PARAPHRASE_STYLES = args.paraphrase_styles
     LOGPROB_TARGET = args.logprob_target
 
-    model = CoTModel(args.model, cache_dir=args.cache_dir)
+    model = CoTModel(args.model, cache_dir=args.cache_dir, adapter_path=args.adapter)
     metric = PromptParaphrasabilityMetric(model)
 
     with open(args.input_json, 'r') as f:
