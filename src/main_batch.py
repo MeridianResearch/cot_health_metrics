@@ -226,7 +226,7 @@ def main():
     os.makedirs(args.cache_dir, exist_ok=True)
 
     # Load models
-    model = None #CoTModel(args.model, cache_dir=args.cache_dir)
+    model = CoTModel(args.model, cache_dir=args.cache_dir) if args.model is not '' else None
     model2 = CoTModel(args.model2, cache_dir=args.cache_dir) if args.model2 else None
 
     # Create metric(s)
