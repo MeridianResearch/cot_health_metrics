@@ -20,7 +20,7 @@ class DecisionPointMetric(SingleMetric):
         print(f"r.cot: {r.cot}")
         print(f"r.answer: {r.answer}")
 
-        if True:
+        if False:  # print alternatives
             for (i, token) in enumerate(cot_tokens[:50]):
                 token_str = self.utils.escape_string(self.utils.decode_to_string(token))
                 lp = log_probs[i][token]

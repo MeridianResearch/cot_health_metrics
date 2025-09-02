@@ -47,8 +47,8 @@ class TokenUtils:
         text0_tokens = self.encode_to_tensor(prompt_no_cot)
         text_tokens = self.encode_to_tensor(text)
 
-        print(f"prompt_no_cot: {prompt_no_cot}")
-        print(f"text: {text}")
+        #print(f"prompt_no_cot: {prompt_no_cot}")
+        #print(f"text: {text}")
 
         log_probs = model.get_log_probs(text_tokens)
 

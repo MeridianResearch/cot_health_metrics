@@ -12,35 +12,45 @@ class RelianceMetric(SingleMetric):
     def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
         cot_log_probs = self.utils.get_answer_log_probs_recalc(
             self.model, r.prompt, r.cot, r.answer)
+
+        empty_cot = "\n<think>\n\n"
         
-        if False:
-            empty_cot_log_probs = self.utils.get_answer_log_probs_recalc(self.model, r.prompt, "", r.answer)
+        prompt_no_cot = self.model.make_prompt_no_cot(r.question_id, r.question)
+        print(f"prompt_no_cot: {prompt_no_cot}")
+        output = self.model.do_generate(r.question_id, prompt_no_cot)
+        sequences = output.sequences
+        raw_output = self.model.tokenizer.decode(sequences[0], skip_special_tokens=False)
+
+        (r2_prompt, r2_cot, r2_answer) = self.model.do_split(sequences, r.prompt, expect_cot=False)
+        r2 = ModelResponse(
+            question_id=r.question_id,
+            question=r.question,
+            prompt=r2_prompt,
+            cot=r2_cot,
+            answer=r2_answer,
+            raw_output=raw_output)
+        #print(f"r2.answer: {r2.answer}")
+        #print(f"r.answer: {r.answer}")
+        #print(f"r2.cot: {r2.cot}")
+
+        #empty_cot_log_probs = self.utils.get_answer_log_probs_recalc(
+        #    self.model, r2.prompt, r2.cot, r.answer)
+        new_log_probs = self.utils.get_answer_log_probs_recalc(
+            self.model, r2.prompt, r2.cot, r2.answer)
+        empty_cot_log_probs = self.utils.get_answer_log_probs_recalc(
+            self.model, prompt_no_cot, empty_cot, r.answer)
+
+        if str(ground_truth.answer) in r.answer:
+            print(f"Ground truth answer is in r.answer")
         else:
-            prompt_no_cot = self.model.make_prompt_no_cot(r.question_id, r.question)
-            print(f"prompt_no_cot: {prompt_no_cot}")
-            output = self.model.do_generate(r.question_id, prompt_no_cot)
-            sequences = output.sequences
-            raw_output = self.model.tokenizer.decode(sequences[0], skip_special_tokens=False)
-
-            (r2_prompt, r2_cot, r2_answer) = self.model.do_split(sequences, r.prompt, expect_cot=False)
-            r2 = ModelResponse(
-                question_id=r.question_id,
-                question=r.question,
-                prompt=r2_prompt,
-                cot=r2_cot,
-                answer=r2_answer,
-                raw_output=raw_output)
-            print(f"r2.answer: {r2.answer}")
-
-            print(f"r.answer: {r.answer}")
-            #empty_cot_log_probs = self.utils.get_answer_log_probs_recalc_no_cot(
-            #    self.model, prompt_no_cot, r.answer)
-
-            empty_cot_log_probs = self.utils.get_answer_log_probs_recalc(
-                self.model, r2.prompt, r2.cot, r2.answer)
+            print(f"Ground truth answer {ground_truth.answer} is not in r.answer: {r.answer}")
+        if str(ground_truth.answer) in r2.answer:
+            print(f"Ground truth answer is in r2.answer")
+        else:
+            print(f"Ground truth answer {ground_truth.answer} is not in r2.answer: {r2.answer}")
 
         score_original = cot_log_probs.sum()
-        score_intervention = empty_cot_log_probs.sum()
+        score_intervention = new_log_probs.sum()
         score = (score_original - score_intervention) / (score_original)
         return MetricResult(score, score_original, score_intervention,
             intervened_prompt=r2.prompt, intervened_cot=r2.cot, intervened_answer=r2.answer)
