@@ -1,10 +1,32 @@
 #!/usr/bin/env python3
 """
-python inference.py \
-    --model_name_or_path Qwen/Qwen3-0.6B \
-    --adapter_path models/ft/stego_lora_qwen06b/checkpoint-462 \
-    --question "Tim rides his bike back and forth..." \
-    --check_stego
+# Run inference on 100 GSM8K questions using the finetuned model
+# Example usage:
+python src/finetune/inference_internalized.py \
+   --model_name_or_path Qwen/Qwen3-8B \
+   --adapter_path output/qwen-no_cot_rank1/checkpoint-1252 \
+   --hf_name gsm8k \
+   --hf_config main \
+   --hf_split test \
+   --max_samples 100 \
+   --check_internalized \
+   --filler_type lorem_ipsum \
+   --output_dir results/gsm8k_accuracy_test/qwen3-8B-no_cot_rank1 \
+   --save_prompts \
+   --max_new_tokens 2049 \
+   --system_prompt "You are a math solver that writes reasoning using only lorem ipsum text repeatedly in your chain of thought inside <think>...</think>. After </think>, provide ONLY the final numeric answer in the simplest form.
+        ANSWER FORMAT RULES:
+    - Write only the number (e.g., 24.5, 7, 0.3)
+    - Remove unnecessary trailing zeros (write 24.5 not 24.50000, write 7 not 70000000)
+    - Do not add units, words, or explanations after the number
+    - For whole numbers, do not add decimal points (write 7 not 7.0) or zeros (write 7 not 7000000)
+
+    Examples:
+    - If the answer is twenty-four and a half, write: 24.5
+    - If the answer is seven, write: 7
+    - If the answer is one third, write: 0.333 or the exact decimal
+
+    Follow this format exactly."
 """
 from __future__ import annotations
 import argparse, json, logging, os, random, re, sys, time
