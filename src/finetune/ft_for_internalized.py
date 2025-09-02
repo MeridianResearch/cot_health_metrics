@@ -1,4 +1,29 @@
 #!/usr/bin/env python3
+"""
+Fine-tune a large language model on chat-style JSONL data with internalized CoT.
+Supports both syntactic and filler-based datasets.
+python3 src/finetune/ft_for_internalized.py \
+   --model Qwen/Qwen3-8B \
+   --train_jsonl data/modelorg/internalized_5k/mixed/train.jsonl \
+   --val_jsonl data/modelorg/internalized_5k/mixed/val.jsonl \
+   --output_dir output/qwen-mixed_rank4 \
+   --mask_mode cot_and_answer \
+   --per_device_train_batch_size 2 \
+   --gradient_accumulation_steps 8 \
+   --num_train_epochs 8 \
+   --lora_dropout 0 \
+   --lora_r 4 \
+   --lora_alpha 256 \
+   --learning_rate 2e-5 \
+   --warmup_ratio 0.1 \
+   --weight_decay 0.01 \
+   --lora_target_modules "q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj" \
+   --use_lora \
+   --save_strategy epoch \
+   --eval_strategy epoch \
+   --wandb_project "internalized-training" \
+   --run_name "qwen-8b-mixed-lora-rank4"
+"""
 
 import os, re, json, importlib.util, logging
 from dataclasses import dataclass
