@@ -1,0 +1,29 @@
+{
+  "mixed": [
+    {
+      "question": "What is 17 + 28?",
+      "cot": "<think> , consider , , consider . analyze think consider analyze , consider , . . analyze analyze analyze think think , think . analyze analyze consider consider analyze . consider , . . think think , . . consider analyze analyze analyze analyze analyze analyze consider . think analyze analyze </think>",
+      "answer": "45"
+    },
+    {
+      "question": "What is the value of 5³ (5 cubed)?",
+      "cot": "<think> , consider . , , think , , analyze think , . analyze consider think , analyze . . consider analyze consider consider analyze analyze , consider , . analyze . analyze . consider think analyze analyze think . analyze . . analyze think . think think analyze consider . </think>",
+      "answer": "125"
+    },
+    {
+      "question": "What is 12 × 12?",
+      "cot": "<think> consider analyze analyze consider think think think . analyze consider think analyze , . consider , consider . analyze analyze think consider . , think , consider analyze think analyze consider . analyze , consider think analyze analyze think consider consider . consider think consider , analyze . consider . </think>",
+      "answer": "144"
+    },
+    {
+      "question": "What is 64 ÷ 8?",
+      "cot": "<think> , consider think , think consider , consider analyze . , think think , think think analyze think analyze , think analyze , , consider consider , think analyze consider consider analyze think . . consider think think consider consider , . . . think analyze analyze , , . </think>",
+      "answer": "8"
+    },
+    {
+      "question": "What is 8 × 7?",
+      "cot": "<think> analyze analyze think . think analyze consider analyze analyze analyze think analyze think consider analyze think . analyze analyze consider analyze think . think . . analyze . think consider . consider , think . analyze , consider , think analyze , consider analyze . think . . think . </think>",
+      "answer": "56"
+    }
+  ]
+}
