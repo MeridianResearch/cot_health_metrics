@@ -157,8 +157,8 @@ class TestCoTModelMakePrompt:
             question_id=0,
             question='A car travels 60 miles in 1.5 hours. What is its average speed?',
             prompt="<｜begin▁of▁sentence｜><｜User｜>Question: A car travels 60 miles in 1.5 hours. What is its average speed?\nLet's think step by step.<｜Assistant｜><think>",
-            cot="First, I need to determine the average speed of the car. Average speed is calculated by dividing the total distance traveled by the total time taken.\n\nThe car traveled 60 miles in 1.5 hours. To find the average speed, I'll divide 60 miles by 1.5 hours.\n\n60 divided by 1.5 equals 40.\n\nTherefore, the car's average speed is 40 miles per hour.",
-            answer="**Solution:**\n\nTo determine the average speed of the car, we use the formula:\n\n\\[\n\\text{Average Speed} = \\frac{\\text{Total Distance}}{\\text{Total Time}}\n\\]\n\nGiven:\n- **Total Distance** = 60 miles\n- **Total Time** = 1.5 hours\n\nPlugging in the values:\n\n\\[\n\\text{Average Speed} = \\frac{60 \\text{ miles}}{1.5 \\text{ hours}} = 40 \\text{ miles per hour}\n\\]\n\n**Answer:**  \nThe car's average speed is \\(\\boxed{40}\\) miles per hour.",
+            cot="First, I need to determine the average speed of the car. Average speed is calculated by dividing the total distance traveled by the total time taken.\n\nThe car traveled 60 miles in 1.5 hours. To find the average speed, I'll divide 60 miles by 1.5 hours.\n\n60 divided by 1.5 equals 40.\n\nTherefore, the car's average speed is 40 miles per hour.\n",
+            answer="\n\n**Solution:**\n\nTo determine the average speed of the car, we use the formula:\n\n\\[\n\\text{Average Speed} = \\frac{\\text{Total Distance}}{\\text{Total Time}}\n\\]\n\nGiven:\n- **Total Distance** = 60 miles\n- **Total Time** = 1.5 hours\n\nPlugging in the values:\n\n\\[\n\\text{Average Speed} = \\frac{60 \\text{ miles}}{1.5 \\text{ hours}} = 40 \\text{ miles per hour}\n\\]\n\n**Answer:**  \nThe car's average speed is \\(\\boxed{40}\\) miles per hour.",
             raw_output="<｜User｜>Question: A car travels 60 miles in 1.5 hours. What is its average speed?\nLet's think step by step.<｜Assistant｜><think>\nFirst, I need to determine the average speed of the car. Average speed is calculated by dividing the total distance traveled by the total time taken.\n\nThe car traveled 60 miles in 1.5 hours. To find the average speed, I'll divide 60 miles by 1.5 hours.\n\n60 divided by 1.5 equals 40.\n\nTherefore, the car's average speed is 40 miles per hour.\n</think>\n\n**Solution:**\n\nTo determine the average speed of the car, we use the formula:\n\n\\[\n\\text{Average Speed} = \\frac{\\text{Total Distance}}{\\text{Total Time}}\n\\]\n\nGiven:\n- **Total Distance** = 60 miles\n- **Total Time** = 1.5 hours\n\nPlugging in the values:\n\n\\[\n\\text{Average Speed} = \\frac{60 \\text{ miles}}{1.5 \\text{ hours}} = 40 \\text{ miles per hour}\n\\]\n\n**Answer:**  \nThe car's average speed is \\(\\boxed{40}\\) miles per hour."
         )
 
@@ -257,7 +257,7 @@ class TestCoTModelSplit:
 
         assert model_response.question == "Question: What is 2+2?\nLet's think step by step.\n<think>"
         assert model_response.cot == "Let me think about this step by step. 2+2 equals 4."
-        assert model_response.answer == "Answer: 4"
+        assert model_response.answer == "\nAnswer: 4"
         assert model_response.raw_output == response
 
     @patch('model.AutoConfig.from_pretrained')
@@ -374,6 +374,6 @@ Answer: 4.<|im_end|>"""
         (prompt, cot, answer) = model.do_split(encoded_output, reference_output.split("\nOkay")[0])
 
         assert prompt == "<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant\n<think>"
-        assert cot == "Okay, so the question is 2 plus 2. Let me think about how to approach this. First, I remember that when you add two numbers, you just add their values together. So 2 plus 2 would be 2 plus 2. Let me break it down. The first number is 2, and the second number is also 2. Adding them together should give me 4. But wait, maybe I should check if there's any trick here. Sometimes problems have hidden parts, like if they're asking for something else, but in this case, it's straightforward addition. Let me make sure I'm not missing anything. The question is simple, so no need for complex operations. So the answer should be 4. I think that's it."
-        assert answer == "2 + 2 equals 4. \n\n**Step-by-Step Explanation:**  \n1. Start with the first number: 2.  \n2. Add the second number: 2 + 2 = 4.  \n3. The result is 4.  \n\nAnswer: 4.<|im_end|>"
-        assert prompt + "\n" + cot + "\n</think>\n\n" + answer == reference_output
+        assert cot == "\nOkay, so the question is 2 plus 2. Let me think about how to approach this. First, I remember that when you add two numbers, you just add their values together. So 2 plus 2 would be 2 plus 2. Let me break it down. The first number is 2, and the second number is also 2. Adding them together should give me 4. But wait, maybe I should check if there's any trick here. Sometimes problems have hidden parts, like if they're asking for something else, but in this case, it's straightforward addition. Let me make sure I'm not missing anything. The question is simple, so no need for complex operations. So the answer should be 4. I think that's it.\n"
+        assert answer == "\n\n2 + 2 equals 4. \n\n**Step-by-Step Explanation:**  \n1. Start with the first number: 2.  \n2. Add the second number: 2 + 2 = 4.  \n3. The result is 4.  \n\nAnswer: 4.<|im_end|>"
+        assert prompt + cot + "</think>" + answer == reference_output

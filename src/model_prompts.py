@@ -61,8 +61,8 @@ class ModelPromptBuilder:
         if custom_instruction is None:
             # Only add "Let's think step by step" if CoT is enabled
             if self.invokes_cot and not self.invokes_filler:
-                #instructions.append("Let's think step by step.")
-                instructions.append("Please be as brief and concise as possible in your chain of thought reasoning.")
+                instructions.append("Let's think step by step.")
+                #instructions.append("Please be as brief and concise as possible in your chain of thought reasoning.")
         elif custom_instruction.strip():  # Only add if not empty
             instructions.append(custom_instruction)
 
