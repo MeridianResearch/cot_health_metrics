@@ -1,7 +1,24 @@
 #!/usr/bin/env python3
 """
 Analyze accuracy from JSON log files
-Usage: python analyze_accuracy.py <json_log_file>
+Usage example:
+# Define input and output files
+INPUT_DIR="results/gsm8k_accuracy_test/qwen-no_cot_rank1"
+INPUT_FILE="$INPUT_DIR/preds.jsonl"
+OUTPUT_FILE="results/$(basename $INPUT_DIR)_analysis_$(date +%Y%m%d_%H%M%S).txt"
+
+echo "Analyzing: $INPUT_FILE"
+echo "Saving results to: $OUTPUT_FILE"
+echo "=========================================="
+
+# Run analysis and save
+python src/analyze_accuracy_gsm8k.py \
+   --split test \
+   "$INPUT_FILE" \
+   | tee "$OUTPUT_FILE"
+
+echo ""
+echo "Analysis complete! Results saved to: $OUTPUT_FILE"
 """
 
 import json
