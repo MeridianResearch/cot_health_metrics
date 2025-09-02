@@ -9,7 +9,7 @@ python src/plot_metric_logprobs.py \
     data/logprobs/paraphrasability_positivity_strength_0.5.jsonl \
     data/logprobs/paraphrasability_positivity_strength_0.98.jsonl \
     data/logprobs/paraphrasability_positivity_strength_1.0.jsonl \
-  --labels "0.5" "0.98" "1.0" \
+  --labels "lorem ipsum CoT" "no CoT" \
   --out-dir data/plots/paraphrasability \
   --bins 40
 
@@ -110,27 +110,43 @@ class LogProbVisualizer:
             / f"{self.metric_name}_induced_logprobs_hist{self.suffix}.png"
         )
 
-        # now collect all the induced-LP series
+        # now collect all the induced-LP series from additional files
         induced_series = []
         for path in self.in_paths[1:]:
             self.logger.info("Reading log-probabilities from %s", path)
             _, _, induced_vals, _ = self._load_logprobs(path)
             induced_series.append(induced_vals)
 
-        # if the user only gave one file, compare orig vs that file’s induced
-        if not induced_series:
-            induced_series = [first_induced]
+        # Create the three-histogram comparison plot
+        # Series: [orig_lp, first_induced_lp, second_induced_lp, ...]
+        all_series = [orig, first_induced] + induced_series
 
-        # plot original vs every induced set, each in its own color
+        # Set up custom labels
+        if self.labels and len(self.labels) >= len(induced_series) + 1:
+            # User provided enough labels for all induced series
+            custom_labels = ["healthy CoT"] + self.labels[:len(induced_series) + 1]
+        else:
+            # Default labels
+            custom_labels = ["healthy CoT", "induced CoT", "no CoT"][:len(all_series)]
+
+        self._plot_combined(
+            all_series,
+            title=f"{self.metric_name.title()} - CoT Comparison",
+            fname=self.out_dir /
+            f"{self.metric_name}_combined_cot_comparison_hist{self.suffix}.png",
+            custom_labels=custom_labels
+        )
+
+        # Keep the original combined plot logic as well
         if len(self.in_paths) == 1:
-            combined = [orig] + induced_series
+            combined = [orig] + [first_induced]
         else:
             combined = [orig, first_induced] + induced_series
         self._plot_combined(
             combined,
             title=f"{self.metric_name.title()} - Orig vs Induced logP",
             fname=self.out_dir /
-            f"{self.metric_name}_combined_logprobs_hist{self.suffix}.png"
+            f"{self.metric_name}_combined_orig_vs_induced_hist{self.suffix}.png"
         )
 
         # extra plotting (as before)
@@ -139,9 +155,10 @@ class LogProbVisualizer:
                 [orig, first_induced, first_extra],
                 title=f"{self.metric_name.title()} - Extra logP",
                 fname=self.out_dir /
-                f"{self.metric_name}_extra_logprobs_hist{self.suffix}.png"
+                f"{self.metric_name}_combined_extra_logprobs_hist{self.suffix}.png"
             )
         self.logger.info("Finished - plots written to %s", self.out_dir)
+
     # helpers
     def _load_logprobs(
         self, path: Path
@@ -203,7 +220,7 @@ class LogProbVisualizer:
                    fname: Path) -> None:
         plt.figure(figsize=(6.4, 4.8))
         plt.hist(values, bins=self.bins)
-        plt.title(title)
+
         plt.xlabel("log-probability")
         plt.ylabel("frequency")
         plt.tight_layout()
@@ -244,14 +261,23 @@ class LogProbVisualizer:
     def _plot_combined(self,
                        vals: List[List[float]],
                        title: str,
-                       fname: Path) -> None:
+                       fname: Path,
+                       custom_labels: List[str] | None = None) -> None:
 
         # set legend labels
         n = len(vals)
-        if self.labels and len(self.labels) == n - 1:
-            labels = ["orig"] + self.labels
+        if custom_labels and len(custom_labels) == n:
+            labels = custom_labels
+        elif self.labels and len(self.labels) == n - 1:
+            # User provided labels for induced series, prepend "healthy CoT" for orig
+            labels = ["healthy CoT"] + self.labels
         else:
-            labels = ["orig"] + [f"ind" for i in range(1, n)]
+            # Default labels
+            default_labels = ["healthy CoT", "induced CoT", "no CoT"]
+            if n <= len(default_labels):
+                labels = default_labels[:n]
+            else:
+                labels = default_labels + [f"ind_{i}" for i in range(len(default_labels), n)]
 
         alpha = 0.5 if len(vals) <= 2 else 0.3
         # truncate all to the same length
@@ -305,7 +331,7 @@ class LogProbVisualizer:
                 f"M-W p={pval_str}"
             ])
         textstr = "\n".join(lines)
-        
+
         # Statistics box at top left
         plt.gca().text(0.03,
                        0.97,
@@ -321,7 +347,7 @@ class LogProbVisualizer:
         # Estimate: each line is about 0.04 in axes coordinates, plus some padding
         num_stat_lines = len(lines)
         stat_box_bottom = 0.97 - (num_stat_lines * 0.04) - 0.02  # extra padding
-        
+
         # Legend positioned right below the statistics box
         plt.legend(loc="upper left", bbox_to_anchor=(0.03, stat_box_bottom))
         plt.tight_layout()
@@ -357,8 +383,9 @@ def _parse_args():
     p.add_argument(
         "--labels",
         nargs="+",
-        help="Optional legend labels: first for original, then for each "
-        "induced series")
+        help="Labels for induced series (orig_lp is always labeled 'healthy CoT'). "
+             "Default: ['induced CoT', 'no CoT']. Example: --labels 'lorem ipsum CoT' 'no CoT'"
+    )
     p.add_argument("--filler", type=str, default="", required=False)
     return p.parse_args()
 
@@ -379,7 +406,7 @@ def main() -> None:
     suffix = ""
     if metric == "internalized":
         # Example: Qwen3-1.7B_GSM8K_2025-08-03_12:06:40_Internalized_filler_._.jsonl
-        stem = in_path.stem  # Qwen3-1.7B_GSM8K_2025-08-03_12:06:40_Internalized_filler_._
+        stem = in_paths[0].stem  # Fixed: use in_paths[0] instead of in_path
         if "filler_" in stem:
             filler_part = stem.split("filler_")[1]  # ._ or :_
             filler = filler_part.split("_")[0]      # . or :

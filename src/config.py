@@ -1,6 +1,6 @@
 from random import sample
 from datasets import load_dataset, Dataset
-from typing import Callable
+from typing import Callable, Union, Optional
 
 CACHE_DIR_DEFAULT = "hf_cache"
 LOG_DIRECTORY_DEFAULT = "log"
@@ -133,7 +133,7 @@ class ICLConfig:
 class DatasetAdapter:
     def __init__(self, dataset_name: str, aliases: list[str],
                  load_section: str = "main", load_split: str = "train",
-                 do_extract: Callable | None = lambda d: (d["question"], "", d["answer"])):
+                 do_extract: Union[Callable, None] = lambda d: (d["question"], "", d["answer"])):
 
         self.dataset_name = dataset_name
         self.aliases = aliases
@@ -154,7 +154,7 @@ class DatasetAdapter:
     def extract_pieces(self, sample_data) -> tuple[str, str, str]:
         return self.do_extract(sample_data)
 
-    def load(self, dataset_name: str, max_samples: int | None = None) -> Dataset:
+    def load(self, dataset_name: str, max_samples: Optional[int] = None) -> Dataset:
         split = self.load_split
         if max_samples is not None:
             split = split + f"[:{max_samples}]"
@@ -191,6 +191,6 @@ class DatasetConfig:
         return DatasetAdapter(dataset_name, [])
 
     @staticmethod
-    def load(dataset_name: str, max_samples: int | None = None) -> Dataset:
+    def load(dataset_name: str, max_samples: Optional[int] = None) -> Dataset:
         dataset = DatasetConfig.get(dataset_name)
         return dataset.load(dataset_name, max_samples)
