@@ -5,7 +5,6 @@ accelerate
 datasets
 plotly
 seaborn
-wandb
 peft
 bitsandbytes
 scipy
