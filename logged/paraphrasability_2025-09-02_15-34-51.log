@@ -1,0 +1,487 @@
+The following generation flags are not valid and may be ignored: ['temperature', 'top_p', 'min_p', 'top_k']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+Gemini failed (Expecting ',' delimiter: line 4 column 155 (char 466)); falling back.
+HF_DATASET_NAMES: {'vicgalle/alpaca-gpt4': <config.DatasetAdapter object at 0x7f830fd35000>, 'gsm8k': <config.DatasetAdapter object at 0x7f830fd37eb0>, 'cais/mmlu': <config.DatasetAdapter object at 0x7f830fd36350>}
+HF_DATASET_ALIASES: {'alpaca': <config.DatasetAdapter object at 0x7f830fd35000>, 'alpaca-gpt4': <config.DatasetAdapter object at 0x7f830fd35000>, 'GSM8K': <config.DatasetAdapter object at 0x7f830fd37eb0>, 'MMLU': <config.DatasetAdapter object at 0x7f830fd36350>, 'mmlu': <config.DatasetAdapter object at 0x7f830fd36350>}
+Loading dataset GSM8K with split train[:50]
+Dataset name: gsm8k
+Stored Dataset name: gsm8k
+2025-09-02_15:34:55
+HF_DATASET_NAMES: {'vicgalle/alpaca-gpt4': <config.DatasetAdapter object at 0x7f830fd35000>, 'gsm8k': <config.DatasetAdapter object at 0x7f830fd37eb0>, 'cais/mmlu': <config.DatasetAdapter object at 0x7f830fd36350>}
+HF_DATASET_ALIASES: {'alpaca': <config.DatasetAdapter object at 0x7f830fd35000>, 'alpaca-gpt4': <config.DatasetAdapter object at 0x7f830fd35000>, 'GSM8K': <config.DatasetAdapter object at 0x7f830fd37eb0>, 'MMLU': <config.DatasetAdapter object at 0x7f830fd36350>, 'mmlu': <config.DatasetAdapter object at 0x7f830fd36350>}
+Running batch with 16 samples
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. Natalia sells clips to her friends. In April, she sold 42 clips. Then in May, she sells half as much as in April. So first, I need to figure out how many clips she sold in May.
+
+Hmm, half as few as April. If April was 4 clips, then May would be half of that, which is 2. So total for April and April would be 4 + 2 = 6. But wait, the problem says she sold to 38 friends in May? Wait, no, the original question says she sells to 28 friends? Wait no, let me check again.
+
+Wait, the question says "Natalia sold 32 clips to friends in March, and'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. Weng makes $10 an hour, right? Wait, no, the question says she earns $2 an hourly rate. Wait, let me check again. The question says "Weng earns 12 dollars an hour." So her hourly rate is $15? Wait no, 1 hour is 10 dollars? Wait wait, no. Wait 1 dollar per hour? Wait the question is phrased as "Wang earns $X an hour". So the problem says she just does 5 hours of babysetting. Wait no. The problem says "she just did five hours of..." Wait no! Wait the original question says: "Wen earns $ 15 an hour. Yesterday she just... 5 minutes of'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. Betty needs to save $120 for a wallet because it costs $200? Wait, no, the question says the wallet costs $50? Let me check again. Wait, the original problem says Betty has half of what she needs, so if the total is $1,000, she has half, which is $5,0. Then her parents give her an extra $14, and grandparents give her twice as many as her parent. Wait no, let me parse the problem again.
+
+Wait, the problem says: Betty has "only half of" the money needed. So if the wallet is $2,0, then she has $1. Then parents give $13, grandparents give twice as more.'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. Julie is trying to read a 200-page (wait, no, the question says a 300? Wait, the original problem says a book with 100 pages? Wait no, let me check again. The user wrote: "a 180-page" but in the problem statement, it says "a book. Let me check the original question again.
+
+Wait, the user wrote:
+
+"Julie is reading... a 400 page book. Wait, no. Let's look again. Original question:
+
+"Question: [...] a 60-page [...] book. [...] If she wanted to read [...] half of remaining pages [...] how many?"
+
+Wait, no... Let me recheck the original user message.
+
+The'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. James writes 3 pages to 3 different friends every week. So, each friend gets 3 letters. Wait, but the question says he writes a letter to two different friends. Hmm, maybe I need to clarify. Wait the original question says "James writes a three-page letter... twice a year." Wait, maybe the problem is that he writes 2 letters a week, each with 3 page. So total pages per week would be 2 * 3 = 6 pages. Then over a year, which is 52 weeks, so 6 * 50 = 300 pages? Wait, no, 5 weeks a year? Wait 53 weeks? Wait no, a year is 12 months.'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+''''solution:
+Okay, let's try to figure out how many flowers Mark has in his yard. Hmm, the problem says he planted plants in three different colored flowers: yellow, purple, and green. 
+
+First, let me note down the given information. Ten yellow flowers. Then, there are eight times more purple flowers than yellow. Wait, that's a bit confusing. Wait: "Ten of them [yellow] are yellow... there are [eight] times more of [purple]". Wait, maybe I need to parse that again. The original says: "There are 90% as much of those [purple]"? Wait, no, let the original problem be: "there are 30% [more] of those purple". Wait no, the original says:'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. Albert wants to know how many pizza slices he can consume in one-day. He bought 2 big and 3 small pizzas, right? Wait, no, the question says he buys 3 pizzas total? Wait the original question says: "He buys 1 large pizza and 1 small pizza." Wait no, let me check again.
+
+Wait the original problem says: Albert buys 4 pizzas in total? Let me read again. The user wrote: "Albert is wondering... He buys two large pizzas... and two small pizzas." So total 4? Because two plus two. Then each large has 6 slices? Wait no. Wait the problem says a large pizza is 12 slices? Or 14? Wait let me recheck.'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's try to figure out the final weights of the goodies in the box. So, Ken started with a box and added some jelly beans, brownies, jelly beans again, and gummyworms. Let me break it down step by step.
+
+First, the initial weight of his box was 2 ounces. Then he added some brownies. Wait, the problem says he added jelly beans first, then brownies? Let me check again. The problem says: "Ken placed a... box on scale, then poured into box enough... to bring weight to two pounds. Then, added enough... brownies... weight to tripling. Next, added another two pounds of... jelly beans... and finally, added gummy... to double again."
+
+Wait, the weights are'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''Okay, let's see. Alexis bought some things at the department store, and she has $ left. I need to figure out how much she paid for the sneakers. Let me start by adding up all the amounts she spent.
+
+First, the shirt: $32. Then the suit pants: $47. The suit coat: $29. Socks: $12. And the belt: $5. Wait, let me check again. The problem says she spent $230 in total? Let me add them up step by step.
+
+Starting with the shirt, which is $35? Wait, the problem says $33 on the shirt? Wait no, let check again:
+
+She spent $40 on the button-up, $56 on the suit'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. Tina earns $12.0 per hour. If she's working more than eight hours, she gets overtime. The problem says she works ten hours every shift for five days. So first, I need to calculate how many hours she works in total.
+
+Ten hours per day multiplied by five days gives me 120 hours. Now, since she works over eight hours each day, that's 18 hours. Wait, no, wait. Wait a second, the problem says "more than 1 hour" for overtime. Wait no, the original question says: "If she works... more than... hours per... shift, then she is... eligible for... overtime, paid by... your hourly rate + ½ your hourly." So the condition'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's try to figure out how many people lived on the first ship the deep-seaw monster ate. So, the problem says that the monster has eaten 8,470 people over 300 years. Each new ship is twice as big as the previous one. 
+
+First, I need to figure how many ships there were in total. Wait, the monster consumed 3 hundred years. So over 100, 200 and 3 hundreds? Wait, 3 years? Wait no, the question says "Over three hundred and years, the ship has consumed..." So total time is 3 centuries? Or 330 years? The wording is a bit confusing. Let me check again. The monster rises once every 1 hundred'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's try to figure out how many driveway shoveling Tobias did. Hmm, let me start by breaking down the problem step by step.
+
+First, Tobias has been earning $5 a month for three months, so that's 3 times 5. Let me calculate that: 3*5=15. So his total allowance from the first three months is $18. But wait, he also has to pay for the shoes and the change. The shoes cost $90, and he gets $10 in change after buying them. Wait, no, the problem says he has a $99 in change? Wait, let check again. The problem says after buying the sneakers, he had $12 in change, right? Wait no, let'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. Randy has mango trees and coconut trees. The problem says he has 20 mango tree? Wait, no, wait. Wait, the problem says "60 mangos trees on her farm." So first, mango trees are 64? Wait no, 6 mango trees? Wait the problem states "Randy has 30 mango and 5 more than half of that as coconut trees." Wait, let me read again.
+
+Wait, the original question says: "R Randy has... 6 more mango trees... 5less than half... How many?"
+
+Wait, let my read again carefully. The original question is:
+
+"Randy's farm has 40 mangoes and 3 less than 50% of that number of'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. Jasper buys some cheese for his dinner. The problem says he buys 1 pound of charded cheese for 10 dollars. Then there's a pound for cream cheese, which costs half the charded price. And a pack for cold cuts, which is twice the chard price. So I need to calculate the total cost.
+
+First, let me break it down. The cheddar is 1 dollar per pound. The cream cheese is half of that, so 1/2 * 1 = 0.5 dollars per pound? Wait, but the problem says "a pound of..." so maybe it's 0 dollars? Wait no, the problem states "a pack of..." which is 2 times the price. Wait, let my read'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. Joy can reading 8 page books in 10 minutes? Wait, no, the question says she can read **8 pages** in **20** minutes. So first, I need to figure out how many pages she reads per minute. Then, multiply that by 150 (since 1 hour is 60 minutes) to get the total pages she needs to read in an hour. Let me check the numbers again.
+
+So, 80 pages in 8 minutes? No, wait, the problem says 8pages in 30 minutes or 2 minutes? Let me read again: "Joy can read... 8_pages in 40 minutes." Wait, the original question says "Joy... 2 pages of'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's try to figure out James's profit over 22 weeks. Hmm, first, I need to break down the problem step by step. 
+
+So, James makes a movie that costs him $2,001. Wait, the problem says each DVD costs $6. Wait a second, maybe there's a typo here? Let me check again. The original problem says he creates a film for $4,020? Wait, no, the user wrote "He creates a video for $6..." Wait, maybe I misread. Let me recheck. 
+
+Wait, the original problem states: "He sells it... for 1.5x that much." Wait, hold on. The user wrote: "Each DVD cost 6 to create'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+0	-0.3047	-20.7188	-27.0312
+1	0.0712	-33.1250	-30.7656
+2	0.0729	-34.2812	-31.7812
+3	-0.0420	-30.8906	-32.1875
+4	0.2712	-36.5938	-26.6719
+5	-0.0444	-34.5000	-36.0312
+6	0.1075	-41.0000	-36.5938
+7	-0.0621	-22.4062	-23.7969
+8	0.0375	-25.4375	-24.4844
+9	-0.0244	-41.0625	-42.0625
+10	-0.0709	-31.5156	-33.7500
+11	0.1014	-29.2812	-26.3125
+12	-0.0507	-31.1094	-32.6875
+13	0.1128	-29.6406	-26.2969
+14	-0.2666	-25.9531	-32.8750
+15	-0.2717	-39.9062	-50.7500
+Running batch with 16 samples
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. The problem is about profit sharing between Mike and John in a business. The ratio is 2 to 5, and Johnson got 25,000. I need to find out how much Mike has after spending part of his profit on a $2400 shirt. Hmm, first, I should figure out the total profit based on the ratio.
+
+So, the ratio is Mike:Johnson = 2 : 5. That means the total parts are 2 + 5 = 7 parts. Johnson's share is 5 parts, and he got $50,025? Wait, no, the problem says Johnson got \$25k. Let me confirm. Yes, Johnson's portion is \$2,50'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+''''solution:
+Okay, let's see. So there are three colors of hard Hats in the Truck: pink, green, and yellow. The numbers are given as 2 pink, 3 green, 4 yellow. Wait, no, wait. Wait the problem says there are pink 27, green 16, yellow 25? Wait no, let me check again. Wait original problem says: "In a truck there are... 28 pink hard hat, 20 green, ...". Wait no. Wait let me read again.
+
+Original problem: "There are 3 colors: 22 pink hard Hats, 8 green, etc." Wait no... Wait the user wrote:
+
+"In a truck... 1 pink, ... 2 green, ..."'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. The problem is about calculating the total time Roque takes to get and come back to work each week using walking and cycling. Hmm. Let me break it down step by step.
+
+First, the problem says that Roque walking to work takes two hours per trip. And he walks to work three trips a week, so that's 3 times 2 hours. Then, he rides his bicycle to work one trip a week twice, so two times that. Wait, the wording says "rides his bike twice a weekly" so that would be two trips. 
+
+Wait, let me check again. The original question says: "Roque walks... three times... and rides... twice...". So walking three times, each trip takes two houres. So'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. Tim bikes back and for forth to his work every day, and also goes on a weekend ride. So first, I need to figure out how much total distance he bikes in a week. Let me break it down.
+
+He works 5 days a week, and each workday is 5 miles? Wait, the problem says his work is two miles away, so maybe each work day is 10 miles? Or is it 2 miles? Let me check again. The question says his job is 30 miles, but the problem states "his work is... 24 miles away." Wait, no, the original problem says: "His work is [20] miles away" and "He also goes... 350 miles'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. Bella has bought some stamps with different designs: snowflake, truck, and rose. The problem gives me the number of each stamp she bought. Let me break it down step by step.
+
+First, she bought 21 snowflakes? Wait, no, the problem says "Bella bought 8 snowflake... no, wait, let me check again. Wait, the original problem says: "Bela bought 3 snowflake..." Wait, hold on. Wait the original question says: Bella purchased 1 snowfall stamps. Wait no, let my read again.
+
+Wait the original user input says: 
+
+"Bella bought stamps... some had snowflake..., some truck..., some rose. Bella... 10 snowflake? No, let see'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. The problem says that each bird eats beetles at a rate of 1 per day? Wait, no, the question says each bird, each serpent, and jaguar eat beetles. Wait, let me read again.
+
+Each bird eats... 1 beetles? Wait no, wait. Wait the original question says:
+
+Each bird... eats 2 beetules per day... Wait no. Wait let me check again.
+
+Wait the original problem says:
+
+"Each bird eat 13 beetles... no, no. Let me check the exact wording again.
+
+Original problem:
+
+"each bird eats [12] beetles/day, each [snake] eats [3] birds/day, and [jaguar] eats 4 snakes/day. If ['''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's try to solve this problem step by step. First, let me parse the information given.
+
+So, Samantha's last name is three letters shorter than Bobbi's. Let me note that down. Let's call Samantha's name S and Bobbie's name B. So, B has 3 more letters than S. So B = S + 3.
+
+Then, if Bobbie takes two letters from her lastname, she ends up with a name that's twice as long as Jamie's. Jamie's full name isn't given directly, but it's mentioned as Jamie Grey, which has 6 letters. Wait, Jamie Grey is 6 characters? Let me check: J-A-M-E-G-R-Y. Yes, that's 7 letters. So Jamie's'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. Ann bought some items at her favorite summer clearance store. The problem is asking how much each top costs. Let me break it down step by step.
+
+First, she bought five pairs of shorties for $6 each. Wait, no, the price per pair is $7? Wait, the problem says she bought "5 pairs" for $5 each? Wait no, let me check again. The original problem says: "For $7" she bought... Wait, maybe there's a typo here. Let's read again:
+
+"For $7 she bought..." Hmm, maybe the original problem is that she paid $7 for the shorts? Or maybe each pair is priced at $7. Let my read again carefully:
+
+"For 5... pairs of Shorts for'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''
+Okay, let's see. Mary's grocery shopping is on Saturday, and she has a credit limit of $200. She uses this credit only at one specific store. The credit must be fully paid before her new shopping trip, which is the next one. 
+
+So, the problem says she spent all the credit limit, which means she used $250 in total? Wait, no, wait. Wait, the credit is $120? Wait the question says she spends the full limit. Let me check again. 
+
+Wait, the question states: "She spent the entire credit limit" and "paid $13 of the credit on Tuesday" and $14 on Thursday? Wait no, let me read again. The problem says: "Mary does her'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+[DEBUG] Gemini Prompt:
+Original text:
+'''Okay, let's see. Ralph has a tennis machine that he uses to practice. He starts by loading it with 200 tennis balls? Wait, no, the problem says he loads it with "170 tennis to start". Wait, the original problem says "he loads up with 350 tennis... no, let me check again. The problem says: "he starts with 400? Wait no, original problem: "He loads up... with 500?" Wait, let my read again.
+
+Original problem: Ralph loads up a tennis box with 700 to start. Wait, looking back: "Ralph is going... with a machine that shots out tennis... he loads up..." So the initial number is 150?'''
+
+FRACTIONS = 0.1, 0.5, 0.98
+TRANSFORMATION MODE = length
+You need to return several versions of the provided chain-of-thought, each with different lengths. The paraphrased versions must preserve the same meaning but should vary in total word count. Specifically, for each fraction f, generate a paraphrase that is approximately f times the length of the original. For example, if the original has 100 words, the version for f=0.5 should have about 50 words.
+
+Return a single JSON object with the paraphrases.
+Gemini failed (429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. [violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerMinutePerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-2.0-flash"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+  quota_value: 15
+}
+, links {
+  description: "Learn more about Gemini API quotas"
+  url: "https://ai.google.dev/gemini-api/docs/rate-limits"
+}
+, retry_delay {
+  seconds: 20
+}
+]); falling back.
+Gemini failed (429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. [violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerMinutePerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-2.0-flash"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+  quota_value: 15
+}
+, links {
+  description: "Learn more about Gemini API quotas"
+  url: "https://ai.google.dev/gemini-api/docs/rate-limits"
+}
+, retry_delay {
+  seconds: 19
+}
+]); falling back.
+Gemini failed (429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. [violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerMinutePerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-2.0-flash"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+  quota_value: 15
+}
+, links {
+  description: "Learn more about Gemini API quotas"
+  url: "https://ai.google.dev/gemini-api/docs/rate-limits"
+}
+, retry_delay {
+  seconds: 10
+}
+]); falling back.
+Gemini failed (429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. [violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerMinutePerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-2.0-flash"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+  quota_value: 15
+}
+, links {
+  description: "Learn more about Gemini API quotas"
+  url: "https://ai.google.dev/gemini-api/docs/rate-limits"
+}
+, retry_delay {
+  seconds: 10
+}
+]); falling back.
+Gemini failed (429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. [violations {
+  quota_metric: "generativelanguage.googleapis.com/generate_content_free_tier_requests"
+  quota_id: "GenerateRequestsPerMinutePerProjectPerModel-FreeTier"
+  quota_dimensions {
+    key: "model"
+    value: "gemini-2.0-flash"
+  }
+  quota_dimensions {
+    key: "location"
+    value: "global"
+  }
+  quota_value: 15
+}
+, links {
+  description: "Learn more about Gemini API quotas"
+  url: "https://ai.google.dev/gemini-api/docs/rate-limits"
+}
+, retry_delay {
+  seconds: 10
+}
+]); falling back.
