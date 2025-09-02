@@ -71,7 +71,8 @@ class LogProbVisualizer:
     def __init__(self, metric_name: str, in_paths: List[Path],
                  out_dir: Path, labels: List[str] | None = None,
                  bins: int = DEFAULT_BINS,
-                 logger: logging.Logger | None = None):
+                 logger: logging.Logger | None = None,
+                 suffix: str = ""):
         self.metric_name = metric_name
         self.in_paths = in_paths
         self.out_dir = out_dir
@@ -216,7 +217,9 @@ class LogProbVisualizer:
                     fname: str) -> None:
         """Plot histogram of score function with mean and std"""
         plt.figure(figsize=(6.4, 4.8))
-        plt.hist(score, bins=self.bins, alpha=0.5, label="score function")
+        bins = np.linspace(-15, 2, self.bins + 1)
+        plt.xlim(-15, 2)
+        plt.hist(score, bins=bins, alpha=0.5, label="score function")
         plt.title(title)
         plt.xlabel("score")
         plt.ylabel("frequency")
@@ -293,8 +296,8 @@ class LogProbVisualizer:
         plt.title(title)
         plt.xlabel("log-probability")
         plt.ylabel("frequency")
-        plt.legend(handles=patches, loc="upper left", bbox_to_anchor=(0.25,
-                                                                      0.9))
+        plt.xlim(-60, 5)
+        plt.legend(handles=patches, loc="center left")
         plt.tight_layout()
 
         # annotate stats: use labels[0] for original, then labels[1..]
@@ -354,7 +357,6 @@ def _parse_args():
         nargs="+",
         help="Optional legend labels: first for original, then for each "
         "induced series")
-    p.add_argument("--bins", type=int, default=DEFAULT_BINS, help="Number of histogram bins")
     p.add_argument("--filler", type=str, default="", required=False)
     return p.parse_args()
 

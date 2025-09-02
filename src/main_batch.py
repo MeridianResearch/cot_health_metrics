@@ -21,7 +21,7 @@ from datasets import Dataset
 from model import CoTModel
 from all_metrics import construct_metric
 from data_loader import load_prompts
-from metric import SampleGroundTruth
+from metric import SampleGroundTruth, MetricResult
 from datetime import datetime
 from config import DatasetAdapter, DatasetConfig, CACHE_DIR_DEFAULT, LOG_EVERY_DEFAULT, LOG_DIRECTORY_DEFAULT
 
@@ -40,11 +40,11 @@ def batched(iterable, n):
 now = datetime.now()
 
 # Format as string
-
 def _get_datetime_str():
     datetime_str = now.strftime("%Y-%m-%d_%H:%M:%S")
     print(datetime_str)
     return datetime_str
+
 def _get_sample_question(sample: dict) -> str:
     question = sample["instruction"].strip()
     if sample.get("input"):
@@ -99,6 +99,12 @@ def handle_datapoints(datapoints, args, model, metric, f, f_json):
         if i < args.skip_samples:
             continue
 
+        if args.print_answers:
+            print(f"Ground truth: {ground_truth_answer}")
+            result = MetricResult(score=0, score_original=0, score_intervention=0)
+            print_output(id, question, question, ground_truth_cot, ground_truth_answer, result, f, f_json, args)
+            continue
+
         try:
             r = model.generate_cot_response_full(id, question)
             r.prompt_id = id
@@ -116,11 +122,18 @@ def handle_datapoints(datapoints, args, model, metric, f, f_json):
             print(f"Sample id={id} - metric evaluation error ({err})")
             continue
 
-        if log_counter % args.log_every == 0:
-            print(f"Sample id={id} - {result.score:.4f}")
-        log_counter += 1
+        if type(result) == list:
+            for res in result:
+                if log_counter % args.log_every == 0:
+                    print(f"Sample id={id} - {res.score:.4f}")
+                log_counter += 1
+                print_output(id, question, r.prompt, r.cot, r.answer, res, f, f_json, args)
+        else:
+            if log_counter % args.log_every == 0:
+                print(f"Sample id={id} - {result.score:.4f}")
+            log_counter += 1
 
-        print_output(id, question, r.prompt, r.cot, r.answer, result, f, f_json, args)
+            print_output(id, question, r.prompt, r.cot, r.answer, result, f, f_json, args)
 
 def handle_datapoints_batch(datapoints, batch_size, args, model, metric, f, f_json):
     sample_counter = 0
@@ -183,6 +196,7 @@ def main():
     parser.add_argument("--log-file", default=None)
     parser.add_argument("--log-every", type=int, default=LOG_EVERY_DEFAULT)
     parser.add_argument("--log-verbose", type=bool, default=True)
+    parser.add_argument("--print-answers", type=bool, default=False)
 
     parser.add_argument("--filler", type=str, default="think")  # Internalized
     parser.add_argument("--filler-in-prompt", type=bool, default=False)  # Internalized
@@ -212,7 +226,7 @@ def main():
     os.makedirs(args.cache_dir, exist_ok=True)
 
     # Load models
-    model = CoTModel(args.model, cache_dir=args.cache_dir)
+    model = None #CoTModel(args.model, cache_dir=args.cache_dir)
     model2 = CoTModel(args.model2, cache_dir=args.cache_dir) if args.model2 else None
 
     # Create metric(s)

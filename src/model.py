@@ -194,6 +194,24 @@ class CoTModel(Model):
         )
         return output
 
+    def do_generate_from_tokens(self, question_id, inputs, max_new_tokens=4096, do_sample=True):
+        """Generate a response using Chain-of-Thought (CoT) prompting."""
+        model_config = ModelConfig.get(self.model_name)
+
+        generate_kwargs = model_config.get("generate_kwargs", {})
+
+        output = self.model.generate(
+            **inputs,
+            max_new_tokens=max_new_tokens,
+            do_sample=do_sample,
+            eos_token_id=self.tokenizer.eos_token_id,
+            pad_token_id=self.tokenizer.eos_token_id,
+            output_scores=True,
+            return_dict_in_generate=True,
+            **generate_kwargs,
+        )
+        return output
+
     def do_generate_batch(self, question_ids, prompts, max_new_tokens=4096, do_sample=True):
         """Generate responses for multiple prompts in batch using Chain-of-Thought (CoT) prompting."""
         model_config = ModelConfig.get(self.model_name)
@@ -323,7 +341,7 @@ class CoTModel(Model):
             generated_text = self.tokenizer.decode(generated_tokens, skip_special_tokens=False)
 
             # Extract question from prompt (for compatibility)
-            question = prompt.strip()
+            question = prompt #.strip()
 
             # Parse the generated text
             # The prompt builder adds <think> at the end, so generated text should be: cot_content</think>answer
@@ -331,14 +349,14 @@ class CoTModel(Model):
                 # Split on the end think token
                 parts = generated_text.split(end_think, 1)
                 if len(parts) == 2:
-                    cot = parts[0].strip()  # Everything before </think>
-                    answer = parts[1].strip()  # Everything after </think>
+                    cot = parts[0] #.strip()  # Everything before </think>
+                    answer = parts[1] #.strip()  # Everything after </think>
                 else:
                     if expect_cot:
                         raise RuntimeError("Not enough pieces to split, probably ran out of tokens")
                     else:
                         cot = ""
-                        answer = generated_text.strip()
+                        answer = generated_text #.strip()
             except Exception as e:
                 raise RuntimeError(
                     f"Failed to extract CoT from generated text: {generated_text[:100]}... Error: {e}"

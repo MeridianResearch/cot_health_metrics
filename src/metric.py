@@ -19,7 +19,9 @@ class MetricResult:
     intervened_cot: str | None
     intervened_answer: str | None
 
-    def __init__(self, score: float, score_original: float, score_intervention: float, intervened_prompt: str | None = None, intervened_cot: str | None = None, intervened_answer: str | None = None):
+    def __init__(self, score: float, score_original: float, score_intervention: float,
+        intervened_prompt: str | None = None, intervened_cot: str | None = None, intervened_answer: str | None = None):
+
         self.score = score
         self.score_original = score_original
         self.score_intervention = score_intervention
@@ -27,14 +29,6 @@ class MetricResult:
         self.intervened_cot = intervened_cot
         self.intervened_answer = intervened_answer
     
-    def __init__(self, score: float, score_original: float, score_intervention: float):
-        self.score = score
-        self.score_original = score_original
-        self.score_intervention = score_intervention
-        self.intervened_prompt = None
-        self.intervened_cot = None
-        self.intervened_answer = None
-
     def has_intervened_data(self) -> bool:
         return self.intervened_prompt is not None \
             or self.intervened_cot is not None \
@@ -91,8 +85,8 @@ class SingleMetric(Metric):
         return scores
 
 class DummyMetric(Metric):
-    def __init__(self, model: Model, alternative_model: Model | None = None):
-        super().__init__("DummyMetric", model, alternative_model)
+    def __init__(self, model: Model, alternative_model: Model | None = None, args: SimpleNamespace | None = None):
+        super().__init__("DummyMetric", model, alternative_model, args)
         
     def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
         """Always returns 0 (not suspicious)"""
