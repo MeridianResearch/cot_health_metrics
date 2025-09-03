@@ -126,15 +126,21 @@ class CoTModel(Model):
             raise
 
     def _load_model(self, model_name, cache_dir):
+        # Set token for gated models
+        import os
+        token = os.environ.get('HF_TOKEN') or os.environ.get('HUGGINGFACE_HUB_TOKEN')
+
         config = AutoConfig.from_pretrained(
             model_name,
             cache_dir=cache_dir,
             trust_remote_code=True,
+            token=token
         )
 
         tokenizer = AutoTokenizer.from_pretrained(
             model_name,
             cache_dir=cache_dir,
+            token=token
         )
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
@@ -142,6 +148,7 @@ class CoTModel(Model):
             torch_dtype=torch.float16,
             device_map="auto",
             cache_dir=cache_dir,
+            token=token
         ) if "Qwen" in model_name else AutoModelForCausalLM.from_pretrained(
             model_name,
             config=config,
