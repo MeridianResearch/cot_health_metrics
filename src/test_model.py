@@ -103,7 +103,6 @@ def do_prompt_builder_test(model_name, question):
     tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=TEST_CACHE_DIR)
     prompt_builder = ModelPromptBuilder(model_name)
     prompt_builder.add_user_message(question)
-    prompt_builder.add_cot_mode()
     prompt = prompt_builder.make_prompt(tokenizer)
     print(f"prompt: {prompt}")
     return prompt
@@ -119,7 +118,7 @@ class TestCoTModelMakePrompt:
 
     def test_make_prompt_Gemma2_2B(self):
         assert do_prompt_builder_test("google/gemma-2-2b-it", "What is 2+2?") \
-            == "<bos><start_of_turn>user\nQuestion: What is 2+2?\nLet's think step by step.\nPlease write the string \"Answer: \" before the final answer.<end_of_turn>\n<start_of_turn>model\n"
+            == "<bos><start_of_turn>user\nQuestion: What is 2+2?\nLet's think step by step. Please write the string \"Answer: \" before the final answer.<end_of_turn>\n<start_of_turn>model\n"
 
     @patch('model.AutoConfig.from_pretrained')
     @patch('model.AutoModelForCausalLM.from_pretrained')
@@ -128,7 +127,7 @@ class TestCoTModelMakePrompt:
         model = CoTModel("google/gemma-2-2b-it", cache_dir=TEST_CACHE_DIR)
         model.make_prompt("test_001", "What is 2+2?")
         assert model.make_prompt("test_001", "What is 2+2?") \
-            == "<bos><start_of_turn>user\nQuestion: What is 2+2?\nLet's think step by step.\nPlease write the string \"Answer: \" before the final answer.<end_of_turn>\n<start_of_turn>model\n"
+            == "<bos><start_of_turn>user\nQuestion: What is 2+2?\nLet's think step by step. Please write the string \"Answer: \" before the final answer.<end_of_turn>\n<start_of_turn>model\n"
 
     @patch('model.AutoConfig.from_pretrained')
     @patch('model.AutoModelForCausalLM.from_pretrained')
@@ -255,7 +254,7 @@ class TestCoTModelSplit:
         response = prompt + "Let me think about this step by step. 2+2 equals 4.</think>\nAnswer: 4"
         model_response = model.evaluate_cot_response(1, prompt, response, to_device=torch.device("cpu"))
 
-        assert model_response.question == "Question: What is 2+2?\nLet's think step by step.\n<think>"
+        assert model_response.question == "Question: What is 2+2?\nLet's think step by step."
         assert model_response.cot == "Let me think about this step by step. 2+2 equals 4."
         assert model_response.answer == "Answer: 4"
         assert model_response.raw_output == response
@@ -329,8 +328,7 @@ The answer is 40 mph.
         reference_output = \
 """<bos><start_of_turn>user
 Question: A car travels 60 miles in 1.5 hours. What is its average speed?
-Let's think step by step.
-Please write the string "Answer: " before the final answer.<end_of_turn>
+Let's think step by step. Please write the string "Answer: " before the final answer.<end_of_turn>
 <start_of_turn>model
 |||Here's how to solve it step-by-step:
 
@@ -373,7 +371,38 @@ Answer: 4.<|im_end|>"""
         encoded_output = model.get_utils().encode_to_tensor(reference_output, to_device=torch.device("cpu"))
         (prompt, cot, answer) = model.do_split(encoded_output, reference_output.split("\nOkay")[0])
 
-        assert prompt == "<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant\n<think>"
+        assert prompt == "<|im_start|>user\nQuestion: What is 2+2?\nLet's think step by step.<|im_end|>\n<|im_start|>assistant"
         assert cot == "Okay, so the question is 2 plus 2. Let me think about how to approach this. First, I remember that when you add two numbers, you just add their values together. So 2 plus 2 would be 2 plus 2. Let me break it down. The first number is 2, and the second number is also 2. Adding them together should give me 4. But wait, maybe I should check if there's any trick here. Sometimes problems have hidden parts, like if they're asking for something else, but in this case, it's straightforward addition. Let me make sure I'm not missing anything. The question is simple, so no need for complex operations. So the answer should be 4. I think that's it."
         assert answer == "2 + 2 equals 4. \n\n**Step-by-Step Explanation:**  \n1. Start with the first number: 2.  \n2. Add the second number: 2 + 2 = 4.  \n3. The result is 4.  \n\nAnswer: 4.<|im_end|>"
-        assert prompt + "\n" + cot + "\n</think>\n\n" + answer == reference_output
+        assert prompt + "\n<think>\n" + cot + "\n</think>\n\n" + answer == reference_output
+
+    @patch('model.AutoConfig.from_pretrained')
+    @patch('model.AutoModelForCausalLM.from_pretrained')
+    def test_split_logprobs_Llama_3_8B_Instruct(self, mock_model, mock_config):
+        reference_output = \
+            """
+            <|begin_of_text|><|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\nQuestion: A car travels 60 miles in 1.5 hours. What is its average speed?\nLet\'s think step by step.\nPlease write the string "Answer: " before the final answer.<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\nLet\'s break it down step by step.\n\n1. The car travels 60 miles in 1.5 hours.\n2. To find the average speed, we need to divide the distance (60 miles) by the time (1.5 hours).\n\nAverage speed = Distance ÷ Time\n= 60 miles ÷ 1.5 hours\n= 40 miles per hour\n\nAnswer: 40 miles per hour<|eot_id|>"""
+        model = CoTModel("meta-llama/Meta-Llama-3-8B-Instruct", cache_dir=TEST_CACHE_DIR)
+        encoded_output = model.get_utils().encode_to_tensor(reference_output, to_device=torch.device("cpu"))
+        (prompt, cot, answer) = model.do_split(encoded_output, reference_output.split("\nLet's break it down")[0])
+
+        # For Llama 3 Instruct we split CoT and answer by the string "Answer:" and
+        # decode the prompt with special tokens removed (similar to Gemma path).
+        assert prompt == "user\n\nQuestion: A car travels 60 miles in 1.5 hours. What is its average speed?\nLet's think step by step.\nPlease write the string \"Answer: \" before the final answer.assistant"
+        assert cot == "Let's break it down step by step.\n\n1. The car travels 60 miles in 1.5 hours.\n2. To find the average speed, we need to divide the distance (60 miles) by the time (1.5 hours).\n\nAverage speed = Distance ÷ Time\n= 60 miles ÷ 1.5 hours\n= 40 miles per hour"
+        assert answer == "40 miles per hour"
+
+    @patch('model.AutoConfig.from_pretrained')
+    @patch('model.AutoModelForCausalLM.from_pretrained')
+    def test_split_logprobs_Mistral_7B_Instruct(self, mock_model, mock_config):
+        reference_output = \
+            """<s><s>[INST] Question: A car travels 60 miles in 1.5 hours. What is its average speed?\nLet\'s think step by step.\nPlease state reasoning first and then write the string "Answer: " before the final answer.[/INST] Reasoning: To find the average speed, we divide the total distance traveled by the time taken. In this case, the car traveled 60 miles in 1.5 hours.\n\nAnswer: Average Speed = Total Distance / Time Taken\n= 60 miles / 1.5 hours\n= 40 miles per hour (written as 40 mph)</s>"""
+        model = CoTModel("mistralai/Mistral-7B-Instruct-v0.3", cache_dir=TEST_CACHE_DIR)
+        encoded_output = model.get_utils().encode_to_tensor(reference_output, to_device=torch.device("cpu"))
+        (prompt, cot, answer) = model.do_split(encoded_output, reference_output.split(" Reasoning:")[0])
+
+        # For Mistral 7B Instruct we split CoT and answer by the string "Answer:" and
+        # decode the prompt with special tokens removed (similar to Gemma path).
+        assert prompt == 'Question: A car travels 60 miles in 1.5 hours. What is its average speed?\nLet\'s think step by step.\nPlease state reasoning first and then write the string "Answer: " before the final answer.'
+        assert cot == "Reasoning: To find the average speed, we divide the total distance traveled by the time taken. In this case, the car traveled 60 miles in 1.5 hours."
+        assert answer == "Average Speed = Total Distance / Time Taken\n= 60 miles / 1.5 hours\n= 40 miles per hour (written as 40 mph)"
