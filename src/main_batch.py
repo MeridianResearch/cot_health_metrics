@@ -172,9 +172,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
     parser.add_argument("--model2", default=None)
+    parser.add_argument("--adapter-path", type=str, help="Path to LoRA adapter checkpoint")
     parser.add_argument("--metric", required=True)
     parser.add_argument("--data-path", default=None)
     parser.add_argument("--data-hf", default=None)
+    parser.add_argument("--data-split", default="train", help="Dataset split to use (train, test, validation, etc.)")
     parser.add_argument("--skip-samples", type=int, default=0)
     parser.add_argument("--max-samples", type=int, default=None)
     parser.add_argument("--batch-size", type=int, default=1)
@@ -185,19 +187,18 @@ def main():
     parser.add_argument("--log-verbose", type=bool, default=True)
 
     parser.add_argument("--filler", type=str, default="think")  # Internalized
-    parser.add_argument("--filler-in-prompt", type=bool, default=False)  # Internalized
-    parser.add_argument("--filler-in-cot", type=bool, default=False)  # Internalized
+    parser.add_argument("--filler-in-prompt", action='store_true')
+    parser.add_argument("--filler-in-cot", action='store_true')
 
     args = parser.parse_args()
 
     # Load dataset
-    dataset_name = ''
     if args.data_hf:
         dataset_name = args.data_hf
         if args.max_samples:
-            dataset = DatasetConfig.load(dataset_name, max_samples=args.max_samples)
+            dataset = DatasetConfig.load(dataset_name, max_samples=args.max_samples, split=args.data_split)
         else:
-            dataset = DatasetConfig.load(dataset_name)
+            dataset = DatasetConfig.load(dataset_name, split=args.data_split)
 
         datapoints = _iterate_dataset(dataset_name, dataset)
     elif args.data_path:
@@ -212,8 +213,18 @@ def main():
     os.makedirs(args.cache_dir, exist_ok=True)
 
     # Load models
-    model = CoTModel(args.model, cache_dir=args.cache_dir)
-    model2 = CoTModel(args.model2, cache_dir=args.cache_dir) if args.model2 else None
+    model = CoTModel(args.model, cache_dir=args.cache_dir, adapter_path=getattr(args, 'adapter_path', None))
+    model2 = CoTModel(args.model2, cache_dir=args.cache_dir, adapter_path=getattr(args, 'adapter_path', None)) if args.model2 else None
+
+    # NEW: Set dataset name for GSM8K prompt handling
+    if args.data_hf:
+        model.set_dataset_name(args.data_hf)
+        if model2:
+            model2.set_dataset_name(args.data_hf)
+    elif args.data_path:
+        model.set_dataset_name(os.path.basename(args.data_path))
+        if model2:
+            model2.set_dataset_name(os.path.basename(args.data_path))
 
     # Create metric(s)
     from types import SimpleNamespace
