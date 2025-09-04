@@ -164,8 +164,9 @@ class DatasetAdapter:
     def extract_pieces(self, sample_data) -> tuple[str, str, str]:
         return self.do_extract(sample_data)
 
-    def load(self, dataset_name: str, max_samples: Optional[int] = None) -> Dataset:
-        split = self.load_split
+    def load(self, dataset_name: str, max_samples: Optional[int] = None, split: str = None) -> Dataset:
+        if split is None:
+            split = self.load_split  # Use default
         if max_samples is not None:
             split = split + f"[:{max_samples}]"
         print(f"Loading dataset {dataset_name} with split {split}")
@@ -201,6 +202,6 @@ class DatasetConfig:
         return DatasetAdapter(dataset_name, [])
 
     @staticmethod
-    def load(dataset_name: str, max_samples: Optional[int] = None) -> Dataset:
+    def load(dataset_name: str, max_samples: Optional[int] = None, split: str = None) -> Dataset:
         dataset = DatasetConfig.get(dataset_name)
-        return dataset.load(dataset_name, max_samples)
+        return dataset.load(dataset_name, max_samples, split)
