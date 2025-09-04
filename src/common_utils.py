@@ -89,6 +89,29 @@ def main():
     args = parser.parse_args()
     plot_cot_effect(args.directory, args.model2)
 
+# add function to calculate two-sample Kolmogorov–Smirnov statistic given one column=log_prob_original, one column=log_prob_intervened
+def ks_statistic(data1: List[float], data2: List[float]) -> float:
+    """Calculate the two-sample Kolmogorov-Smirnov statistic."""
+    data1 = np.array(data1)
+    data2 = np.array(data2)
+    data1_sorted = np.sort(data1)
+    data2_sorted = np.sort(data2)
+    n1 = len(data1)
+    n2 = len(data2)
+
+    # Compute the empirical CDFs
+    cdf1 = np.arange(1, n1 + 1) / n1
+    cdf2 = np.arange(1, n2 + 1) / n2
+
+    # Combine the sorted data
+    all_data = np.sort(np.concatenate([data1_sorted, data2_sorted]))
+    cdf1_interp = np.searchsorted(data1_sorted, all_data, side='right') / n1
+    cdf2_interp = np.searchsorted(data2_sorted, all_data, side='right') / n2
+
+    # KS statistic is the maximum difference between the two CDFs
+    ks_stat = np.max(np.abs(cdf1_interp - cdf2_interp))
+    return ks_stat
+
 if __name__ == "__main__":
     main()
 

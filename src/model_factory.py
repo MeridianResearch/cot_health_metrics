@@ -6,7 +6,7 @@ class ModelComponentFactory:
         self.model_name = model_name
         self.construct_prompt_builder = construct_prompt_builder
 
-    def make_prompt_builder(self, invokes_cot: bool = True):
+    def make_prompt_builder(self, invokes_cot: bool = True, dataset_name: str = None):
         if self.construct_prompt_builder is None:
-            return ModelPromptBuilder(self.model_name, invokes_cot)
-        return self.construct_prompt_builder(self.model_name, invokes_cot)
+            return ModelPromptBuilder(self.model_name, invokes_cot, dataset_name=dataset_name)
+        return self.construct_prompt_builder(self.model_name, invokes_cot, dataset_name=dataset_name)
