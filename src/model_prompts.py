@@ -13,8 +13,7 @@ class ModelPromptBuilder:
         - make_prompt()
     """
 
-    def __init__(self, model_name: str, invokes_cot: bool = True, invokes_filler: bool = False,
-                 dataset_name: str = None):
+    def __init__(self, model_name: str, invokes_cot: bool = True, invokes_filler: bool = False):
         self.model_name = model_name
         self.invokes_cot = invokes_cot
         self.invokes_filler = invokes_filler
@@ -25,8 +24,6 @@ class ModelPromptBuilder:
         self.add_generation_prompt = True
         self.history = []
         self.append_after_apply = ""
-
-        self.dataset_name = dataset_name  # NEW: Store dataset name
 
     def add_to_history(self, role: str, content: str):
         assert self.continue_final_message == False
@@ -61,12 +58,6 @@ class ModelPromptBuilder:
 
         return None
 
-    def _get_gsm8k_instruction(self):
-        """Get GSM8K-specific instruction if using GSM8K dataset"""
-        if self.dataset_name and "gsm8k" in self.dataset_name.lower():
-            return " After thinking is complete, provide ONLY the final numeric answer in the simplest form after \\n Answer: "
-        return ""
-
     def _get_user_message_components(self, question: str, custom_instruction: str = None):
         instructions = []
         instructions.append(f"Question: {question}")
@@ -78,18 +69,17 @@ class ModelPromptBuilder:
         elif custom_instruction.strip():  # Only add if not empty
             instructions.append(custom_instruction)
 
-        # NEW: Add GSM8K-specific instruction automatically
-        gsm8k_instruction = self._get_gsm8k_instruction()
-        if gsm8k_instruction:
-            instructions.append(gsm8k_instruction)
-
         model_custom_instruction = self._get_model_custom_instruction()
         if model_custom_instruction is not None:
             instructions.append(model_custom_instruction)
 
         if self.invokes_cot == False:
             # Very strong, explicit anti-think instructions for no-CoT mode
-            anti_think_instruction = "IMPORTANT: Give ONLY the final answer. Do NOT show your work. Do NOT explain your reasoning. Do NOT use any tags. Just state the answer directly."
+            anti_think_instruction = "IMPORTANT: Give ONLY the final answer. Do NOT show your work. Do NOT explain your reasoning. Do NOT use any tags. Just state the answer directly. /no_think"
+            instructions.append(anti_think_instruction)
+        else:
+            # Very strong, explicit anti-think instructions for CoT mode
+            anti_think_instruction = "IMPORTANT: Give ONLY the final answer. Do NOT show your work. Do NOT explain your reasoning. Just state the answer directly."
             instructions.append(anti_think_instruction)
 
         return instructions
@@ -151,9 +141,8 @@ class ModelPromptBuilder:
 
 class CustomInstructionPromptBuilder(ModelPromptBuilder):
     def __init__(self, model_name: str, custom_instruction: str, custom_assistant_prefix: str = "",
-                 invokes_cot: bool = True, invokes_filler: bool = False,
-                 dataset_name: str = None):
-        super().__init__(model_name, invokes_cot, invokes_filler, dataset_name)
+                 invokes_cot: bool = True, invokes_filler: bool = False):
+        super().__init__(model_name, invokes_cot, invokes_filler)
         self.custom_instruction = custom_instruction
         self.custom_assistant_prefix = custom_assistant_prefix
 
@@ -181,9 +170,8 @@ class ICLPromptBuilder(CustomInstructionPromptBuilder):
 
     def __init__(self, model_name: str, custom_instruction: str,
                  custom_assistant_prefix: str = "", icl_examples: list = None,
-                 filler_type: str = "think", invokes_cot: bool = True,
-                 dataset_name: str = None):
-        super().__init__(model_name, custom_instruction, custom_assistant_prefix, invokes_cot, dataset_name=dataset_name)
+                 filler_type: str = "think", invokes_cot: bool = True):
+        super().__init__(model_name, custom_instruction, custom_assistant_prefix, invokes_cot)
         self.icl_examples = icl_examples or []
         self.filler_type = filler_type
 
