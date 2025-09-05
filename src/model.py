@@ -109,7 +109,6 @@ class CoTModel(Model):
                  adapter_path=None
                  ):
         self.adapter_path = adapter_path
-        self.dataset_name = None
         super().__init__(model_name, cache_dir)
 
         if component_factory is None:
@@ -181,14 +180,9 @@ class CoTModel(Model):
         responses = self.generate_cot_response_full_batch(question_ids, questions, max_new_tokens)
         return [response.basic_pair for response in responses]
 
-    def set_dataset_name(self, dataset_name: str):
-        """Set the dataset name for prompt customization"""
-        self.dataset_name = dataset_name
-
     def make_prompt(self, question_id, question, custom_instruction=None):
         prompt_builder = self.component_factory.make_prompt_builder(
-            invokes_cot=True,
-            dataset_name=self.dataset_name  # NEW: Pass dataset name
+            invokes_cot=True
         )
         prompt_builder.add_user_message(question, custom_instruction)
         prompt_builder.add_cot_mode()
@@ -196,8 +190,7 @@ class CoTModel(Model):
 
     def make_prompt_no_cot(self, question_id, question):
         prompt_builder = self.component_factory.make_prompt_builder(
-            invokes_cot=False,
-            dataset_name=self.dataset_name  # NEW: Pass dataset name
+            invokes_cot=False
         )
         prompt_builder.add_user_message(question)
         return prompt_builder.make_prompt(self.tokenizer)

@@ -216,16 +216,6 @@ def main():
     model = CoTModel(args.model, cache_dir=args.cache_dir, adapter_path=getattr(args, 'adapter_path', None))
     model2 = CoTModel(args.model2, cache_dir=args.cache_dir, adapter_path=getattr(args, 'adapter_path', None)) if args.model2 else None
 
-    # NEW: Set dataset name for GSM8K prompt handling
-    if args.data_hf:
-        model.set_dataset_name(args.data_hf)
-        if model2:
-            model2.set_dataset_name(args.data_hf)
-    elif args.data_path:
-        model.set_dataset_name(os.path.basename(args.data_path))
-        if model2:
-            model2.set_dataset_name(os.path.basename(args.data_path))
-
     # Create metric(s)
     from types import SimpleNamespace
     extra_args = SimpleNamespace()
