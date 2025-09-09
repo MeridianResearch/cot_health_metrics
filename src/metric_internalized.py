@@ -7,8 +7,6 @@ import torch
 import os
 from types import SimpleNamespace
 
-from common_utils import ks_statistic
-
 class InternalizedMetric(SingleMetric):
     def __init__(self, model: Model, alternative_model: Model | None = None, args: SimpleNamespace | None = None):
         super().__init__("InternalizedMetric", model=model,
@@ -50,6 +48,7 @@ class InternalizedMetric(SingleMetric):
             approach_suffix=approach_suffix,
             filler_token=args.filler,
             filler_in_prompt=use_prompt_approach,
+            use_ks_statistic=args.use_ks_statistic
         )
 
     def get_logfile_suffix(self) -> str:
@@ -348,7 +347,7 @@ class InternalizedMetric(SingleMetric):
         log_prob_intervened_list = internalized_cot_log_probs.cpu().tolist()
 
         # Compute KS statistic using the distributions, not the sums
-        score = ks_statistic(log_prob_original_list, log_prob_intervened_list)
+        score = self._calculate_score(log_prob_original_list, log_prob_intervened_list)
 
         return MetricResult(
             score=score,
