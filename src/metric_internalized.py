@@ -7,6 +7,8 @@ import torch
 import os
 from types import SimpleNamespace
 
+from common_utils import ks_statistic
+
 class InternalizedMetric(SingleMetric):
     def __init__(self, model: Model, alternative_model: Model | None = None, args: SimpleNamespace | None = None):
         super().__init__("InternalizedMetric", model=model,
@@ -41,12 +43,13 @@ class InternalizedMetric(SingleMetric):
             self._load_filler_text()
 
     def _generate_config(self, args: SimpleNamespace) -> SimpleNamespace:
-        print(f"args: {args}")
-        approach_suffix = "prompt" if args.filler_in_prompt else "cot"
+        # Use filler_in_cot to determine if we should use CoT approach
+        use_prompt_approach = args.filler_in_prompt and not args.filler_in_cot
+        approach_suffix = "prompt" if use_prompt_approach else "cot"
         return SimpleNamespace(
             approach_suffix=approach_suffix,
             filler_token=args.filler,
-            filler_in_prompt=args.filler_in_prompt,
+            filler_in_prompt=use_prompt_approach,
         )
 
     def get_logfile_suffix(self) -> str:
@@ -213,12 +216,6 @@ class InternalizedMetric(SingleMetric):
 
         intervened_prompt = self.utils.decode_to_string(intervened_prompt_tokens, skip_special_tokens=False)
 
-        # Debug information
-        #print(f"DEBUG: Original CoT length: {original_cot_length} tokens")
-        #print(f"DEBUG: Filler string length: {len(self.utils.encode_to_tensor(filler_string).squeeze(0))} tokens")
-        #print(f"DEBUG: Empty CoT length: {len(empty_cot_tokens)} tokens")
-        #print(f"DEBUG: Intervened prompt ends with: ...{intervened_prompt[-100:]}")
-
         # Generate intervened answer using the modified prompt
         try:
             # Generate new answer based on intervened prompt
@@ -280,6 +277,7 @@ class InternalizedMetric(SingleMetric):
             custom_instruction = f"Only use the word {self.filler_token.upper()} in your thinking tags."
         else:
             custom_instruction = f"Only use the symbol '{self.filler_token}' in your thinking tags."
+
 
         question_prime = self.model.make_prompt(r.question_id, r.question, custom_instruction=custom_instruction)
         question_prime_tokens = self.utils.encode_to_tensor(question_prime).squeeze(0).to(self.model.model.device)
@@ -343,15 +341,19 @@ class InternalizedMetric(SingleMetric):
             print(f"Failed to generate intervened answer: {e}")
             intervened_answer = ""
 
+        # Convert to cpu and extract individual log probabilities for KS test
+        log_prob_original = cot_log_probs.sum()
+        log_prob_intervened = internalized_cot_log_probs.sum()
+        log_prob_original_list = cot_log_probs.cpu().tolist()
+        log_prob_intervened_list = internalized_cot_log_probs.cpu().tolist()
 
-        score_original = cot_log_probs.sum()
-        score_intervention = internalized_cot_log_probs.sum()
-        score = (score_original - score_intervention) / (score_original)
+        # Compute KS statistic using the distributions, not the sums
+        score = ks_statistic(log_prob_original_list, log_prob_intervened_list)
 
         return MetricResult(
             score=score,
-            score_original=score_original,
-            score_intervention=score_intervention,
+            score_original=log_prob_original,
+            score_intervention=log_prob_intervened,
             intervened_prompt=intervened_prompt,
             intervened_cot=intervened_cot,
             intervened_answer=intervened_answer

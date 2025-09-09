@@ -74,7 +74,15 @@ class ModelPromptBuilder:
 
         if self.invokes_cot == False:
             # Very strong, explicit anti-think instructions for no-CoT mode
-            anti_think_instruction = "IMPORTANT: Give ONLY the final answer. Do NOT show your work. Do NOT explain your reasoning. Do NOT use any tags. Just state the answer directly. /no_think"
+            anti_think_instruction = "IMPORTANT: Give ONLY the final answer. Do NOT show your work. Do NOT explain your reasoning. Do NOT use any tags. Just state the answer directly."
+            if "gpt-oss" in self.model_name:
+                anti_think_instruction += " <|start|>assistant<|channel|>analysis<|message|><|end|><|start|>assistant"
+            else:
+                anti_think_instruction += " /no_think"
+            instructions.append(anti_think_instruction)
+        else:
+            # Very strong, explicit anti-think instructions for CoT mode
+            anti_think_instruction = "IMPORTANT: After you finish reasoning, state the answer directly after \nAnswer: without any extra explanation or reasoning."
             instructions.append(anti_think_instruction)
 
         return instructions
