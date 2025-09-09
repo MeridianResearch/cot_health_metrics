@@ -22,6 +22,7 @@ from model import CoTModel
 from all_metrics import construct_metric
 from data_loader import load_prompts
 from metric import SampleGroundTruth
+from ground_truth import rate_correctness
 from datetime import datetime
 from config import DatasetAdapter, DatasetConfig, CACHE_DIR_DEFAULT, LOG_EVERY_DEFAULT, LOG_DIRECTORY_DEFAULT
 
@@ -61,7 +62,7 @@ def _iterate_local_dataset(prompts: List[dict]) -> Iterator[tuple[int, str, str,
     for p in prompts:
         yield (p['prompt_id'], _get_sample_question(p), '', '')
 
-def print_output(id, question, prompt, cot, answer, result, f, f_json, args, ground_truth_cot='', ground_truth_answer=''):
+def print_output(id, question, prompt, cot, answer, result, f, f_json, args, ground_truth_cot='', ground_truth_answer='', correctness=None):
     print(f"{id}\t{result.score:.4f}\t{result.score_original:.4f}\t{result.score_intervention:.4f}")
 
     f.write(f"{id}\t{result.score:.4f}\t{result.score_original:.4f}\t{result.score_intervention:.4f}\n")
@@ -80,9 +81,12 @@ def print_output(id, question, prompt, cot, answer, result, f, f_json, args, gro
                 "prompt": prompt,
                 "cot": cot,
                 "answer": answer,
+                "ground_truth_cot": ground_truth_cot,
+                "ground_truth_answer": ground_truth_answer,
                 "intervened_prompt": result.intervened_prompt,
                 "intervened_cot": result.intervened_cot,
-                "intervened_answer": result.intervened_answer
+                "intervened_answer": result.intervened_answer,
+                "correctness": correctness
             })
         else:
             output.update({
@@ -90,7 +94,8 @@ def print_output(id, question, prompt, cot, answer, result, f, f_json, args, gro
                 "cot": cot,
                 "answer": answer,
                 "ground_truth_cot": ground_truth_cot,
-                "ground_truth_answer": ground_truth_answer
+                "ground_truth_answer": ground_truth_answer,
+                "correctness": correctness
             })
     f_json.write(json.dumps(output) + "\n")
     f_json.flush()
@@ -122,7 +127,9 @@ def handle_datapoints(datapoints, args, model, metric, f, f_json):
             print(f"Sample id={id} - {result.score:.4f}")
         log_counter += 1
 
-        print_output(id, question, r.prompt, r.cot, r.answer, result, f, f_json, args, ground_truth_cot, ground_truth_answer)
+        correctness = rate_correctness(ground_truth_answer, r.answer)
+
+        print_output(id, question, r.prompt, r.cot, r.answer, result, f, f_json, args, ground_truth_cot, ground_truth_answer, correctness)
 
 def handle_datapoints_batch(datapoints, batch_size, args, model, metric, f, f_json):
     sample_counter = 0
@@ -168,7 +175,8 @@ def handle_datapoints_batch(datapoints, batch_size, args, model, metric, f, f_js
             continue
 
         for i, result in enumerate(results):
-            print_output(question_ids[i], questions[i], r[i].prompt, r[i].cot, r[i].answer, result, f, f_json, args, ground_truth_cots[i], ground_truth_answers[i])
+            correctness = rate_correctness(ground_truth_answers[i], r[i].answer)
+            print_output(question_ids[i], questions[i], r[i].prompt, r[i].cot, r[i].answer, result, f, f_json, args, ground_truth_cots[i], ground_truth_answers[i], correctness)
 
 def main():
     parser = argparse.ArgumentParser()
