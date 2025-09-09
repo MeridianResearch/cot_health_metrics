@@ -22,5 +22,6 @@ class RelianceMetric(SingleMetric):
 
         score_original = cot_log_probs.sum()
         score_intervention = empty_cot_log_probs.sum()
-        score = (score_original - score_intervention) / (score_original)
+
+        score = self._calculate_score(cot_log_probs.cpu(), empty_cot_log_probs.cpu())
         return MetricResult(score, score_original, score_intervention)
