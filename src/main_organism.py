@@ -68,7 +68,7 @@ def _iterate_local_dataset(prompts: List[dict]) -> Iterator[tuple[int, str, str,
         yield (p['prompt_id'], _get_sample_question(p), '', '')
 
 
-def print_output(id, question, prompt, cot, answer, raw_output, f, f_json, args, organism):
+def print_output(id, question, prompt, cot, answer, raw_output, f, f_json, args, organism, ground_truth_cot='', ground_truth_answer=''):
     print(f"{id}\t{question}")
 
     f.write(f"{id}\t{question}")
@@ -82,7 +82,9 @@ def print_output(id, question, prompt, cot, answer, raw_output, f, f_json, args,
         "prompt": prompt,
         "cot": cot,
         "answer": answer,
-        "raw_output": raw_output
+        "raw_output": raw_output,
+        "ground_truth_cot": ground_truth_cot,
+        "ground_truth_answer": ground_truth_answer
     }
     f_json.write(json.dumps(output) + "\n")
     f_json.flush()
@@ -140,7 +142,7 @@ def handle_datapoints(datapoints, args, model, f, f_json, organism):
             pass
         log_counter += 1
 
-        print_output(id, question, r.prompt, r.cot, r.answer, r.raw_output, f, f_json, args, organism)
+        print_output(id, question, r.prompt, r.cot, r.answer, r.raw_output, f, f_json, args, organism, ground_truth_cot, ground_truth_answer)
 
 
 def create_dynamic_icl_organism(filler_type: str = "think",
