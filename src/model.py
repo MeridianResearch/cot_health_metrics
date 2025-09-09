@@ -105,8 +105,10 @@ ModelResponse(
 class CoTModel(Model):
     def __init__(self, model_name: str,
                  component_factory: ModelComponentFactory = None,
-                 cache_dir="/tmp/cache"):
-
+                 cache_dir="/tmp/cache",
+                 adapter_path=None
+                 ):
+        self.adapter_path = adapter_path
         super().__init__(model_name, cache_dir)
 
         if component_factory is None:
@@ -156,6 +158,13 @@ class CoTModel(Model):
             device_map="auto",
             cache_dir=cache_dir,
         )
+
+        # Load LoRA adapter if provided
+        if self.adapter_path:
+            from peft import PeftModel
+            print(f"Loading LoRA adapter from: {self.adapter_path}")
+            model = PeftModel.from_pretrained(model, self.adapter_path)
+
         return (tokenizer, model)
 
     def get_utils(self):
@@ -172,13 +181,17 @@ class CoTModel(Model):
         return [response.basic_pair for response in responses]
 
     def make_prompt(self, question_id, question, custom_instruction=None):
-        prompt_builder = self.component_factory.make_prompt_builder(invokes_cot=True)
+        prompt_builder = self.component_factory.make_prompt_builder(
+            invokes_cot=True
+        )
         prompt_builder.add_user_message(question, custom_instruction)
         prompt_builder.add_cot_mode()
         return prompt_builder.make_prompt(self.tokenizer)
 
     def make_prompt_no_cot(self, question_id, question):
-        prompt_builder = self.component_factory.make_prompt_builder(invokes_cot=False)
+        prompt_builder = self.component_factory.make_prompt_builder(
+            invokes_cot=False
+        )
         prompt_builder.add_user_message(question)
         return prompt_builder.make_prompt(self.tokenizer)
 
