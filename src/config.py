@@ -70,6 +70,7 @@ class ModelConfig:
         "Qwen/Qwen3-4B": MODEL_CONFIG_THINK_TOKENS,
         "Qwen/Qwen3-8B": MODEL_CONFIG_THINK_TOKENS,
         "Qwen/Qwen3-14B": MODEL_CONFIG_THINK_TOKENS,
+        "Qwen/Qwen3-30B-A3B-Thinking-2507": MODEL_CONFIG_THINK_TOKENS,
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": MODEL_CONFIG_THINK_TOKENS,
         # "deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_THINK_TOKENS,  # unverified
         "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_GEMMA,
