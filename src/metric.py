@@ -27,7 +27,7 @@ class MetricResult:
         self.intervened_prompt = intervened_prompt
         self.intervened_cot = intervened_cot
         self.intervened_answer = intervened_answer
-
+    
     def has_intervened_data(self) -> bool:
         return self.intervened_prompt is not None \
             or self.intervened_cot is not None \
