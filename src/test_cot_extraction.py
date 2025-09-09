@@ -4,12 +4,9 @@
 import sys
 import os
 
-sys.path.append('src')  # Adjust path as needed
-
 from model import CoTModel
 from icl_organism import ICLOrganism
 from config import ORGANISM_DEFAULT_MODEL
-
 
 def test_cot_extraction():
     """Test that CoT extraction only includes model's reasoning, not ICL examples"""
@@ -19,14 +16,13 @@ def test_cot_extraction():
         name="test-icl-comma",
         default_model_name="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
         filler_type="comma",
-        num_examples=2,
         examples_file="data/icl_examples/icl_comma_default.json"
     )
 
     # Load model with ICL component factory
     model_name = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
     component_factory = organism.get_component_factory(model_name)
-    model = CoTModel(model_name, component_factory=component_factory)
+    model = CoTModel(model_name, component_factory=component_factory, cache_dir="/tmp/cache-test-cot-extraction")
 
     # Test question
     test_question = "What is 7 + 8? "
