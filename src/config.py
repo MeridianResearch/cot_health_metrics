@@ -71,9 +71,11 @@ class ModelConfig:
         "Qwen/Qwen3-8B": MODEL_CONFIG_THINK_TOKENS,
         "Qwen/Qwen3-14B": MODEL_CONFIG_THINK_TOKENS,
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": MODEL_CONFIG_THINK_TOKENS,
+        "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B": MODEL_CONFIG_THINK_TOKENS,
         # "deepcogito/cogito-v1-preview-llama-3B": MODEL_CONFIG_THINK_TOKENS,  # unverified
         "Wladastic/Mini-Think-Base-1B": MODEL_CONFIG_GEMMA,
         "google/gemma-2-2b-it": MODEL_CONFIG_GEMMA,
+        "google/gemma-2-9b-it": MODEL_CONFIG_GEMMA,
         "openai/gpt-oss-20b": MODEL_CONFIG_GPT_OSS_20B,
         # "microsoft/phi-2": MODEL_CONFIG_FUZZY_ANSWER,  # not very consistent
         "meta-llama/Meta-Llama-3-8B-Instruct": MODEL_CONFIG_LLAMA,
