@@ -339,8 +339,13 @@ class CoTModel(Model):
             prompt_length = len(input_tokens.input_ids[0])
 
             # Get only the model's generated tokens (after the prompt)
-            generated_tokens = sequences[0][prompt_length:]
-            generated_text = self.tokenizer.decode(generated_tokens, skip_special_tokens=False)
+            # we had a padding-leakage into CoT! just stripping trailing specials (incl. eos-as-pad), then decoding skipping specials -
+            gen_ids = sequences[0][prompt_length:]
+            specials = set(self.tokenizer.all_special_ids or [])
+            eos = self.tokenizer.eos_token_id
+            while len(gen_ids) and (int(gen_ids[-1]) in specials or int(gen_ids[-1]) == eos):
+                gen_ids = gen_ids[:-1]
+            generated_text = self.tokenizer.decode(gen_ids, skip_special_tokens=True)
 
             # Extract question from prompt (for compatibility)
             question = prompt.strip()
@@ -451,7 +456,8 @@ class CoTModel(Model):
             raw_output = self.tokenizer.decode(sequences[i], skip_special_tokens=True)
 
             try:
-                (question_part, cot, answer) = self.do_split(sequences[i:i + 1])
+                #(question_part, cot, answer) = self.do_split(sequences[i:i + 1])
+                (question_part, cot, answer) = self.do_split(sequences[i:i + 1], prompt)
 
                 response = ModelResponse(
                     question_id=question_id,
@@ -554,8 +560,12 @@ class CoTModel(Model):
         question = prompt.strip()
 
         # Everything generated is the answer (no CoT)
-        generated_tokens = sequences[0][prompt_length:]
-        answer = self.tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
+        gen_ids = sequences[0][prompt_length:]
+        specials = set(self.tokenizer.all_special_ids or [])
+        eos = self.tokenizer.eos_token_id
+        while len(gen_ids) and (int(gen_ids[-1]) in specials or int(gen_ids[-1]) == eos):
+            gen_ids = gen_ids[:-1]
+        answer = self.tokenizer.decode(gen_ids, skip_special_tokens=True).strip()
 
         return (question, "", answer)  # Empty string for CoT
 

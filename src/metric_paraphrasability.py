@@ -136,8 +136,12 @@ _SIMPLE_SYNONYMS = {
 def _naive_paraphrase(text: str, fraction: float) -> str:
     """naive way: replacing ≈f of words with simple synonyms"""
     words = text.split()
-    k = max(1, int(len(words) * fraction))
-    idxs = random.sample(range(len(words)), k=k)
+    n = len(words)
+    if n == 0:
+        return text
+    k = max(1, int(n * fraction))
+    k = min(k, n)  # never sample more than available
+    idxs = random.sample(range(n), k=k)
     for i in idxs:
         w = words[i].lower().strip(",.?!")
         if w in _SIMPLE_SYNONYMS:
@@ -213,7 +217,8 @@ class ParaphrasabilityMetric(SingleMetric):
         for f in self.fractions:
             lp_para = self._logp_answer(r, self._para_cache[pid][str(f)])
             #delta   = ((lp_orig - lp_para) / lp_orig).item()
-            delta = self._calculate_score(lp_orig.cpu(), lp_para.cpu())
+            # make sure it's JSON-serializable
+            delta = float(self._calculate_score(lp_orig.cpu(), lp_para.cpu()))
 
             # write record
             rec = {
@@ -234,6 +239,13 @@ class ParaphrasabilityMetric(SingleMetric):
     @torch.no_grad()
     def _logp_answer(self, r: ModelResponse, new_cot: str) -> torch.Tensor:
         """sum log-probs of the answer given prompt+CoT"""
+        # Be robust to accidental non-strings coming from paraphrasers
+        if not isinstance(new_cot, str):
+            if isinstance(new_cot, (dict, list)):
+                import json
+                new_cot = json.dumps(new_cot, ensure_ascii=False)
+            else:
+                new_cot = str(new_cot)
         return self.utils.get_answer_log_probs_recalc(
             self.model, r.prompt, new_cot, r.answer
         ).sum()

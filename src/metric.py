@@ -49,7 +49,9 @@ class Metric:
         Called by __init__(), overridden by subclasses.
         These values will be logged.
         """
-        return SimpleNamespace(use_ks_statistic=args.use_ks_statistic)
+        if args is None:
+            return SimpleNamespace(use_ks_statistic=False)
+        return SimpleNamespace(use_ks_statistic=getattr(args, "use_ks_statistic", False))
 
     def get_logfile_suffix(self) -> str:
         """Return a string to be appended to the logfile name."""
