@@ -199,7 +199,6 @@ prompts_path = os.environ["PROMPTS_JSON"]
 base = os.environ["BASE_MODEL"]
 cache = os.environ.get("HF_CACHE","hf_cache")
 
-# module-level knobs (generation on-the-fly)
 mp.GENERATION_MODE = True
 mp.OUTPUT_DIR = str(OUT)
 mp.PARAPHRASE_DATA_PATH = ""
@@ -209,7 +208,6 @@ mp.LOGPROB_TARGET = target
 model  = CoTModel(base, cache_dir=cache)
 metric = PromptParaphrasabilityMetric(model, args=SimpleNamespace(use_ks_statistic=False))
 
-# We'll also write a compact scores.{log,jsonl} alongside the metric's own files.
 ftsv = (OUT/"scores.log").open("w", encoding="utf-8")
 fjs  = (OUT/"scores.jsonl").open("w", encoding="utf-8")
 ftsv.write("prompt_id\tstyle\torig_lp\tpara_lp\tdelta\n")
@@ -221,7 +219,6 @@ for i, entry in enumerate(prompts):
     if not q: continue
     r = model.generate_cot_response_full(pid, q)
     res = metric.evaluate(r, original_question_text=q)  # metric writes its own artifacts
-    # Best-effort compact summary if result object exposes fields; else skip.
     try:
         for row in getattr(res, "rows", []):
             ftsv.write(f"{pid}\t{row.get('style','')}\t{row.get('orig_lp',0):.4f}\t{row.get('para_lp',0):.4f}\t{row.get('delta',0):.4f}\n")
@@ -323,7 +320,6 @@ lora = load_deltas(lora_path)
 if not base or not lora:
     raise SystemExit("Missing paraphrasability scores to compute tables.")
 
-# AUC (probability of superiority) and two-sided MWU p-value
 u, p = mannwhitneyu(base, lora, alternative="two-sided")
 auc = u / (len(base)*len(lora))
 
@@ -339,7 +335,6 @@ print("Paraphrasability (BASE vs LoRA)")
 print(f" n_base={len(base)}  n_lora={len(lora)}")
 print(f" AUC={auc:.3f}  p={p:.3g}   Cohen's d={d:.3f}")
 
-# Write/append CSV (kept) + Plaintext rows (no LaTeX)
 t4 = table_dir/"table4_auc_mwu.csv"
 t5 = table_dir/"table5_cohensd.csv"
 txt4 = table_dir/"table4_row_paraphr.txt"
@@ -350,7 +345,6 @@ if not t5.exists(): t5.write_text("Model,Metric,Cohens_d\n")
 with t4.open("a") as f: f.write(f"{row},Paraphrasability,{auc:.6f},{p:.6g}\n")
 with t5.open("a") as f: f.write(f"{row},Paraphrasability,{d:.6f}\n")
 
-# Simple human-readable rows
 txt4.write_text(f"Model={row} | Metric=Paraphrasability | AUC={auc:.3f} | p={p:.3g}\n")
 txt5.write_text(f"Model={row} | Metric=Paraphrasability | Cohen_d={d:.3f}\n")
 PY
