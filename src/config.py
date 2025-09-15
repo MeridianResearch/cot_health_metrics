@@ -164,7 +164,7 @@ class DatasetAdapter:
     def extract_pieces(self, sample_data) -> tuple[str, str, str]:
         return self.do_extract(sample_data)
 
-    def load(self, dataset_name: str, max_samples: Optional[int] = None, split: str = None) -> Dataset:
+    def load(self, dataset_name: str, max_samples: Optional[int] = None, split: str = None, posthoc: bool = True) -> Dataset:
         if split is None:
             split = self.load_split  # Use default
         if max_samples is not None:
@@ -172,7 +172,26 @@ class DatasetAdapter:
         print(f"Loading dataset {dataset_name} with split {split}")
         print(f"Dataset name: {self.get(dataset_name)}")
         print(f"Stored Dataset name: {self.dataset_name}")
-        return load_dataset(self.get(dataset_name), self.load_section, split=split)
+        # datset= load_dataset(self.get(dataset_name), self.load_section, split=split)
+        # Load the original dataset
+        dataset = load_dataset(self.get(dataset_name), self.load_section, split=split)
+
+        # Modify the questions by adding the answer for GSM8K dataset
+        if  "gsm8k" in dataset_name.lower() and posthoc:
+            def modify_question(example):
+                # Extract the final answer using split("####")[-1]
+                final_answer = example["answer"].split("####")[-1].strip()
+
+                # Modify the question by appending the answer
+                example["question"] = example["question"] + " The answer is " + final_answer
+
+                return example
+
+            # Apply the modification to all examples in the dataset
+            dataset = dataset.map(modify_question)
+            print(f"Modified {len(dataset)} questions by adding answers")
+
+        return dataset
 
 
 class DatasetConfig:
