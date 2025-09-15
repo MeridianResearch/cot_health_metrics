@@ -185,6 +185,7 @@ def main():
     parser.add_argument("--log-file", default=None)
     parser.add_argument("--log-every", type=int, default=LOG_EVERY_DEFAULT)
     parser.add_argument("--log-verbose", type=bool, default=True)
+    parser.add_argument("--disable-cot", type=bool, default=False)
 
     parser.add_argument("--filler", type=str, default="think")  # Internalized
     parser.add_argument("--filler-in-prompt", action='store_true')
@@ -214,8 +215,15 @@ def main():
     os.makedirs(args.cache_dir, exist_ok=True)
 
     # Load models
-    model = CoTModel(args.model, cache_dir=args.cache_dir, adapter_path=getattr(args, 'adapter_path', None))
-    model2 = CoTModel(args.model2, cache_dir=args.cache_dir, adapter_path=getattr(args, 'adapter_path', None)) if args.model2 else None
+    model = CoTModel(args.model,
+        cache_dir=args.cache_dir,
+        adapter_path=getattr(args, 'adapter_path', None),
+        enable_thinking=not args.disable_cot)
+    model2 = CoTModel(
+        args.model2,
+        cache_dir=args.cache_dir,
+        adapter_path=getattr(args, 'adapter_path', None),
+        enable_thinking=not args.disable_cot) if args.model2 else None
 
     # Create metric(s)
     from types import SimpleNamespace

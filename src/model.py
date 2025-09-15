@@ -106,7 +106,8 @@ class CoTModel(Model):
     def __init__(self, model_name: str,
                  component_factory: ModelComponentFactory = None,
                  cache_dir="/tmp/cache",
-                 adapter_path=None
+                 adapter_path=None,
+                 enable_thinking=True
                  ):
         self.adapter_path = adapter_path
         super().__init__(model_name, cache_dir)
@@ -126,6 +127,7 @@ class CoTModel(Model):
         except Exception as e:
             print(f"Error loading model {model_name}: {e}")
             raise
+        self.enable_thinking = enable_thinking
 
     def _load_model(self, model_name, cache_dir):
         # Set token for gated models
@@ -182,7 +184,7 @@ class CoTModel(Model):
 
     def make_prompt(self, question_id, question, custom_instruction=None):
         prompt_builder = self.component_factory.make_prompt_builder(
-            invokes_cot=True
+            invokes_cot=self.enable_thinking
         )
         prompt_builder.add_user_message(question, custom_instruction)
         prompt_builder.add_cot_mode()
