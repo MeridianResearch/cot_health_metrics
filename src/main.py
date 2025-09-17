@@ -1,53 +1,48 @@
 import torch
-from metric import Metric, DummyMetric
-from metric_reliance import RelianceMetric
-from metric_paraphrasability import ParaphrasabilityMetric
-from metric_transferability import TransferabilityMetric
-from model import Model, CoTModel
-from metric_internalized import InternalizedMetric
+import argparse
+from model import CoTModel
+from all_metrics import construct_metric
+from config import CACHE_DIR_DEFAULT
 
+DEFAULT_MODEL_MAIN = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
 
 def main():
-    # Check if CUDA is available
-    cuda_available = torch.cuda.is_available()
-    print(f"CUDA Available: {cuda_available}")
-    
-    if not cuda_available:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", default=DEFAULT_MODEL_MAIN)
+    parser.add_argument("--model2", default=DEFAULT_MODEL_MAIN)
+    parser.add_argument("--metric", default="Dummy")
+    parser.add_argument("--question", default="A car travels 60 miles in 1.5 hours. What is its average speed?")
+    parser.add_argument("--question-file", default=None)
+    parser.add_argument("--cache-dir", default=CACHE_DIR_DEFAULT)
+    args = parser.parse_args()
+
+    if not torch.cuda.is_available():
         print("CUDA is not available. Exiting...")
         exit(1)
 
-    #model = Model("Qwen/Qwen3-0.6B", cache_dir="/tmp/cache2")
-    #model = Model("deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", cache_dir="/tmp/cache2")
-    #model = Model("deepcogito/cogito-v1-preview-llama-3B", cache_dir="/tmp/cache2")
-    #model = Model("Wladastic/Mini-Think-Base-1B", cache_dir="/tmp/cache2")
-    #model = Model("google/gemma-2-2b", cache_dir="/tmp/cache2")
-    #model = Model("microsoft/phi-2", cache_dir="/tmp/cache2")
-    model = CoTModel("mistralai/Mistral-7B-Instruct-v0.3", cache_dir="/tmp/cache2")
+    model = CoTModel(args.model, cache_dir="/tmp/cache2")
+    model2 = CoTModel(args.model2, cache_dir=args.cache_dir) if args.model2 else None
 
-    question = "A car travels 60 miles in 1.5 hours. What is its average speed?"
-    # This interface also works, convenient for testing
-    #(cot, prediction) = model.generate_cot_response(question)
-    r = model.generate_cot_response_full(0, question)
+    metric = construct_metric(
+        metric_name=args.metric,
+        model=model,
+        alternative_model=model2)
+    
+    question = args.question
+    if args.question_file:
+        with open(args.question_file, "r") as f:
+            question = '\n'.join(f.readlines())
+
+    r = model.generate_cot_response_full(question_id=0, question=question)
     print(r)
 
-    '''
-    metric: Metric = DummyMetric("DummyModel")
-    value: float = metric.evaluate(r)
-    print(f"Metric value: {value}")
-    
-    print("ParaphrasedMetric")
-    metric: Metric = ParaphrasabilityMetric(model.model_name)
-    value: float = metric.evaluate(r)
-    print(f"Metric value: {value}")
-    
+    try:
+        (score, score_original, score_intervention) = metric.evaluate(r)
+    except RuntimeError as err:
+        print(f"Sample id={id} - metric evaluation error ({err})")
+        exit(1)
 
-
-    print("InternalizedMetric")
-    metric: Metric = InternalizedMetric(model.model_name)
-    score, score_original, score_intervention = metric.evaluate(r)
-    print(f"score: {score}, score original: {score_original}, score intervention {score_intervention}")
-    '''
-
+    print(f"Metric value: {score}, logprob original: {score_original}, logprob intervention {score_intervention}")
 
 if __name__ == "__main__":
     main()
