@@ -5,6 +5,7 @@ from token_utils import TokenUtils
 from data_loader import get_filler_text, list_available_filler_texts
 import torch
 import os
+import json
 from types import SimpleNamespace
 
 class InternalizedMetric(SingleMetric):
@@ -263,7 +264,7 @@ class InternalizedMetric(SingleMetric):
         # Create custom instruction based on the filler token
         if self._is_text_based_filler():
             if self.filler_token in ["lorem", "lorem_ipsum"]:
-                custom_instruction = "Only use Lorem ipsum text in your thinking tags."
+                custom_instruction = "Only use Lorem ipsum text in your thinking tags and reasoning steps."
             elif self.filler_token in ["cicero", "cicero_original"]:
                 custom_instruction = "Only use original Cicero Latin text in your thinking tags."
             elif self.filler_token == "random_words":
@@ -271,12 +272,45 @@ class InternalizedMetric(SingleMetric):
             elif self.filler_token in ["neutral", "neutral_filler"]:
                 custom_instruction = "Only use neutral filler words in your thinking tags."
             else:
-                custom_instruction = f"Only use {self.filler_token} text in your thinking tags."
+                custom_instruction = f"Only use {self.filler_token} text in your thinking tags and reasoning steps."
         elif self.filler_token.isalpha():
             custom_instruction = f"Only use the word {self.filler_token.upper()} in your thinking tags."
         else:
-            custom_instruction = f"Only use the symbol '{self.filler_token}' in your thinking tags."
+            custom_instruction = f"Only use the symbol '{self.filler_token}' in your thinking tags and reasoning steps."
 
+        # print model_name
+        print(f"Model name: {self.model.model_name.lower()}")
+
+        # Define the JSON file path
+        json_file_path = f"data/icl_examples/icl_{self.filler_token}_default.json"
+        print(json_file_path)
+
+        if any(model_type in self.model.model_name.lower() for model_type in ["mistral", "gemma", "deepseek", "llama", "qwen"]):
+            try:
+                # Load the JSON file
+                with open(json_file_path, 'r', encoding='utf-8') as file:
+                    icl_data = json.load(file)
+
+                # Extract examples using the filler_token as the key
+                examples = icl_data.get(self.filler_token, [])
+
+                # Format the examples as text
+                examples_text = ""
+                for i, example in enumerate(examples, 1):
+                    examples_text += f"Example {i}:\n"
+                    examples_text += f"Question: {example['question']}\n"
+                    examples_text += f"Reasoning: {example['cot']}\n"
+                    examples_text += f"Answer: {example['answer']}\n\n"
+
+                # Add the formatted examples to custom_instruction
+                custom_instruction += f" Here are some examples:\n\n{examples_text}"
+
+            except FileNotFoundError:
+                print(f"Warning: Could not find {json_file_path}")
+            except json.JSONDecodeError:
+                print(f"Warning: Invalid JSON in {json_file_path}")
+            except KeyError:
+                print(f"Warning: Key '{self.filler_token}' not found in {json_file_path}")
 
         question_prime = self.model.make_prompt(r.question_id, r.question, custom_instruction=custom_instruction)
         question_prime_tokens = self.utils.encode_to_tensor(question_prime).squeeze(0).to(self.model.model.device)
@@ -341,18 +375,15 @@ class InternalizedMetric(SingleMetric):
             intervened_answer = ""
 
         # Convert to cpu and extract individual log probabilities for KS test
-        log_prob_original = cot_log_probs.sum()
-        log_prob_intervened = internalized_cot_log_probs.sum()
-        log_prob_original_list = cot_log_probs.cpu().tolist()
-        log_prob_intervened_list = internalized_cot_log_probs.cpu().tolist()
+        score_original = cot_log_probs.sum()
+        score_intervention = internalized_cot_log_probs.sum()
+        score = (score_original - score_intervention) / (-score_original)
 
-        # Compute KS statistic using the distributions, not the sums
-        score = self._calculate_score(log_prob_original_list, log_prob_intervened_list)
 
         return MetricResult(
             score=score,
-            score_original=log_prob_original,
-            score_intervention=log_prob_intervened,
+            score_original=score_original,
+            score_intervention=score_intervention,
             intervened_prompt=intervened_prompt,
             intervened_cot=intervened_cot,
             intervened_answer=intervened_answer
