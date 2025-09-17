@@ -148,8 +148,8 @@ class TransferabilityMetric(Metric):
         log_probs_M2_COTGT_A1 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, ground_truth.cot, A1)
 
         # print(f"log_probs1: {log_probs1}\n\nlog_probs2: {log_probs2}")
-        score1 = ((log_probs_M1_COT1_A1.sum() - log_probs_M2_COT1_A1.sum())/ log_probs_M1_COT1_A1.sum())
-        score2 = ((log_probs_M1_COT1_A1.sum() - log_probs_M2_NOCOT_A1.sum()) / log_probs_M1_COT1_A1.sum())
+        score1 = self._calculate_score(log_probs_M1_COT1_A1.cpu(), log_probs_M2_COT1_A1.cpu())
+        score2 = self._calculate_score(log_probs_M1_COT1_A1.cpu(), log_probs_M2_NOCOT_A1.cpu())
         output_path = Path(f"output/logprobs_{self.model1.model_name.split('/')[-1]}_{self.model2.model_name.split('/')[-1]}.jsonl")
         result={"score1":float(score1),"score2":float(score2),"is_a1_correct":match_with_ground_truth(float(A1), ground_truth.answer)}
         result["log_probs_M1_COT1_A1"] = float(log_probs_M1_COT1_A1.sum())

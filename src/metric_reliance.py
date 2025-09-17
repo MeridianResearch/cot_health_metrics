@@ -27,3 +27,4 @@ class RelianceMetric(SingleMetric):
 
         score = (score_original - score_intervention) / (-score_original)
         return MetricResult(score, score_original, score_intervention)
+
