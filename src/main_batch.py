@@ -185,6 +185,7 @@ def main():
     parser.add_argument("--log-file", default=None)
     parser.add_argument("--log-every", type=int, default=LOG_EVERY_DEFAULT)
     parser.add_argument("--log-verbose", type=bool, default=True)
+    parser.add_argument("--not-prompt", action='store_true', help="Activate not_prompt logic in RelianceMetric")
 
     parser.add_argument("--filler", type=str, default="think")  # Internalized
     parser.add_argument("--filler-in-prompt", action='store_true')
@@ -221,6 +222,7 @@ def main():
     extra_args = SimpleNamespace()
     for arg in ["filler", "filler_in_prompt", "filler_in_cot"]:
         setattr(extra_args, arg, getattr(args, arg))
+    extra_args.not_prompt = args.not_prompt
 
     metric = construct_metric(
         metric_name=args.metric,
