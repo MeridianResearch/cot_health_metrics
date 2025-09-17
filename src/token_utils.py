@@ -1,5 +1,6 @@
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from config import ModelConfig
 
 class TokenUtils:
     def __init__(self, hf_model: AutoModelForCausalLM, tokenizer: AutoTokenizer):
@@ -19,16 +20,34 @@ class TokenUtils:
     def escape_string(self, string: str):
         return string.encode('unicode_escape').decode()
 
+    ## extract end_think based on model name, if Qwen is used, use </think>, else use fuzzy end think list from model config
+    def _get_end_think_token(self, model):
+        model_name = model.model_name
+        model_config = ModelConfig.get(model_name)
+        if "end_think" in model_config:
+            end_think = model_config["end_think"]
+        elif "fuzzy_end_think_list" in model_config:
+            # Use the first token in the fuzzy_end_think_list as end_think
+            end_think = model_config["fuzzy_end_think_list"][0]
+        else:
+            print(f"ERROR: model {model_name} missing CoT separator config")
+            exit(1)
+        return end_think
+
     def get_answer_log_probs_recalc(self, model, prompt: str, cot: str, prediction: str):
         """ Get log probs for just the answer (prediction), given prompt+cot+prediction.
         
             Note: prompt should end with a <think> token if required.
             cot should not contain <think> or </think>.
         """
+        # Determine end_think token
+        end_think = self._get_end_think_token(model)
+        # print end_think token for debugging
+        print(f"end_think token: {end_think}")
         if cot == "":
-            text0 = prompt + "</think>"
+            text0 = prompt + end_think
         else:
-            text0 = prompt + cot + "</think>"
+            text0 = prompt + cot + end_think
         text = text0 + prediction
 
         text0_tokens = self.encode_to_tensor(text0)
