@@ -3,7 +3,7 @@ from transformers import AutoConfig
 import torch
 from dataclasses import dataclass
 from token_utils import TokenUtils
-from model_prompts import ModelPromptBuilder
+from src.model_prompts import ModelPromptBuilder
 from typing import Optional, List, Callable
 from config import ModelConfig
 from model_factory import ModelComponentFactory
@@ -505,21 +505,31 @@ class CoTModel(Model):
     def get_think_tokens(self):
         model_config = ModelConfig.get(self.model_name)
 
-        # Tokenize the begin_think and end_think strings to get all token IDs
-        begin_think_text = model_config["begin_think"]
-        end_think_text = model_config["end_think"]
+        if "begin_think" in model_config:
+            # Tokenize the begin_think and end_think strings to get all token IDs
+            begin_think_text = model_config["begin_think"]
+            end_think_text = model_config["end_think"]
 
-        # Encode to get token IDs (returns tensor, so convert to list)
-        begin_think_tokens = self.tokenizer.encode(begin_think_text, add_special_tokens=True)
-        end_think_tokens = self.tokenizer.encode(end_think_text, add_special_tokens=True)
+            # Encode to get token IDs (returns tensor, so convert to list)
+            begin_think_tokens = self.tokenizer.encode(begin_think_text, add_special_tokens=True)
+            end_think_tokens = self.tokenizer.encode(end_think_text, add_special_tokens=True)
 
-        # Convert to lists if they're tensors
-        if hasattr(begin_think_tokens, 'tolist'):
-            begin_think_tokens = begin_think_tokens.tolist()
-        if hasattr(end_think_tokens, 'tolist'):
-            end_think_tokens = end_think_tokens.tolist()
+            # Convert to lists if they're tensors
+            if hasattr(begin_think_tokens, 'tolist'):
+                begin_think_tokens = begin_think_tokens.tolist()
+            if hasattr(end_think_tokens, 'tolist'):
+                end_think_tokens = end_think_tokens.tolist()
 
-        return (begin_think_tokens, end_think_tokens)
+            return (begin_think_tokens, end_think_tokens)
+        elif "fuzzy_end_think_list" in model_config:
+            end_think_list = model_config["fuzzy_end_think_list"]
+            end_think_tokens = []
+            for end_think in end_think_list:
+                tokens = self.tokenizer.encode(end_think, add_special_tokens=True)
+                if hasattr(tokens, 'tolist'):
+                    tokens = tokens.tolist()
+                end_think_tokens.extend(tokens)
+            return ([], end_think_tokens)
     def generate_no_cot_response_full(self, question_id, question, max_new_tokens=4096, do_sample=True):
         """Generate a response without any Chain-of-Thought reasoning"""
         # Use the no-CoT prompt builder
