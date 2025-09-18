@@ -1,6 +1,7 @@
-torch
 numpy
-transformers
+transformers>=4.53.2
+tokenizers>=0.15.0
+sentencepiece>=0.1.99
 accelerate
 datasets
 plotly
@@ -9,3 +10,6 @@ wandb
 peft
 bitsandbytes
 scipy
+torch
+pytest
+google-generativeai
