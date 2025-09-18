@@ -35,7 +35,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, StoppingCriteria, StoppingCriteriaList
+from transformers import AutoModelForCausalLM, AutoTokenizer, StoppingCriteria, StoppingCriteriaList, AutoConfig
 
 # Optional packages
 try:
@@ -489,28 +489,36 @@ def resolve_adapter_dir(adapter_path: str | None) -> Optional[Path]:
         f"Point to a directory containing 'adapter_config.json' (e.g., .../checkpoint-462)."
     )
 
+
 def load_model_and_tokenizer(
-    model_name_or_path: str,
-    adapter_path: Optional[str],
-    tokenizer_path: Optional[str],
-    use_8bit: bool,
-    use_4bit: bool,
-    bf16: bool,
-    fp16: bool,
-    device_map: str = "auto",
+        model_name_or_path: str,
+        adapter_path: Optional[str],
+        tokenizer_path: Optional[str],
+        use_8bit: bool,
+        use_4bit: bool,
+        bf16: bool,
+        fp16: bool,
+        device_map: str = "auto",
 ):
     quant_cfg = None
     dtype = torch.bfloat16 if bf16 else (torch.float16 if fp16 else None)
+
     if use_8bit or use_4bit:
         if not _BNB_AVAILABLE:
             raise RuntimeError("bitsandbytes is not available; cannot use --use_4bit/--use_8bit.")
-        quant_cfg = BitsAndBytesConfig(
-            load_in_8bit=use_8bit,
-            load_in_4bit=use_4bit,
-            bnb_4bit_use_double_quant=True if use_4bit else None,
-            bnb_4bit_quant_type="nf4" if use_4bit else None,
-            bnb_4bit_compute_dtype=torch.bfloat16 if bf16 else torch.float16,
-        )
+
+        if use_4bit:
+            quant_cfg = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.bfloat16 if bf16 else torch.float16,
+            )
+        else:
+            quant_cfg = BitsAndBytesConfig(
+                load_in_8bit=True,
+                bnb_8bit_compute_dtype=torch.bfloat16 if bf16 else torch.float16,
+            )
 
     tok_src = tokenizer_path or model_name_or_path
     logging.info("Loading tokenizer: %s", tok_src)
@@ -519,13 +527,49 @@ def load_model_and_tokenizer(
         tok.pad_token = tok.eos_token
 
     logging.info("Loading base model: %s", model_name_or_path)
-    base = AutoModelForCausalLM.from_pretrained(
-        model_name_or_path,
-        device_map=device_map,
-        torch_dtype=dtype,
-        quantization_config=quant_cfg,
-        trust_remote_code=True,
-    )
+
+    # FIX: Patch the config to avoid the quantization_config.to_dict() error
+    import logging as python_logging
+    import warnings
+    from transformers import AutoConfig
+
+    # Save original logging states
+    transformers_logger = python_logging.getLogger("transformers")
+    config_logger = python_logging.getLogger("transformers.configuration_utils")
+    original_transformers_level = transformers_logger.level
+    original_config_level = config_logger.level
+
+    # Suppress logging temporarily
+    transformers_logger.setLevel(python_logging.CRITICAL)
+    config_logger.setLevel(python_logging.CRITICAL)
+    warnings.filterwarnings("ignore")
+
+    try:
+        # First, load the config separately and patch it
+        config = AutoConfig.from_pretrained(
+            model_name_or_path,
+            trust_remote_code=True,
+        )
+
+        # Patch the config to avoid the NoneType error
+        if hasattr(config, 'quantization_config') and config.quantization_config is None:
+            # Remove the None quantization_config to avoid the error
+            delattr(config, 'quantization_config')
+
+        # Now load the model with the patched config
+        base = AutoModelForCausalLM.from_pretrained(
+            model_name_or_path,
+            config=config,
+            device_map=device_map,
+            torch_dtype=dtype,
+            quantization_config=quant_cfg,
+            trust_remote_code=True,
+        )
+    finally:
+        # Restore original logging levels
+        transformers_logger.setLevel(original_transformers_level)
+        config_logger.setLevel(original_config_level)
+        warnings.filterwarnings("default")
 
     if adapter_path:
         if not _PEFT_AVAILABLE:
@@ -732,6 +776,20 @@ def main():
         raise ValueError("Provide one of: --question OR --questions_file OR --jsonl_messages_file OR (--hf_name AND --hf_split).")
     if len(streams) > 1:
         logging.warning("Multiple inputs provided; they will be concatenated.")
+
+    # ADD THE TEST HERE - before model loading
+    logging.info("Testing model availability...")
+    try:
+        from transformers import AutoConfig
+        config = AutoConfig.from_pretrained(args.model_name_or_path, trust_remote_code=True)
+        logging.info("Model config loaded successfully")
+        logging.info(f"Model type: {config.model_type}")
+        logging.info(
+            f"Has quantization config: {hasattr(config, 'quantization_config') and config.quantization_config is not None}")
+    except Exception as e:
+        logging.error(f"Error loading model config: {e}")
+        logging.error("The model might not exist or be accessible. Check your model name and network connection.")
+        raise SystemExit(1)
 
     # Load model/tokeniser
     tok, model = load_model_and_tokenizer(

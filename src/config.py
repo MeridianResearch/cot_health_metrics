@@ -68,6 +68,7 @@ class ModelConfig:
         "Qwen/Qwen3-0.6B": MODEL_CONFIG_THINK_TOKENS,
         "Qwen/Qwen3-1.7B": MODEL_CONFIG_THINK_TOKENS,
         "Qwen/Qwen3-4B": MODEL_CONFIG_THINK_TOKENS,
+        "Qwen/Qwen2-7B": MODEL_CONFIG_THINK_TOKENS,
         "Qwen/Qwen3-8B": MODEL_CONFIG_THINK_TOKENS,
         "Qwen/Qwen3-14B": MODEL_CONFIG_THINK_TOKENS,
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": MODEL_CONFIG_THINK_TOKENS,
@@ -81,6 +82,9 @@ class ModelConfig:
         "meta-llama/Meta-Llama-3-8B-Instruct": MODEL_CONFIG_LLAMA,
         "meta-llama/Llama-2-7b-chat-hf": MODEL_CONFIG_LLAMA,
         "mistralai/Mistral-7B-Instruct-v0.3": MODEL_CONFIG_MISTRAL,
+        # merged SFT models
+        "output/qwen-mixed_rank8-merged": MODEL_CONFIG_THINK_TOKENS,
+        "output/qwen-no_cot_rank1-merged": MODEL_CONFIG_THINK_TOKENS,
     }
 
     @staticmethod

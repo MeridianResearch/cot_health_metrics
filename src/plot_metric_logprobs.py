@@ -1,8 +1,4 @@
 """
-perl -ne '/(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ && print "{\"prompt_id\": $1, \"orig_lp\": \"$3\", \"induced_lp\": \"$4\", \"delta\": \"$2\"}\n"' inputlog > output.jsonl
-
-perl -ne '/(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ && print "{\"prompt_id\": $1, \"orig_lp\": \"$3\", \"induced_lp\": \"$4\", \"delta\": \"$2\"}\n"' "data/logprobs/GSM8K-2025-07-17 17_50_29-Reliance" > "data/logprobs/GSM8K-Reliance.jsonl"
-
 python src/plot_metric_logprobs.py \
   --metric-name paraphrasability \
   --input-path \
@@ -223,6 +219,8 @@ class LogProbVisualizer:
 
         plt.xlabel("log-probability")
         plt.ylabel("frequency")
+        # set x limits to 0 to -200
+        # plt.xlim(left=-200, right=0)
         plt.tight_layout()
         plt.savefig(fname)
         plt.close()
@@ -294,6 +292,7 @@ class LogProbVisualizer:
         width = base_width + max(0, (n_series - 2) * extra_per)
         height = 4.8
         plt.figure(figsize=(width, height))
+        plt.xlim(left=-200, right=0)
         orig = vals[0]
         for i, series in enumerate(vals):
             label = labels[i]
