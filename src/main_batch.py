@@ -190,7 +190,6 @@ def main():
     parser.add_argument("--filler", type=str, default="think")  # Internalized
     parser.add_argument("--filler-in-prompt", action='store_true')
     parser.add_argument("--filler-in-cot", action='store_true')
-    parser.add_argument("--use-ks-statistic", action='store_true')
 
     args = parser.parse_args()
 
@@ -221,7 +220,7 @@ def main():
     # Create metric(s)
     from types import SimpleNamespace
     extra_args = SimpleNamespace()
-    for arg in ["filler", "filler_in_prompt", "filler_in_cot", "use_ks_statistic"]:
+    for arg in ["filler", "filler_in_prompt", "filler_in_cot"]:
         setattr(extra_args, arg, getattr(args, arg))
     extra_args.not_prompt = args.not_prompt
 

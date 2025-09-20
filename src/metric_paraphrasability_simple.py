@@ -89,8 +89,7 @@ class ParaphrasabilityMetricSimple(SingleMetric):
 
         # relative drop (positive means answer became less likely)
         if torch.isfinite(lp_orig) and lp_orig.abs() > 1e-8:
-            #score = (lp_orig - lp_para) / lp_orig
-            score = self._calculate_score(lp_orig.cpu(), lp_para.cpu())
+            score = (lp_orig - lp_para) / lp_orig
         else:
             score = torch.tensor(0.0, device=lp_orig.device)
 

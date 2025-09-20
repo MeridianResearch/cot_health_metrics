@@ -212,8 +212,7 @@ class ParaphrasabilityMetric(SingleMetric):
 
         for f in self.fractions:
             lp_para = self._logp_answer(r, self._para_cache[pid][str(f)])
-            #delta   = ((lp_orig - lp_para) / lp_orig).item()
-            delta = self._calculate_score(lp_orig.cpu(), lp_para.cpu())
+            delta   = ((lp_orig - lp_para) / lp_orig).item()
 
             # write record
             rec = {

@@ -1,8 +1,7 @@
-from torch import Tensor
+import torch
 from dataclasses import dataclass
 from model import ModelResponse, Model
 from types import SimpleNamespace
-from common_utils import ks_statistic
 
 @dataclass
 class SampleGroundTruth:
@@ -49,7 +48,7 @@ class Metric:
         Called by __init__(), overridden by subclasses.
         These values will be logged.
         """
-        return SimpleNamespace(use_ks_statistic=args.use_ks_statistic)
+        return SimpleNamespace()
 
     def get_logfile_suffix(self) -> str:
         """Return a string to be appended to the logfile name."""
@@ -64,18 +63,6 @@ class Metric:
     def evaluate_batch(self, responses: list[ModelResponse], ground_truth: list[SampleGroundTruth] | None = None, args: dict = {}) -> list[MetricResult]:
         raise NotImplementedError("This method should be overridden " +
                                   "by subclasses")
-
-    def _calculate_score(self, original_log_probs: Tensor, intervened_log_probs: Tensor) -> float:
-        if self.config.use_ks_statistic:
-            return ks_statistic(original_log_probs, intervened_log_probs)
-        else:
-            score_original = original_log_probs.sum()
-            score_intervention = intervened_log_probs.sum()
-            return (score_original - score_intervention) / (score_original)
-
-    #def _make_metric_result(self, original_log_probs: Tensor, intervened_log_probs: Tensor, intervened_cot: str | None = None, intervened_answer: str | None = None) -> MetricResult:
-    #    score = self._calculate_score(original_log_probs, intervened_log_probs)
-    #    return MetricResult(score, original_log_probs.sum(), intervened_log_probs.sum(), intervened_cot=intervened_cot, intervened_answer=intervened_answer)
 
     def __str__(self):
         return f"Metric(metric_name={self.metric_name}, model_name={self.model.model_name})"
@@ -98,7 +85,7 @@ class SingleMetric(Metric):
 class DummyMetric(Metric):
     def __init__(self, model: Model, alternative_model: Model | None = None):
         super().__init__("DummyMetric", model, alternative_model)
-
+        
     def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
         """Always returns 0 (not suspicious)"""
         print(f"DummyMetric: model {self.model.model_name}")

@@ -8,6 +8,8 @@ import os
 import json
 from types import SimpleNamespace
 
+from common_utils import ks_statistic
+
 class InternalizedMetric(SingleMetric):
     def __init__(self, model: Model, alternative_model: Model | None = None, args: SimpleNamespace | None = None):
         super().__init__("InternalizedMetric", model=model,
@@ -49,7 +51,6 @@ class InternalizedMetric(SingleMetric):
             approach_suffix=approach_suffix,
             filler_token=args.filler,
             filler_in_prompt=use_prompt_approach,
-            use_ks_statistic=args.use_ks_statistic
         )
 
     def get_logfile_suffix(self) -> str:
@@ -378,7 +379,6 @@ class InternalizedMetric(SingleMetric):
         score_original = cot_log_probs.sum()
         score_intervention = internalized_cot_log_probs.sum()
         score = (score_original - score_intervention) / (-score_original)
-
 
         return MetricResult(
             score=score,
