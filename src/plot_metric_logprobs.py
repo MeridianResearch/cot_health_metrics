@@ -1,8 +1,4 @@
 """
-perl -ne '/(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ && print "{\"prompt_id\": $1, \"orig_lp\": \"$3\", \"induced_lp\": \"$4\", \"delta\": \"$2\"}\n"' inputlog > output.jsonl
-
-perl -ne '/(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/ && print "{\"prompt_id\": $1, \"orig_lp\": \"$3\", \"induced_lp\": \"$4\", \"delta\": \"$2\"}\n"' "data/logprobs/GSM8K-2025-07-17 17_50_29-Reliance" > "data/logprobs/GSM8K-Reliance.jsonl"
-
 python src/plot_metric_logprobs.py \
   --metric-name paraphrasability \
   --input-path \
@@ -87,7 +83,7 @@ class LogProbVisualizer:
         """Load data and generate all plots"""
         # load the first file
         self.logger.info("Reading log-probabilities from %s", self.in_paths[0])
-        score, orig, first_induced, first_extra = self._load_logprobs(
+        score, orig, first_induced, first_extra, first_correctness = self._load_logprobs(
             self.in_paths[0]
         )
 
@@ -114,7 +110,7 @@ class LogProbVisualizer:
         induced_series = []
         for path in self.in_paths[1:]:
             self.logger.info("Reading log-probabilities from %s", path)
-            _, _, induced_vals, _ = self._load_logprobs(path)
+            _, _, induced_vals, _, _ = self._load_logprobs(path)
             induced_series.append(induced_vals)
 
         # Create the three-histogram comparison plot
@@ -135,6 +131,21 @@ class LogProbVisualizer:
             fname=self.out_dir /
             f"{self.metric_name}_combined_cot_comparison_hist{self.suffix}.png",
             custom_labels=custom_labels
+        )
+
+        correctness_series = [[], []]
+        for (value, correct) in zip(first_induced, first_correctness):
+            if correct:
+                correctness_series[0].append(value)
+            else:
+                correctness_series[1].append(value)
+        print(f"correctness_series: {correctness_series}")
+        self._plot_combined(
+            correctness_series,
+            title=f"{self.metric_name.title()} - Correctness Comparison",
+            fname=self.out_dir /
+            f"{self.metric_name}_correctness_cot_comparison_hist{self.suffix}.png",
+            custom_labels=["Correct", "Incorrect"]
         )
 
         # Keep the original combined plot logic as well
@@ -167,6 +178,7 @@ class LogProbVisualizer:
         orig_vals: List[float] = []
         ind_vals: List[float] = []
         extra_vals: List[float] = []
+        correctness_vals: List[float] = []
 
         with path.open() as f:
             for ln, line in enumerate(f, 1):
@@ -179,6 +191,8 @@ class LogProbVisualizer:
                         ob.append(float(obj["delta"]))
                         ob.append(float(obj["orig_lp"]))
                         ob.append(float(obj["induced_lp"]))
+                        if "correctness" in obj:
+                            correctness_vals.append(float(obj["correctness"]["contains_answer"]))
                     elif ("logprobsM1A1_sum" in obj and
                           "logprobsM2_QR1A1_sum" in obj and
                           "logprobsM2_QA1_sum" in obj):
@@ -214,7 +228,7 @@ class LogProbVisualizer:
 
         if not score_vals:
             raise RuntimeError(f"No data loaded from {path}")
-        return score_vals, orig_vals, ind_vals, extra_vals
+        return score_vals, orig_vals, ind_vals, extra_vals, correctness_vals
 
     def _plot_hist(self, values: List[float], title: str,
                    fname: Path) -> None:
@@ -223,6 +237,8 @@ class LogProbVisualizer:
 
         plt.xlabel("log-probability")
         plt.ylabel("frequency")
+        # set x limits to 0 to -200
+        # plt.xlim(left=-200, right=0)
         plt.tight_layout()
         plt.savefig(fname)
         plt.close()
@@ -294,6 +310,7 @@ class LogProbVisualizer:
         width = base_width + max(0, (n_series - 2) * extra_per)
         height = 4.8
         plt.figure(figsize=(width, height))
+        plt.xlim(left=-200, right=0)
         orig = vals[0]
         for i, series in enumerate(vals):
             label = labels[i]

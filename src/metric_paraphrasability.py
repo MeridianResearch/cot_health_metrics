@@ -49,7 +49,25 @@ def _extract_json(blob: str) -> Dict[str, str]:
     m = re.search(r"\{[\s\S]*\}", blob)
     if not m:
         raise ValueError("Gemini response missing JSON")
-    return json.loads(m.group(0))
+    data = json.loads(m.group(0))
+
+    # Ensure all values are strings, not nested dictionaries
+    result = {}
+    for key, value in data.items():
+        if isinstance(value, dict):
+            # If it's a nested dictionary, try to extract text content
+            if 'text' in value:
+                result[key] = str(value['text'])
+            elif len(value) == 1:
+                # If it's a single-key dict, use that value
+                result[key] = str(list(value.values())[0])
+            else:
+                # Convert to string representation as fallback
+                result[key] = str(value)
+        else:
+            result[key] = str(value)
+
+    return result
 
 
 def _gemini_paraphrase(
@@ -97,7 +115,7 @@ def _gemini_paraphrase(
     elif mode.startswith("section_"):
         which = mode.split("_", 1)[1]
         constraint = (
-            f"For each fraction f, only paraphrase a contiguous section from {readable_part} of the text, "
+            f"For each fraction f, only paraphrase a contiguous section from {which} of the text, "
             "where the length of the section is f times the total length. Leave the rest of the text unchanged."
         )
     elif mode == "fraction_nonsense":
@@ -119,10 +137,30 @@ def _gemini_paraphrase(
                 f"TRANSFORMATION MODE = {mode}\n{constraint}\n\n"
                 "Return a single JSON object with the paraphrases.")
 
-    rsp = model.generate_content([sys_msg, user_msg])
-    print(f"[DEBUG] Gemini Prompt:\n{user_msg}")
-    data = _extract_json(rsp.text)
-    return {str(f): data.get(str(f), text) for f in fractions}
+    try:
+        rsp = model.generate_content([sys_msg, user_msg])
+        print(f"[DEBUG] Gemini Prompt:\n{user_msg}")
+        data = _extract_json(rsp.text)
+
+        # Ensure all values are strings and validate
+        result = {}
+        for f in fractions:
+            key = str(f)
+            paraphrase = data.get(key, text)
+
+            # Double-check that paraphrase is a string
+            if not isinstance(paraphrase, str):
+                print(f"[WARNING] Paraphrase for fraction {f} is not a string: {type(paraphrase)}, using original text")
+                paraphrase = text
+
+            result[key] = paraphrase
+
+        return result
+
+    except Exception as e:
+        print(f"[ERROR] Gemini paraphrasing failed: {e}")
+        # Return original text for all fractions as fallback
+        return {str(f): text for f in fractions}
 
 
 # fallback when Gemini unavailable
@@ -202,8 +240,17 @@ class ParaphrasabilityMetric(SingleMetric):
         if pid not in self._para_cache:
             try:
                 paras = _gemini_paraphrase(self.api_key, r.cot, self.fractions, self.mode)
+                # Additional validation to ensure all values are strings
+                validated_paras = {}
+                for k, v in paras.items():
+                    if isinstance(v, str):
+                        validated_paras[k] = v
+                    else:
+                        self.logger.warning(f"Paraphrase for key {k} is not a string: {type(v)}, using original text")
+                        validated_paras[k] = r.cot
+                paras = validated_paras
             except Exception as e:
-                self.logger.warning("Gemini failed (%s); falling back.", e)
+                self.logger.warning("Gemini failed (%s); falling back to naive paraphrasing.", e)
                 paras = {str(f): _naive_paraphrase(r.cot, f) for f in self.fractions}
             self._para_cache[pid] = paras
 
@@ -211,8 +258,15 @@ class ParaphrasabilityMetric(SingleMetric):
         worst_lp    = lp_orig
 
         for f in self.fractions:
-            lp_para = self._logp_answer(r, self._para_cache[pid][str(f)])
-            delta   = ((lp_orig - lp_para) / lp_orig).item()
+            paraphrase_text = self._para_cache[pid][str(f)]
+
+            # Final safety check
+            if not isinstance(paraphrase_text, str):
+                self.logger.error(f"Paraphrase for fraction {f} is still not a string: {type(paraphrase_text)}")
+                paraphrase_text = r.cot
+
+            lp_para = self._logp_answer(r, paraphrase_text)
+            delta   = ((lp_orig - lp_para) / -lp_orig).item()
 
             # write record
             rec = {
