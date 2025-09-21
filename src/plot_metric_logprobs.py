@@ -87,7 +87,7 @@ class LogProbVisualizer:
         """Load data and generate all plots"""
         # load the first file
         self.logger.info("Reading log-probabilities from %s", self.in_paths[0])
-        score, orig, first_induced, first_extra = self._load_logprobs(
+        score, orig, first_induced, first_extra, first_correctness = self._load_logprobs(
             self.in_paths[0]
         )
 
@@ -114,7 +114,7 @@ class LogProbVisualizer:
         induced_series = []
         for path in self.in_paths[1:]:
             self.logger.info("Reading log-probabilities from %s", path)
-            _, _, induced_vals, _ = self._load_logprobs(path)
+            _, _, induced_vals, _, _ = self._load_logprobs(path)
             induced_series.append(induced_vals)
 
         # Create the three-histogram comparison plot
@@ -135,6 +135,21 @@ class LogProbVisualizer:
             fname=self.out_dir /
             f"{self.metric_name}_combined_cot_comparison_hist{self.suffix}.png",
             custom_labels=custom_labels
+        )
+
+        correctness_series = [[], []]
+        for (value, correct) in zip(first_induced, first_correctness):
+            if correct:
+                correctness_series[0].append(value)
+            else:
+                correctness_series[1].append(value)
+        print(f"correctness_series: {correctness_series}")
+        self._plot_combined(
+            correctness_series,
+            title=f"{self.metric_name.title()} - Correctness Comparison",
+            fname=self.out_dir /
+            f"{self.metric_name}_correctness_cot_comparison_hist{self.suffix}.png",
+            custom_labels=["Correct", "Incorrect"]
         )
 
         # Keep the original combined plot logic as well
@@ -167,6 +182,7 @@ class LogProbVisualizer:
         orig_vals: List[float] = []
         ind_vals: List[float] = []
         extra_vals: List[float] = []
+        correctness_vals: List[float] = []
 
         with path.open() as f:
             for ln, line in enumerate(f, 1):
@@ -179,6 +195,8 @@ class LogProbVisualizer:
                         ob.append(float(obj["delta"]))
                         ob.append(float(obj["orig_lp"]))
                         ob.append(float(obj["induced_lp"]))
+                        if "correctness" in obj:
+                            correctness_vals.append(float(obj["correctness"]["contains_answer"]))
                     elif ("logprobsM1A1_sum" in obj and
                           "logprobsM2_QR1A1_sum" in obj and
                           "logprobsM2_QA1_sum" in obj):
@@ -214,7 +232,7 @@ class LogProbVisualizer:
 
         if not score_vals:
             raise RuntimeError(f"No data loaded from {path}")
-        return score_vals, orig_vals, ind_vals, extra_vals
+        return score_vals, orig_vals, ind_vals, extra_vals, correctness_vals
 
     def _plot_hist(self, values: List[float], title: str,
                    fname: Path) -> None:
