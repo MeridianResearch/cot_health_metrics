@@ -62,6 +62,7 @@ import re
 import shutil
 from pathlib import Path
 from typing import Dict, List, Optional, TextIO, Tuple
+from types import SimpleNamespace
 
 import torch
 
@@ -307,35 +308,75 @@ class PromptParaphrasabilityMetric(SingleMetric):
             return MetricResult(0.0, 0.0, 0.0)
 
     def close(self):
+        # 1) Safely close any open files
         if hasattr(self, 'file_handles') and self.file_handles:
-            self.logger.info("Closing all file handles...")
-            for log_f, jsonl_f in self.file_handles.values():
-                log_f.close()
-                jsonl_f.close()
+            try:
+                self.logger.info("Closing all file handles...")
+            except Exception:
+                pass
+            for log_f, jsonl_f in list(self.file_handles.values()):
+                try:
+                    log_f.close()
+                except Exception:
+                    pass
+                try:
+                    jsonl_f.close()
+                except Exception:
+                    pass
             self.file_handles.clear()
 
-        if GENERATION_MODE and self.generated_paraphrases:
-            output_path = self.output_dir / "paraphrases_generated.json"
-            self.logger.info(
-                "Saving %d generated paraphrase sets to %s",
-                len(self.generated_paraphrases), output_path)
-            with open(output_path, 'w') as f:
-                json.dump(self.generated_paraphrases, f, indent=2)
-
-        if GENERATED_PARAPHRASE_CACHE_DIR.exists():
-            self.logger.info(
-                "Cleaning up temporary cache directory: %s",
-                GENERATED_PARAPHRASE_CACHE_DIR)
+        # 2) If we actually generated paraphrases, write them out
+        try:
+            if GENERATION_MODE and hasattr(self, 'generated_paraphrases') \
+               and isinstance(self.generated_paraphrases, list) \
+               and len(self.generated_paraphrases) > 0:
+                output_path = self.output_dir / "paraphrases_generated.json"
+                try:
+                    self.logger.info(
+                        "Saving %d generated paraphrase sets to %s",
+                        len(self.generated_paraphrases), output_path
+                    )
+                except Exception:
+                    pass
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    json.dump(self.generated_paraphrases, f, indent=2)
+        except Exception as e:
             try:
-                shutil.rmtree(GENERATED_PARAPHRASE_CACHE_DIR)
-            except OSError as e:
-                self.logger.error(
-                    "Error removing cache directory %s: %s",
-                    GENERATED_PARAPHRASE_CACHE_DIR, e)
-        self.logger.info("Cleanup complete.")
+                self.logger.error("Error while saving generated paraphrases: %s", e)
+            except Exception:
+                pass
+
+        # 3) Best-effort cleanup of the temporary cache dir
+        try:
+            from pathlib import Path
+            cache_dir = GENERATED_PARAPHRASE_CACHE_DIR
+            if isinstance(cache_dir, Path) and cache_dir.exists():
+                try:
+                    self.logger.info("Cleaning up temporary cache directory: %s", cache_dir)
+                except Exception:
+                    pass
+                try:
+                    shutil.rmtree(cache_dir)
+                except OSError as e:
+                    try:
+                        self.logger.error("Error removing cache directory %s: %s", cache_dir, e)
+                    except Exception:
+                        pass
+        except Exception:
+            # swallow any unexpected errors here
+            pass
+
+        try:
+            self.logger.info("Cleanup complete.")
+        except Exception:
+            pass
 
     def __del__(self):
-        self.close()
+        try:
+            self.close()
+        except Exception:
+            # Never let destructor exceptions bubble up
+            pass
 
 
 def _run_standalone(args):
@@ -349,7 +390,10 @@ def _run_standalone(args):
     LOGPROB_TARGET = args.logprob_target
 
     model = CoTModel(args.model, cache_dir=args.cache_dir)
-    metric = PromptParaphrasabilityMetric(model)
+    metric = PromptParaphrasabilityMetric(
+        model,
+        args=SimpleNamespace(use_ks_statistic=bool(getattr(args, "use_ks_statistic", False)))
+    )
 
     with open(args.input_json, 'r') as f:
         prompts = json.load(f)
@@ -401,6 +445,8 @@ def main():
     p.add_argument(
         "--cache-dir", default=CACHE_DIR_DEFAULT,
         help="Hugging Face model cache directory.")
+    p.add_argument("--use-ks-statistic", action="store_true",
+        help="Use KS statistic when applicable (default: off)")
     args = p.parse_args()
 
     if args.paraphrase_styles is None:
