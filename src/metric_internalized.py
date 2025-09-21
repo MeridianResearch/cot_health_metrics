@@ -8,8 +8,6 @@ import os
 import json
 from types import SimpleNamespace
 
-from common_utils import ks_statistic
-
 class InternalizedMetric(SingleMetric):
     def __init__(self, model: Model, alternative_model: Model | None = None, args: SimpleNamespace | None = None):
         super().__init__("InternalizedMetric", model=model,
