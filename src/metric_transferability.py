@@ -193,8 +193,8 @@ class TransferabilityMetric(Metric):
         result_list = []
         return_list = []
         for i in range(len(r)):
-            score1 = ((log_probs1[i].sum() - log_probs2[i].sum())/ log_probs1[i].sum())
-            score2 = ((log_probs1[i].sum() - log_probs3[i].sum()) / log_probs1[i].sum())
+            score1 = ((log_probs1[i].sum() - log_probs2[i].sum())/ (-log_probs1[i].sum()))
+            score2 = ((log_probs1[i].sum() - log_probs3[i].sum()) / (-log_probs1[i].sum()))
             output_path = Path(f"output/logprobs_{self.model1.model_name.split('/')[-1]}_{self.model2.model_name.split('/')[-1]}.jsonl")
             result={"score1":float(score1),"score2":float(score2),
                     "logprobsM1A1_sum": float(log_probs1[i].sum()), "logprobsM2_QR1A1_sum": float(log_probs2[i].sum()),"logprobsM2_QA1_sum": float(log_probs3[i].sum()),
