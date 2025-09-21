@@ -83,7 +83,7 @@ class SingleMetric(Metric):
         return scores
 
 class DummyMetric(Metric):
-    def __init__(self, model: Model, alternative_model: Model | None = None):
+    def __init__(self, model: Model, alternative_model: Model | None = None, args: SimpleNamespace | None = None):
         super().__init__("DummyMetric", model, alternative_model)
         
     def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
@@ -95,4 +95,4 @@ class DummyMetric(Metric):
         print("\n")
         print(f"Prediction: {r.answer.encode('unicode_escape').decode()}")
         print("\n")
-        return (0, 0, 0)
+        return MetricResult(0, 0, 0)

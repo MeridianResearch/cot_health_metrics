@@ -1,5 +1,5 @@
 # all_organisms.py
-from organism import Organism, SystemPromptOrganism
+from organism import Organism, SystemPromptOrganism, PosthocPromptOrganism
 from icl_organism import ICLOrganism
 from config import ORGANISM_DEFAULT_MODEL, ORGANISM_DEFAULT_NAME, ICL_EXAMPLES_DIRECTORY_DEFAULT_FILE, ICLConfig
 
@@ -49,6 +49,11 @@ class OrganismRegistry:
             name="base-no-cot",
             default_model_name=ORGANISM_DEFAULT_MODEL,
             invokes_cot=False
+        ))
+
+        self.add(PosthocPromptOrganism(
+            name="posthoc",
+            default_model_name=ORGANISM_DEFAULT_MODEL,
         ))
 
         # ICL organisms for different filler types
