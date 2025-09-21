@@ -178,7 +178,26 @@ class DatasetAdapter:
         print(f"Loading dataset {dataset_name} with split {split}")
         print(f"Dataset name: {self.get(dataset_name)}")
         print(f"Stored Dataset name: {self.dataset_name}")
-        return load_dataset(self.get(dataset_name), self.load_section, split=split)
+        # dataset= load_dataset(self.get(dataset_name), self.load_section, split=split)
+        # Load the original dataset
+        dataset = load_dataset(self.get(dataset_name), self.load_section, split=split)
+
+        # Modify the questions by adding the answer for GSM8K dataset
+        #if  "gsm8k" in dataset_name.lower():
+        #    def modify_question(example):
+        #        # Extract the final answer using split("####")[-1]
+        #        final_answer = example["answer"].split("####")[-1].strip()
+
+        #        # Modify the question by appending the answer
+        #        example["question"] = example["question"] + " The answer is " + final_answer
+
+        #        return example
+
+        #    # Apply the modification to all examples in the dataset
+        #    dataset = dataset.map(modify_question)
+        #    print(f"Modified {len(dataset)} questions by adding answers")
+
+        return dataset
 
 
 class DatasetConfig:
