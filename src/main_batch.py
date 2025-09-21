@@ -248,6 +248,8 @@ def main():
                 return original_construct_prompt_builder(model_name, invokes_cot=False)
 
             component_factory.construct_prompt_builder = no_cot_construct_prompt_builder
+    else:
+        component_factory = None
 
     # Load models
     model = CoTModel(args.model,

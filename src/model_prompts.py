@@ -82,7 +82,7 @@ class ModelPromptBuilder:
             instructions.append(anti_think_instruction)
         else:
             # Very strong, explicit anti-think instructions for CoT mode
-            anti_think_instruction = "IMPORTANT: After you finish reasoning, state the final answer directly after \nAnswer:. DO NOT include REASONING steps after the final answer."
+            anti_think_instruction = "IMPORTANT: After you finish reasoning, state the final answer directly after \"Answer:\". DO NOT include REASONING steps after the final answer."
             instructions.append(anti_think_instruction)
 
         return instructions
