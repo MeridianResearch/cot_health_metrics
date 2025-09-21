@@ -25,6 +25,7 @@ from metric import SampleGroundTruth
 from ground_truth import rate_correctness
 from datetime import datetime
 from config import DatasetAdapter, DatasetConfig, CACHE_DIR_DEFAULT, LOG_EVERY_DEFAULT, LOG_DIRECTORY_DEFAULT
+from all_organisms import OrganismRegistry
 
 #from itertools import batched  # only available in Python 3.12+
 # Custom batched implementation for Python < 3.12
@@ -107,7 +108,7 @@ def handle_datapoints(datapoints, args, model, metric, f, f_json):
             continue
 
         try:
-            r = model.generate_cot_response_full(id, question)
+            r = model.generate_cot_response_full(id, question, ground_truth_answer)
             r.prompt_id = id
         except RuntimeError as err:
             print(f"Sample id={id} - generation error ({err})")
@@ -182,8 +183,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
     parser.add_argument("--model2", default=None)
-    parser.add_argument("--adapter-path", type=str, help="Path to LoRA adapter checkpoint")
+    parser.add_argument("--adapter-path", type=str, default=None, help="Path to LoRA adapter checkpoint")
     parser.add_argument("--metric", required=True)
+    parser.add_argument("--organism", type=str, default=None)
     parser.add_argument("--data-path", default=None)
     parser.add_argument("--data-hf", default=None)
     parser.add_argument("--data-split", default="train", help="Dataset split to use (train, test, validation, etc.)")
@@ -196,6 +198,7 @@ def main():
     parser.add_argument("--log-every", type=int, default=LOG_EVERY_DEFAULT)
     parser.add_argument("--log-verbose", type=bool, default=True)
     parser.add_argument("--not-prompt", action='store_true', help="Activate not_prompt logic in RelianceMetric")
+    parser.add_argument("--no-cot", default=False, action='store_true')
 
     parser.add_argument("--filler", type=str, default="think")  # Internalized
     parser.add_argument("--filler-in-prompt", action='store_true')
@@ -223,9 +226,38 @@ def main():
     # Make cache dir
     os.makedirs(args.cache_dir, exist_ok=True)
 
+    if args.organism:
+        # Handle ICL organism selection and creation
+        organism_registry = OrganismRegistry()
+        #args.organism = handle_icl_organism_selection(args, organism_registry)
+
+        # Get organism
+        organism = organism_registry.get(args.organism)
+        if organism is None:
+            raise ValueError(f"Organism {args.organism} not found")
+
+        # Load model
+        component_factory = organism.get_component_factory(args.model)
+
+        # Override invokes_cot behavior if --no-cot flag is set
+        if args.no_cot:
+            # Create a custom component factory that forces invokes_cot=False
+            original_construct_prompt_builder = component_factory.construct_prompt_builder
+
+            def no_cot_construct_prompt_builder(model_name: str, invokes_cot: bool):
+                return original_construct_prompt_builder(model_name, invokes_cot=False)
+
+            component_factory.construct_prompt_builder = no_cot_construct_prompt_builder
+
     # Load models
-    model = CoTModel(args.model, cache_dir=args.cache_dir, adapter_path=getattr(args, 'adapter_path', None))
-    model2 = CoTModel(args.model2, cache_dir=args.cache_dir, adapter_path=getattr(args, 'adapter_path', None)) if args.model2 else None
+    model = CoTModel(args.model,
+        component_factory=component_factory,
+        cache_dir=args.cache_dir,
+        adapter_path=args.adapter_path)
+    model2 = CoTModel(args.model2,
+        component_factory=component_factory,
+        cache_dir=args.cache_dir,
+        adapter_path=args.adapter_path) if args.model2 else None
 
     # Create metric(s)
     from types import SimpleNamespace

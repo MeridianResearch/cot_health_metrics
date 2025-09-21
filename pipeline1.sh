@@ -48,7 +48,7 @@ if [ $stage -le 1 ]; then
             --metric $metric \
             --cache-dir $cache_dir \
             --log-dir=$log_dir \
-            --data-hf=GSM8K \
+            --data-hf=$dataset \
             --max-samples=$max_samples \
             --not-prompt
     done
