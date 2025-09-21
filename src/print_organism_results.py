@@ -132,7 +132,9 @@ def calculate_standardized_scores(filepath: str) -> List[float]:
 
         standardized_score = (orig_lp - induced_lp) / (-orig_lp)
         standardized_scores.append(standardized_score)
-        if standardized_score != item['delta']:
+        diff = standardized_score - float(item['delta'])
+        print(diff)
+        if diff < -0.001 or diff > 0.001:
             print(f"WARNING: sign flip? log score={item['delta']}, calc score={standardized_score}")
 
 
@@ -141,6 +143,41 @@ def calculate_standardized_scores(filepath: str) -> List[float]:
 
     return standardized_scores
 
+
+def calculate_scores_one_file(filepath: str) -> Dict[str, Any]:
+    """
+    Compare standardized scores between two JSON files using K-S test, Mann-Whitney U test, and Cohen's d.
+
+    Parameters:
+    -----------
+    filepath1, filepath2 : str
+        Paths to the two JSON files
+
+    Returns:
+    --------
+    Dict containing comparison results including K-S test, Mann-Whitney U test, AUC, and Cohen's d
+    """
+    # Calculate standardized scores for both files
+    print(f"Processing file: {filepath}")
+    scores1 = calculate_standardized_scores(filepath)
+
+    scores1_array = np.array(scores1)
+    mean1 = np.mean(scores1_array)
+    std1 = np.std(scores1_array, ddof=1)  # Sample standard deviation
+    print(f"  Mean: {mean1:.6f}")
+    #print(f"  Std:  {std1:.6f}")
+    #print(f"  Min:  {np.min(scores1_array):.6f}")
+    #print(f"  Max:  {np.max(scores1_array):.6f}")
+
+    return {
+        'scores_stats': {
+            'n_scores': len(scores1),
+            'mean': float(mean1),
+            'std': float(std1),
+            'min': float(np.min(scores1_array)),
+            'max': float(np.max(scores1_array))
+        },
+    }
 
 def compare_standardized_scores_two_files(filepath1: str, filepath2: str) -> Dict[str, Any]:
     """
@@ -155,10 +192,6 @@ def compare_standardized_scores_two_files(filepath1: str, filepath2: str) -> Dic
     --------
     Dict containing comparison results including K-S test, Mann-Whitney U test, AUC, and Cohen's d
     """
-    print("=" * 70)
-    print("STANDARDIZED SCORES COMPARISON BETWEEN TWO FILES")
-    print("=" * 70)
-
     # Calculate standardized scores for both files
     print(f"Processing file 1: {filepath1}")
     scores1 = calculate_standardized_scores(filepath1)
@@ -172,9 +205,9 @@ def compare_standardized_scores_two_files(filepath1: str, filepath2: str) -> Dic
     mean1 = np.mean(scores1_array)
     std1 = np.std(scores1_array, ddof=1)  # Sample standard deviation
     print(f"  Mean: {mean1:.6f}")
-    print(f"  Std:  {std1:.6f}")
-    print(f"  Min:  {np.min(scores1_array):.6f}")
-    print(f"  Max:  {np.max(scores1_array):.6f}")
+    #print(f"  Std:  {std1:.6f}")
+    #print(f"  Min:  {np.min(scores1_array):.6f}")
+    #print(f"  Max:  {np.max(scores1_array):.6f}")
 
     print(f"\nFile 2 ({filepath2}):")
     print(f"  Number of scores: {len(scores2)}")
@@ -182,9 +215,9 @@ def compare_standardized_scores_two_files(filepath1: str, filepath2: str) -> Dic
     mean2 = np.mean(scores2_array)
     std2 = np.std(scores2_array, ddof=1)  # Sample standard deviation
     print(f"  Mean: {mean2:.6f}")
-    print(f"  Std:  {std2:.6f}")
-    print(f"  Min:  {np.min(scores2_array):.6f}")
-    print(f"  Max:  {np.max(scores2_array):.6f}")
+    #print(f"  Std:  {std2:.6f}")
+    #print(f"  Min:  {np.min(scores2_array):.6f}")
+    #print(f"  Max:  {np.max(scores2_array):.6f}")
 
     # Calculate Cohen's d
     n1, n2 = len(scores1), len(scores2)
@@ -294,24 +327,29 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Compare standardized scores between two JSON files using K-S test, Mann-Whitney U test, and Cohen's d")
     parser.add_argument("--healthy", type=str, required=True, help="Base model JSON file")
-    parser.add_argument("--organism", type=str, required=True, help="Model organism JSON file")
+    parser.add_argument("--organism", type=str, required=False, help="Model organism JSON file")
 
     args = parser.parse_args()
 
     try:
-        # Compare standardized scores between the two files
-        comparison_results = compare_standardized_scores_two_files(args.healthy, args.organism)
+        if not args.organism:
+            # Calculate standardized scores for just one model
+            print(f"Processing file 1: {args.healthy}")
+            comparison_results = calculate_scores_one_file(args.healthy)
+            print(comparison_results)
+        else:
+            # Compare standardized scores between the two files
+            comparison_results = compare_standardized_scores_two_files(args.healthy, args.organism)
 
-        print(f"\n" + "=" * 70)
-        print("SUMMARY")
-        print("=" * 70)
-        print(f"K-S Statistic:     {comparison_results['ks_statistic']:.6f}")
-        print(f"K-S P-value:       {comparison_results['ks_p_value']:.6f}")
-        print(f"Mann-Whitney U:    {comparison_results['mw_u_statistic']:.6f}")
-        print(f"Mann-Whitney P:    {comparison_results['mw_p_value']:.6f}")
-        print(f"AUC:               {comparison_results['auc']:.6f}")
-        print(f"Cohen's d:         {comparison_results['cohens_d']:.6f}")
-
+            print(f"\n" + "=" * 70)
+            print("SUMMARY")
+            print("=" * 70)
+            print(f"K-S Statistic:     {comparison_results['ks_statistic']:.6f}")
+            print(f"K-S P-value:       {comparison_results['ks_p_value']:.6f}")
+            print(f"Mann-Whitney U:    {comparison_results['mw_u_statistic']:.6f}")
+            print(f"Mann-Whitney P:    {comparison_results['mw_p_value']:.6f}")
+            print(f"AUC:               {comparison_results['auc']:.6f}")
+            print(f"Cohen's d:         {comparison_results['cohens_d']:.6f}")
     except Exception as e:
         print(f"Error during analysis: {e}")
         import traceback
