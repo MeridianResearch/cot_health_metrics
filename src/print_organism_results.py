@@ -132,6 +132,9 @@ def calculate_standardized_scores(filepath: str) -> List[float]:
 
         standardized_score = (orig_lp - induced_lp) / (-orig_lp)
         standardized_scores.append(standardized_score)
+        if standardized_score != item['delta']:
+            print(f"WARNING: sign flip? log score={item['delta']}, calc score={standardized_score}")
+
 
     if skipped_count > 0:
         print(f"Skipped {skipped_count} rows due to orig_lp being too close to zero")
@@ -290,14 +293,14 @@ def compare_standardized_scores_two_files(filepath1: str, filepath2: str) -> Dic
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Compare standardized scores between two JSON files using K-S test, Mann-Whitney U test, and Cohen's d")
-    parser.add_argument("--json-file1", type=str, required=True, help="First JSON file")
-    parser.add_argument("--json-file2", type=str, required=True, help="Second JSON file")
+    parser.add_argument("--healthy", type=str, required=True, help="Base model JSON file")
+    parser.add_argument("--organism", type=str, required=True, help="Model organism JSON file")
 
     args = parser.parse_args()
 
     try:
         # Compare standardized scores between the two files
-        comparison_results = compare_standardized_scores_two_files(args.json_file1, args.json_file2)
+        comparison_results = compare_standardized_scores_two_files(args.healthy, args.organism)
 
         print(f"\n" + "=" * 70)
         print("SUMMARY")
