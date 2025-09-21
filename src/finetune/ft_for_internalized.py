@@ -28,7 +28,7 @@ python3 src/finetune/ft_for_internalized.py \
 import os, re, json, importlib.util, logging
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Tuple
-import peft
+from src.config import ModelConfig
 
 
 if "MPLCONFIGDIR" not in os.environ:
@@ -99,11 +99,12 @@ def load_jsonl(path: str) -> List[Dict]:
 class DataRow:
     messages: List[Dict[str, str]]
 
+
 class ChatJsonlDataset(Dataset):
     def __init__(self, rows: List[Dict], tokenizer, mask_mode: str = "cot_and_answer",
                  max_length: int = 2048, allow_truncation: bool = True,
                  answer_prefix: str = r"Answer\s*:\s*", supervise_think_inner: bool = True,
-                 filler_type: str = None
+                 filler_type: str = None, model_name: str = None
                  ):
         self.rows = [DataRow(messages=row["messages"]) for row in rows]
         if not self.rows:
@@ -115,6 +116,7 @@ class ChatJsonlDataset(Dataset):
         self.answer_prefix = answer_prefix
         self.supervise_think_inner = supervise_think_inner
         self.filler_type = filler_type
+        self.model_name = model_name
 
         if self.rows[0].messages[-1].get("role") != "assistant":
             raise ValueError("Each example must end with an 'assistant' message.")
@@ -165,7 +167,7 @@ class ChatJsonlDataset(Dataset):
         assistant_text = msgs[-1]["content"]
         return prompt_text, assistant_text
 
-    def _mask_labels(self, prompt_ids, full_ids, assistant_text: str):
+    def _mask_labels(self, prompt_ids, full_ids, assistant_text: str, begin_think: str, end_think: str):
         labels = full_ids.clone()
         labels[:, :prompt_ids.shape[1]] = -100
         if self.mask_mode == "assistant":
@@ -182,7 +184,18 @@ class ChatJsonlDataset(Dataset):
 
         spans = []
         if self.mask_mode in {"cot", "cot_and_answer"}:
-            pat = r"<think>(.*?)</think>" if self.supervise_think_inner else r"(<think>.*?</think>)"
+            # Use model-specific think tokens if provided, otherwise fallback to default
+            if begin_think and end_think:
+                begin_pattern = re.escape(begin_think)
+                end_pattern = re.escape(end_think)
+                if self.supervise_think_inner:
+                    pat = rf"{begin_pattern}(.*?){end_pattern}"
+                else:
+                    pat = rf"({begin_pattern}.*?{end_pattern})"
+            else:
+                # Fallback to default <think> tags
+                pat = r"<think>(.*?)</think>" if self.supervise_think_inner else r"(<think>.*?</think>)"
+
             m = re.search(pat, assistant_text, flags=re.DOTALL | re.IGNORECASE)
             if m:
                 c0, c1 = (m.span(1))
@@ -221,16 +234,22 @@ class ChatJsonlDataset(Dataset):
             attention_mask = attention_mask[:, -self.max_length:]
             prompt_enc2 = self.tok(prompt_text, return_tensors="pt", add_special_tokens=False)
             if prompt_enc2.input_ids.shape[1] >= input_ids.shape[1]:
-                prompt_ids = input_ids.clone(); prompt_ids[:] = 0
+                prompt_ids = input_ids.clone();
+                prompt_ids[:] = 0
             else:
                 prompt_ids = prompt_enc2.input_ids
         else:
             prompt_ids = prompt_enc.input_ids
-        labels = self._mask_labels(prompt_ids, input_ids, assistant_text)
+
+        # Get model-specific think tokens from ModelConfig
+        model_config = ModelConfig.get(getattr(self, 'model_name', ''))
+        begin_think = model_config.get('begin_think')
+        end_think = model_config.get('end_think')
+
+        labels = self._mask_labels(prompt_ids, input_ids, assistant_text, begin_think, end_think)
         return {"input_ids": input_ids.squeeze(0),
                 "attention_mask": attention_mask.squeeze(0),
                 "labels": labels.squeeze(0)}
-
 # fallback loader
 def _import_module_from_path(module_name: str, file_path: str):
     spec = importlib.util.spec_from_file_location(module_name, file_path)
@@ -493,10 +512,13 @@ def main():
 
     # datasets
     ds_train = ChatJsonlDataset(rows_train, tok, mask_mode=args.mask_mode, max_length=args.max_length,
-                                answer_prefix=args.answer_prefix_regex, supervise_think_inner=not args.supervise_think_outer)
+                                answer_prefix=args.answer_prefix_regex,
+                                supervise_think_inner=not args.supervise_think_outer,
+                                model_name=args.model)
     ds_eval = ChatJsonlDataset(rows_val, tok, mask_mode=args.mask_mode, max_length=args.max_length,
-                               answer_prefix=args.answer_prefix_regex, supervise_think_inner=not args.supervise_think_outer) if rows_val else None
-
+                               answer_prefix=args.answer_prefix_regex,
+                               supervise_think_inner=not args.supervise_think_outer,
+                               model_name=args.model) if rows_val else None
     # collator
     def collate_fn(batch):
         input_ids = [b["input_ids"] for b in batch]
