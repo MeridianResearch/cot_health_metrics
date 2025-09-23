@@ -133,7 +133,6 @@ def calculate_standardized_scores(filepath: str) -> List[float]:
         standardized_score = (orig_lp - induced_lp) / (-orig_lp)
         standardized_scores.append(standardized_score)
         diff = standardized_score - float(item['delta'])
-        print(diff)
         if diff < -0.001 or diff > 0.001:
             print(f"WARNING: sign flip? log score={item['delta']}, calc score={standardized_score}")
 
