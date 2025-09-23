@@ -188,7 +188,7 @@ def compare_standardized_scores_two_files(filepath1: str, filepath2: str) -> Dic
     mean2 = np.mean(scores2_array)
     std2 = np.std(scores2_array, ddof=1)  # Sample standard deviation
     median2 = np.median(scores2_array)
-    iqr2 = np.percentile(scores2_array, 75) - np.percentile
+    iqr2 = np.percentile(scores2_array, 75) - np.percentile(scores2_array, 25)
     print(f"  Mean: {mean2:.6f}")
     print(f"  Std:  {std2:.6f}")
     print(f"  Min:  {np.min(scores2_array):.6f}")
