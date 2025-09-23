@@ -181,7 +181,6 @@ class CoTModel(Model):
         return [response.basic_pair for response in responses]
 
     def make_prompt(self, question_id, question, ground_truth_answer=None, custom_instruction=None):
-        print(f"Make prompt: question_id: {question_id}, question: {question}, custom_instruction: {custom_instruction}, ground_truth_answer: {ground_truth_answer}")
         prompt_builder = self.component_factory.make_prompt_builder(
             invokes_cot=True
         )
