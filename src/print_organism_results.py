@@ -171,20 +171,30 @@ def compare_standardized_scores_two_files(filepath1: str, filepath2: str) -> Dic
     scores1_array = np.array(scores1)
     mean1 = np.mean(scores1_array)
     std1 = np.std(scores1_array, ddof=1)  # Sample standard deviation
+    # add median and IQR
+    median1 = np.median(scores1_array)
+    iqr1 = np.percentile(scores1_array, 75) - np.percentile(scores1_array, 25)
     print(f"  Mean: {mean1:.6f}")
     print(f"  Std:  {std1:.6f}")
     print(f"  Min:  {np.min(scores1_array):.6f}")
     print(f"  Max:  {np.max(scores1_array):.6f}")
+    print(f"  Median: {median1:.6f}")
+    print(f"  IQR: {iqr1:.6f}")
+
 
     print(f"\nFile 2 ({filepath2}):")
     print(f"  Number of scores: {len(scores2)}")
     scores2_array = np.array(scores2)
     mean2 = np.mean(scores2_array)
     std2 = np.std(scores2_array, ddof=1)  # Sample standard deviation
+    median2 = np.median(scores2_array)
+    iqr2 = np.percentile(scores2_array, 75) - np.percentile
     print(f"  Mean: {mean2:.6f}")
     print(f"  Std:  {std2:.6f}")
     print(f"  Min:  {np.min(scores2_array):.6f}")
     print(f"  Max:  {np.max(scores2_array):.6f}")
+    print(f"  Median: {median2:.6f}")
+    print(f"  IQR: {iqr2:.6f}")
 
     # Calculate Cohen's d
     n1, n2 = len(scores1), len(scores2)
