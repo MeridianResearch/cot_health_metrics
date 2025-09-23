@@ -128,7 +128,7 @@ class TransferabilityMetric(Metric):
         log_probs_M2_COT1_A1 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, r.cot, A1)
 
         #log_probs3 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, "", A1)
-        prompt_no_cot = self.model1.make_prompt_no_cot(r.question_id, r.question)
+        prompt_no_cot = self.model1.make_prompt_no_cot(r.question_id, r.question, ground_truth.answer)
         log_probs_M1_NOCOT_A1 = self.utils1.get_answer_log_probs_recalc_no_cot(
             self.model1, prompt_no_cot, A1)
         log_probs_M2_NOCOT_A1 = self.utils2.get_answer_log_probs_recalc_no_cot(

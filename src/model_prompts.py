@@ -176,7 +176,8 @@ class AddGroundTruthPromptBuilder(CustomInstructionPromptBuilder):
     def add_user_message(self, question: str, custom_instruction_: str = None, ground_truth_answer: str = None):
         if ground_truth_answer is None:
             raise ValueError("ground_truth_answer is required for AddGroundTruthPromptBuilder")
-        question = question + self.custom_instruction + ground_truth_answer
+        question = question + " The answer is " + ground_truth_answer
+        #print(f"AddGroundTruthPromptBuilder: question: {question}, custom_instruction_: {custom_instruction_}")
         return super().add_user_message(question, custom_instruction_)
 
 
