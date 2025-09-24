@@ -28,12 +28,12 @@ def get_differences(healthy_file, organism_file):
     differences = []
 
     for item in healthy_data:
-        question = item['question']
+        question = item['prompt_id']
 
         match_found = False
 
         for item2 in organism_data:
-            question2 = item2['question']
+            question2 = item2['prompt_id']
 
             if question == question2:
                 match_found = True
