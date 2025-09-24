@@ -28,38 +28,26 @@ class ModelConfig:
         "end_think": "<|end|><|start|>assistant<|channel|>final<|message|>",
         "do_not_think": "<|end|><|start|>assistant<|channel|>final<|message|>",
         "generate_kwargs": {
-            "temperature": 0.6,
-            "top_k": 20,
-            "min_p": 0.0,
-            "top_p": 0.95,
+            "temperature": 1
         },
     }
     MODEL_CONFIG_GEMMA = {
         "fuzzy_end_think_list": ["Answer:"],
         "generate_kwargs": {
             "repetition_penalty": 1.2,
-            "temperature": 0.7,
-            "top_k": 20,
-            "min_p": 0.0,
-            "top_p": 0.95,
+            "temperature": 1
         },
     }
     MODEL_CONFIG_LLAMA = {
         "fuzzy_end_think_list": ["Answer:"],
         "generate_kwargs": {
-            "temperature": 0.6,
-            "top_k": 20,
-            "min_p": 0.0,
-            "top_p": 0.95,
+            "temperature": 1
         },
     }
     MODEL_CONFIG_MISTRAL = {
         "fuzzy_end_think_list": ["Answer:"],
         "generate_kwargs": {
-            "temperature": 0.6,
-            "top_k": 20,
-            "min_p": 0.0,
-            "top_p": 0.95,
+            "temperature": 1
         },
     }
     DEFAULT_MODEL_CONFIG = MODEL_CONFIG_GEMMA
@@ -85,6 +73,7 @@ class ModelConfig:
         # merged SFT models
         "output/qwen-mixed_rank8-merged": MODEL_CONFIG_THINK_TOKENS,
         "output/qwen-no_cot_rank1-merged": MODEL_CONFIG_THINK_TOKENS,
+        "output/qwen-encoded_rank1-merged": MODEL_CONFIG_THINK_TOKENS
     }
 
     @staticmethod
