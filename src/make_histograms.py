@@ -103,8 +103,8 @@ if __name__ == "__main__":
     for metric in metrics:
 
         print(metric)
-        hf = [file for file in health_files if metric in file][0]
-        mofs = [file for file in MO_files if metric in file]
+        hf = [file for file in health_files if metric.lower() in file.lower()][0]
+        mofs = [file for file in MO_files if metric.lower() in file.lower()]
 
         for mof in mofs:
 
@@ -118,10 +118,8 @@ if __name__ == "__main__":
 
             differences = get_differences(hf, mof)
 
-            print(len(differences))
-            if len(differences) == 0:
-                print(f"No differences found for {metric} {m_org} {mof} {hf}")
-                # input()
-                continue
+            if m_org == "Int-Mo" and metric == "Substitutability":
+                print(differences)
+                input()
 
             plot_differences(differences, metric, m_org, OUTDIR)
