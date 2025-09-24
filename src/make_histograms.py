@@ -71,6 +71,26 @@ def plot_differences(differences, metric, m_org, outdir):
     plt.close()
 
 
+def plot_combined_differences(metric_differences, metric, outdir):
+    plt.figure(figsize=(10, 6))
+
+    colors = ['skyblue', 'lightcoral', 'lightgreen']
+    alpha = 0.7
+
+    for i, (m_org, differences) in enumerate(metric_differences.items()):
+        plt.hist(differences, bins=30, color=colors[i], alpha=alpha,
+                edgecolor='black', label=f'Healthy - {m_org}')
+
+    plt.title(f'Combined Distribution of Differences: {metric}')
+    plt.xlabel('Difference')
+    plt.ylabel('Frequency')
+    plt.legend()
+    plt.grid(axis='y', alpha=0.75)
+    plt.tight_layout()
+    plt.savefig(os.path.join(outdir, f"{metric}_combined_differences.png"))
+    plt.close()
+
+
 if __name__ == "__main__":
 
     OUTDIR = "data/plots/metric_difference_histograms"
@@ -106,6 +126,9 @@ if __name__ == "__main__":
         hf = [file for file in health_files if metric.lower() in file.lower()][0]
         mofs = [file for file in MO_files if metric.lower() in file.lower()]
 
+        # Store differences for all organisms for this metric
+        metric_differences = {}
+
         for mof in mofs:
 
             m_org = next(org for org in m_orgs if org in mof)
@@ -114,7 +137,7 @@ if __name__ == "__main__":
             print(m_org)
             print(mof)
             print(hf)
-            
+
 
             differences = get_differences(hf, mof)
 
@@ -122,4 +145,13 @@ if __name__ == "__main__":
                 print(differences)
                 input()
 
+            # Store differences for combined plot
+            metric_differences[m_org] = differences
+
+            # Generate individual plot
             plot_differences(differences, metric, m_org, OUTDIR)
+
+        # Generate combined plot for all organisms for this metric
+        plot_combined_differences(metric_differences, metric, OUTDIR)
+
+            
