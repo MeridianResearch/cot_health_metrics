@@ -29,7 +29,7 @@ fi
 #Qwen/Qwen3-0.6B Qwen/Qwen3-1.7B Qwen/Qwen3-4B Qwen/Qwen3-8B Qwen/Qwen3-8B Qwen/Qwen3-14B deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B google/gemma-2-2b-it microsoft/phi-2 meta-llama/Meta-Llama-3-8B-Instruct meta-llama/Llama-2-7b-chat-hf mistralai/Mistral-7B-Instruct-v0.3
 model=Qwen/Qwen3-8B
 model2=Qwen/Qwen3-4B
-cache_dir=models
+cache_dir=cache
 log_dir=data/pipeline
 
 mkdir -p $log_dir
