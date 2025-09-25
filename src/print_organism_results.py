@@ -149,7 +149,7 @@ def calculate_standardized_scores(filepath: str) -> List[float]:
     return standardized_scores
 
 
-def calculate_scores_one_file(filepath: str) -> Dict[str, Any]:
+def calculate_scores_one_file(filepath: str, max_samples: int) -> Dict[str, Any]:
     """
     Compare standardized scores between two JSON files using K-S test, Mann-Whitney U test, and Cohen's d.
 
@@ -165,10 +165,14 @@ def calculate_scores_one_file(filepath: str) -> Dict[str, Any]:
     # Calculate standardized scores for both files
     print(f"Processing file: {filepath}")
     scores1 = calculate_standardized_scores(filepath)
+    scores1 = scores1[:max_samples]
 
     scores1_array = np.array(scores1)
     mean1 = np.mean(scores1_array)
     median1 = np.median(scores1_array)
+    iqr1 = np.percentile(scores1_array, 75) - np.percentile(scores1_array, 25)
+    p25_1 = np.percentile(scores1_array, 25)
+    p75_1 = np.percentile(scores1_array, 75)
     std1 = np.std(scores1_array, ddof=1)  # Sample standard deviation
     print(f"  Mean: {mean1:.6f}")
     print(f"  Median: {median1:.6f}")
@@ -181,6 +185,9 @@ def calculate_scores_one_file(filepath: str) -> Dict[str, Any]:
             'n_scores': len(scores1),
             'mean': float(mean1),
             'median': float(median1),
+            'iqr': float(iqr1),
+            'p25': float(p25_1),
+            'p75': float(p75_1),
             'std': float(std1),
             'min': float(np.min(scores1_array)),
             'max': float(np.max(scores1_array))
@@ -212,6 +219,9 @@ def compare_standardized_scores_two_files(filepath1: str, filepath2: str) -> Dic
     scores1_array = np.array(scores1)
     mean1 = np.mean(scores1_array)
     median1 = np.median(scores1_array)
+    iqr1 = np.percentile(scores1_array, 75) - np.percentile(scores1_array, 25)
+    p25_1 = np.percentile(scores1_array, 25)
+    p75_1 = np.percentile(scores1_array, 75)
     std1 = np.std(scores1_array, ddof=1)  # Sample standard deviation
     print(f"  Mean: {mean1:.6f}")
     print(f"  Median: {median1:.6f}")
@@ -224,6 +234,9 @@ def compare_standardized_scores_two_files(filepath1: str, filepath2: str) -> Dic
     scores2_array = np.array(scores2)
     mean2 = np.mean(scores2_array)
     median2 = np.median(scores2_array)
+    iqr2 = np.percentile(scores2_array, 75) - np.percentile(scores2_array, 25)
+    p25_2 = np.percentile(scores2_array, 25)
+    p75_2 = np.percentile(scores2_array, 75)
     std2 = np.std(scores2_array, ddof=1)  # Sample standard deviation
     print(f"  Mean: {mean2:.6f}")
     print(f"  Median: {median2:.6f}")
@@ -321,6 +334,9 @@ def compare_standardized_scores_two_files(filepath1: str, filepath2: str) -> Dic
             'n_scores': len(scores1),
             'mean': float(mean1),
             'median': float(median1),
+            'iqr': float(iqr1),
+            'p25': float(p25_1),
+            'p75': float(p75_1),
             'std': float(std1),
             'min': float(np.min(scores1_array)),
             'max': float(np.max(scores1_array))
@@ -329,6 +345,9 @@ def compare_standardized_scores_two_files(filepath1: str, filepath2: str) -> Dic
             'n_scores': len(scores2),
             'mean': float(mean2),
             'median': float(median2),
+            'iqr': float(iqr2),
+            'p25': float(p25_2),
+            'p75': float(p75_2),
             'std': float(std2),
             'min': float(np.min(scores2_array)),
             'max': float(np.max(scores2_array))
@@ -342,6 +361,7 @@ if __name__ == "__main__":
         description="Compare standardized scores between two JSON files using K-S test, Mann-Whitney U test, and Cohen's d")
     parser.add_argument("--healthy", type=str, required=True, help="Base model JSON file")
     parser.add_argument("--organism", type=str, required=False, help="Model organism JSON file")
+    parser.add_argument("--max-samples", type=int, default=10000000)
 
     args = parser.parse_args()
 
@@ -349,7 +369,7 @@ if __name__ == "__main__":
         if not args.organism:
             # Calculate standardized scores for just one model
             print(f"Processing file 1: {args.healthy}")
-            comparison_results = calculate_scores_one_file(args.healthy)
+            comparison_results = calculate_scores_one_file(args.healthy, args.max_samples)
             print(comparison_results)
         else:
             # Compare standardized scores between the two files
