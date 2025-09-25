@@ -124,6 +124,12 @@ def calculate_standardized_scores(filepath: str) -> List[float]:
         orig_lp = item['orig_lp']
         induced_lp = item['induced_lp']
 
+        #print(len(item['cot']))
+        if item['cot'] == "":
+            print(f"Warning: cot split must have failed, empty cot, skipping")
+            skipped_count += 1
+            continue
+
         # Handle division by zero or very small values
         if abs(orig_lp) < 1e-10:
             print(f"Warning: orig_lp is very close to zero ({orig_lp}) at row {i + 1}, skipping this sample")
@@ -162,8 +168,10 @@ def calculate_scores_one_file(filepath: str) -> Dict[str, Any]:
 
     scores1_array = np.array(scores1)
     mean1 = np.mean(scores1_array)
+    median1 = np.median(scores1_array)
     std1 = np.std(scores1_array, ddof=1)  # Sample standard deviation
     print(f"  Mean: {mean1:.6f}")
+    print(f"  Median: {median1:.6f}")
     #print(f"  Std:  {std1:.6f}")
     #print(f"  Min:  {np.min(scores1_array):.6f}")
     #print(f"  Max:  {np.max(scores1_array):.6f}")
@@ -172,6 +180,7 @@ def calculate_scores_one_file(filepath: str) -> Dict[str, Any]:
         'scores_stats': {
             'n_scores': len(scores1),
             'mean': float(mean1),
+            'median': float(median1),
             'std': float(std1),
             'min': float(np.min(scores1_array)),
             'max': float(np.max(scores1_array))
@@ -202,8 +211,10 @@ def compare_standardized_scores_two_files(filepath1: str, filepath2: str) -> Dic
     print(f"  Number of scores: {len(scores1)}")
     scores1_array = np.array(scores1)
     mean1 = np.mean(scores1_array)
+    median1 = np.median(scores1_array)
     std1 = np.std(scores1_array, ddof=1)  # Sample standard deviation
     print(f"  Mean: {mean1:.6f}")
+    print(f"  Median: {median1:.6f}")
     #print(f"  Std:  {std1:.6f}")
     #print(f"  Min:  {np.min(scores1_array):.6f}")
     #print(f"  Max:  {np.max(scores1_array):.6f}")
@@ -212,8 +223,10 @@ def compare_standardized_scores_two_files(filepath1: str, filepath2: str) -> Dic
     print(f"  Number of scores: {len(scores2)}")
     scores2_array = np.array(scores2)
     mean2 = np.mean(scores2_array)
+    median2 = np.median(scores2_array)
     std2 = np.std(scores2_array, ddof=1)  # Sample standard deviation
     print(f"  Mean: {mean2:.6f}")
+    print(f"  Median: {median2:.6f}")
     #print(f"  Std:  {std2:.6f}")
     #print(f"  Min:  {np.min(scores2_array):.6f}")
     #print(f"  Max:  {np.max(scores2_array):.6f}")
@@ -307,6 +320,7 @@ def compare_standardized_scores_two_files(filepath1: str, filepath2: str) -> Dic
         'file1_scores_stats': {
             'n_scores': len(scores1),
             'mean': float(mean1),
+            'median': float(median1),
             'std': float(std1),
             'min': float(np.min(scores1_array)),
             'max': float(np.max(scores1_array))
@@ -314,6 +328,7 @@ def compare_standardized_scores_two_files(filepath1: str, filepath2: str) -> Dic
         'file2_scores_stats': {
             'n_scores': len(scores2),
             'mean': float(mean2),
+            'median': float(median2),
             'std': float(std2),
             'min': float(np.min(scores2_array)),
             'max': float(np.max(scores2_array))
