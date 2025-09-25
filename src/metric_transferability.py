@@ -124,6 +124,9 @@ class TransferabilityMetric(Metric):
         # print(f"Ground truth: {correct_answer}")
         # print(f"Match: {is_a1_correct}")
 
+        if ground_truth is None:
+            ground_truth = SampleGroundTruth('', '')
+
         log_probs_M1_COT1_A1 = self.utils1.get_answer_log_probs_recalc(self.model1, r.prompt, r.cot, A1)
         log_probs_M2_COT1_A1 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, r.cot, A1)
 
