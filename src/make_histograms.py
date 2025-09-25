@@ -77,9 +77,20 @@ def plot_combined_differences(metric_differences, metric, outdir):
     colors = ['skyblue', 'lightcoral', 'lightgreen']
     alpha = 0.7
 
+    # Calculate global min and max across all distributions
+    all_differences = []
+    for differences in metric_differences.values():
+        all_differences.extend(differences)
+
+    # Create consistent bins across all distributions
+    bins = 30
+    bin_range = (min(all_differences), max(all_differences))
+
     for i, (m_org, differences) in enumerate(metric_differences.items()):
-        plt.hist(differences, bins=30, color=colors[i], alpha=alpha,
-                edgecolor='black', label=f'Healthy - {m_org}')
+        # Replace 'Encoded-MO' with 'Enc-MO' for display
+        display_name = m_org.replace('Encoded-MO', 'Enc-MO')
+        plt.hist(differences, bins=bins, range=bin_range, color=colors[i], alpha=alpha,
+                edgecolor='black', label=f'Healthy - {display_name}')
 
     plt.title(f'Combined Distribution of Differences: {metric}')
     plt.xlabel('Difference')
