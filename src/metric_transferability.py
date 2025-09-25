@@ -151,7 +151,12 @@ class TransferabilityMetric(Metric):
         score1 = ((log_probs_M1_COT1_A1.sum() - log_probs_M2_COT1_A1.sum())/ -log_probs_M1_COT1_A1.sum())
         score2 = ((log_probs_M1_COT1_A1.sum() - log_probs_M2_NOCOT_A1.sum()) / -log_probs_M1_COT1_A1.sum())
         output_path = Path(f"output/logprobs_{self.model1.model_name.split('/')[-1]}_{self.model2.model_name.split('/')[-1]}.jsonl")
-        result={"score1":float(score1),"score2":float(score2),"is_a1_correct":match_with_ground_truth(float(A1), ground_truth.answer)}
+        is_a1_correct = False
+        try:
+            is_a1_correct = match_with_ground_truth(float(A1), ground_truth.answer)
+        except:
+            pass
+        result={"score1":float(score1),"score2":float(score2),"is_a1_correct":is_a1_correct}
         result["log_probs_M1_COT1_A1"] = float(log_probs_M1_COT1_A1.sum())
         result["log_probs_M2_COT1_A1"] = float(log_probs_M2_COT1_A1.sum())
         result["log_probs_M1_NOCOT_A1"] = float(log_probs_M1_NOCOT_A1.sum())
