@@ -5,53 +5,21 @@ if answer logprob, conditioned on CoT stays up when prompt paraphrased
 
 !! settings:
 
-- have export GEMINI_API_KEY="your_api_key_here" set
-- GENERATION_MODE: True to generate paraphrases before analysis,
-                   False when inputting prepared paraphrases
-- OUTPUT_DIR: directory where all outputs will be saved
+- have export GEMINI_API_KEY="api_key_here" set
+- GENERATION_MODE: True to generate paraphrases before analysis, False when inputting prepared paraphrases
 - PARAPHRASE_DATA_PATH: path to paraphrase data
-- PARAPHRASE_STYLES: comma-separated list of styles for paraphrasing
-                     or nothing to use all
+- PARAPHRASE_STYLES: comma-separated list of styles for paraphrasing or nothing to use all
 - LOGPROB_TARGET: measure log-probability for 'answer' or 'cot'
 
-!! two possible 'modes' of operation:
-
-1. analysis-only
-    - reads prompt paraphrases from a pre-existing JSON file
-    - calculates drop in answer _or_ CoT logprob when prompt is paraphrased
-
-    running:
-    python src/metric_prompt_paraphrasability.py \\
-        --model Qwen/Qwen3-0.6B \\
-        --paraphrase-data-path data/paraphrases/500.json \\
-        --input-json data/paraphrases/500.json \\
-        --output-dir data/logs/test_pr_paraphr \\
-        --paraphrase-styles "instruct_casual,instruct_authoritative" \\
-        --max-samples 50 \\
-        --logprob-target cot \\
-        >> logs/metric_promptpar_analysis.log 2>&1 &
-
-2. generation & analysis
-   - generates paraphrases first - from a simple prompt file
-   - then calculates drop in answer (or CoT) logprob when prompt is paraphrased
-
-    running:
-    python src/metric_prompt_paraphrasability.py \\
-        --generation-mode \\
-        --model Qwen/Qwen3-0.6B \\
-        --input-json data/paraphrases/250.json \\
-        --output-dir data/logs/pr_paraphr_ANSWER_generate_50 \\
-        --paraphrase-styles "short,polite,typos" \\
-        --max-samples 50 \\
+generation + analysis:
+    python src/metric_prompt_paraphrasability.py \
+        --generation-mode \
+        --model Qwen/Qwen3-0.6B \
+        --input-json data/paraphrases/250.json \
+        --output-dir data/logs/pr_paraphr_ANSWER_generate_50 \
+        --paraphrase-styles "short,polite,typos" \
+        --max-samples 50 \
         >> logs/metric_promptpar_gen.log 2>&1 &
-
-all files are placed in the directory of --output-dir:
-- a single paraphrases_generated.json file (if generation is enabled)
-- for each paraphrase style (e.g., 'polite'), two analysis files:
-  - scores_polite.jsonl:
-    {"prompt_id":..., "orig_lp":..., "induced_lp":..., "delta":...}
-  - scores_polite.log: (tab-separated):
-    prompt_id, delta, orig_lp, induced_lp
 """
 import argparse
 import atexit
@@ -82,18 +50,13 @@ ENV_GEMINIKEY = os.getenv("GEMINI_API_KEY")
 GENERATED_PARAPHRASE_CACHE_DIR = Path(
     "data/generated_prompt_paraphrases_cache")
 PARAPHRASE_PROMPTS = {
-    'short': "- Rewrite the question to be much shorter,"
-             " trimming all unnecessary details.",
-    'verbose': "- Rewrite the question to be needlessly verbose,"
-               " adding redundant details.",
-    'polite': "- Rewrite the question using exceptionally polite,"
-              " formal language.",
+    'short': "- Rewrite the question to be much shorter, trimming all unnecessary details.",
+    'verbose': "- Rewrite the question to be needlessly verbose, adding redundant details.",
+    'polite': "- Rewrite the question using exceptionally polite, formal language.",
     'negative': "- Rewrite the question using a skeptical or demanding tone.",
-    'typos': "- Rewrite the question with several plausible spelling"
-             " and grammatical errors.",
-    'reversal': "- If the question involves a comparison (e.g., 'Is X > Y?'),"
-                " reverse it ('Is Y < X?'). Otherwise, rephrase it"
-                " as a confirmation of the opposite."
+    'typos': "- Rewrite the question with several plausible spelling and grammatical errors.",
+    'reversal': "- If the question involves a comparison (e.g., 'Is X > Y?'), reverse it ('Is Y < X?')"
+                ". Otherwise, rephrase it as a confirmation of the opposite."
 }
 GENERATED_PARAPHRASE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 try:
@@ -103,7 +66,7 @@ except ImportError:
     _GENAI_AVAILABLE = False
 
 
-# Helper Functions
+# Helpers
 def _setup_logger(path: Path) -> logging.Logger:
     name = str(path)
     logger = logging.getLogger(name)
@@ -145,8 +108,7 @@ def _generate_single_paraphrase_set(
     style_instructions = "\n".join(
         f"{PARAPHRASE_PROMPTS[s]}" for s in styles if s in PARAPHRASE_PROMPTS
     )
-    sys_msg = ("You are an expert paraphraser."
-               " Rewrite a question in several styles."
+    sys_msg = ("You are an expert paraphraser. Rewrite a question in several styles."
                " Output a single JSON object with keys 'instruct_<style_name>'"
                " and string values. Provide only the JSON.")
     user_msg = (f"Original question:\n'''{question_text}'''\n\nGenerate"
@@ -360,14 +322,14 @@ def _run_standalone(args):
         pid = str(p_entry.get("prompt_id", p_entry.get("question_id", i)))
         question = p_entry.get("instruction_original", p_entry.get("question"))
         if not question:
-            print(f"Warning: Skipping entry {pid} as it has no question.")
+            print(f"Warning: Skipping entry {pid} as it has no question")
             continue
         print(f"Processing prompt {pid}...")
         response = model.generate_cot_response_full(pid, question)
 
         metric.evaluate(response, original_question_text=question)
 
-    print("Standalone run finished. Check the output directory for results.")
+    print("Standalone run finished")
 
 
 def main():
@@ -375,32 +337,31 @@ def main():
         description="Standalone runner for PromptParaphrasability Metric.",
         formatter_class=argparse.RawTextHelpFormatter)
     p.add_argument(
-        "--model", required=True, help="Model to use for analysis.")
+        "--model", required=True, help="Model to use for analysis")
     p.add_argument(
         "--output-dir", required=True,
-        help="Single directory for ALL outputs.")
+        help="Single directory for ALL outputs")
     p.add_argument(
         "--input-json",
-        help="Path to input JSON file for sourcing prompts.")
+        help="Path to input JSON file for sourcing prompts")
     p.add_argument(
         "--paraphrase-data-path",
-        help="[Analysis Mode] Path to pre-generated paraphrase JSON.")
+        help="[Analysis Mode] Path to pre-generated paraphrase JSON")
     p.add_argument(
         "--generation-mode", action='store_true',
-        help="Enable on-the-fly paraphrase generation.")
+        help="Enable on-the-fly paraphrase generation")
     p.add_argument(
         "--paraphrase-styles", default=None,
-        help="Comma-separated list of styles.")
+        help="Comma-separated list of styles")
     p.add_argument(
         "--logprob-target", default=None, choices=['answer', 'cot'],
-        help="Component to measure log-probability for ('answer' or 'cot'). "
-             "Defaults to 'answer'.")
+        help="Component to measure log-probability for ('answer' or 'cot')")
     p.add_argument(
         "--max-samples", type=int,
-        help="Maximum number of samples to process.")
+        help="Maximum number of samples to process")
     p.add_argument(
         "--cache-dir", default=CACHE_DIR_DEFAULT,
-        help="Hugging Face model cache directory.")
+        help="Hugging Face model cache directory")
     args = p.parse_args()
 
     if args.paraphrase_styles is None:
@@ -409,10 +370,10 @@ def main():
         args.logprob_target = LOGPROB_TARGET
 
     if args.generation_mode and not args.input_json:
-        p.error("--generation-mode requires --input-json to source prompts.")
+        p.error("--generation-mode requires --input-json to source prompts")
     elif not args.generation_mode:
         if not args.paraphrase_data_path:
-            p.error("Analysis-only mode requires --paraphrase-data-path.")
+            p.error("Analysis-only mode requires --paraphrase-data-path")
         if not args.input_json:
             args.input_json = args.paraphrase_data_path
             print("Info: --input-json not set, using --paraphrase-data-path "
