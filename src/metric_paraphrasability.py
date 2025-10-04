@@ -1,5 +1,6 @@
 """
-PYTHONUNBUFFERED=1 python src/main_batch.py --model=Qwen/Qwen3-0.6B \
+running:
+python src/main_batch.py --model=Qwen/Qwen3-0.6B \
     --metric=Paraphrasability --data-hf=GSM8K --max-samples=50 \
     >> logs/paraphrasability_$(date +%Y-%m-%d_%H-%M-%S).log 2>&1 &
 """
@@ -33,7 +34,6 @@ def ensure_output_dirs() -> None:
     for d in (PARAPHRASE_DIR, LOGPROB_DIR):
         d.mkdir(parents=True, exist_ok=True)
 
-# at startup, make sure our output dirs exist
 ensure_output_dirs()
 
 # !optional! Gemini integration
@@ -45,7 +45,7 @@ except ImportError:
 
 
 def _extract_json(blob: str) -> Dict[str, str]:
-    """Grab the first {...} blob from a Gemini response."""
+    """getting first {...} blob from Gemini response"""
     m = re.search(r"\{[\s\S]*\}", blob)
     if not m:
         raise ValueError("Gemini response missing JSON")
@@ -62,7 +62,6 @@ def _extract_json(blob: str) -> Dict[str, str]:
                 # If it's a single-key dict, use that value
                 result[key] = str(list(value.values())[0])
             else:
-                # Convert to string representation as fallback
                 result[key] = str(value)
         else:
             result[key] = str(value)
@@ -172,7 +171,7 @@ _SIMPLE_SYNONYMS = {
 
 
 def _naive_paraphrase(text: str, fraction: float) -> str:
-    """naive way: replacing ≈f of words with simple synonyms"""
+    """quick-check-run way: replacing ≈f of words with simple synonyms"""
     words = text.split()
     k = max(1, int(len(words) * fraction))
     idxs = random.sample(range(len(words)), k=k)
