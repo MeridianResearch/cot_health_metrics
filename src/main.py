@@ -20,7 +20,7 @@ def main():
         print("CUDA is not available. Exiting...")
         exit(1)
 
-    model = CoTModel(args.model, cache_dir="/tmp/cache2")
+    model = CoTModel(args.model, cache_dir=args.cache_dir)
     model2 = CoTModel(args.model2, cache_dir=args.cache_dir) if args.model2 else None
 
     metric = construct_metric(
