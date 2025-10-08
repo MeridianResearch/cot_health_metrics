@@ -44,7 +44,7 @@ class Model:
     def get_utils(self):
         raise NotImplementedError("Subclasses must implement this method")
 
-    def make_prompt(self, question_id, question, custom_instruction=None):
+    def make_prompt(self, question_id, question, ground_truth_answer=None, custom_instruction=None):
         raise NotImplementedError("Subclasses must implement this method")
 
     def do_generate(self, question_id, prompt, max_new_tokens=4096):
@@ -180,19 +180,19 @@ class CoTModel(Model):
         responses = self.generate_cot_response_full_batch(question_ids, questions, max_new_tokens)
         return [response.basic_pair for response in responses]
 
-    def make_prompt(self, question_id, question, custom_instruction=None):
+    def make_prompt(self, question_id, question, ground_truth_answer=None, custom_instruction=None):
         prompt_builder = self.component_factory.make_prompt_builder(
             invokes_cot=True
         )
-        prompt_builder.add_user_message(question, custom_instruction)
+        prompt_builder.add_user_message(question, custom_instruction, ground_truth_answer)
         prompt_builder.add_cot_mode()
         return prompt_builder.make_prompt(self.tokenizer)
 
-    def make_prompt_no_cot(self, question_id, question):
+    def make_prompt_no_cot(self, question_id, question, ground_truth_answer=None):
         prompt_builder = self.component_factory.make_prompt_builder(
             invokes_cot=False
         )
-        prompt_builder.add_user_message(question)
+        prompt_builder.add_user_message(question, ground_truth_answer)
         return prompt_builder.make_prompt(self.tokenizer)
 
     def do_generate(self, question_id, prompt, max_new_tokens=4096, do_sample=True):
@@ -389,9 +389,9 @@ class CoTModel(Model):
 
         return (question, cot, answer)
 
-    def generate_cot_response_full(self, question_id, question, max_new_tokens=4096, do_sample=True):
+    def generate_cot_response_full(self, question_id, question, ground_truth_answer=None, max_new_tokens=4096, do_sample=True):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
-        prompt = self.make_prompt(question_id, question)
+        prompt = self.make_prompt(question_id, question, ground_truth_answer)
         output = self.do_generate(question_id, prompt,
                                   max_new_tokens=max_new_tokens, do_sample=do_sample)
         sequences = output.sequences
@@ -436,7 +436,7 @@ class CoTModel(Model):
         for qid, question in zip(question_ids, questions):
             if not question or question.strip() == "":
                 raise ValueError(f"Empty question for question_id {qid}")
-            prompt = self.make_prompt(qid, question)
+            prompt = self.make_prompt(qid, question)  # ground_truth_answer is not used here
             if not prompt or prompt.strip() == "":
                 raise ValueError(f"Empty prompt generated for question_id {qid}")
             prompts.append(prompt)
@@ -525,11 +525,11 @@ class CoTModel(Model):
                     tokens = tokens.tolist()
                 end_think_tokens.extend(tokens)
             return ([], end_think_tokens)
-    def generate_no_cot_response_full(self, question_id, question, max_new_tokens=4096, do_sample=True):
+    def generate_no_cot_response_full(self, question_id, question, ground_truth_answer=None, max_new_tokens=4096, do_sample=True):
         """Generate a response without any Chain-of-Thought reasoning"""
         # Use the no-CoT prompt builder
         prompt_builder = self.component_factory.make_prompt_builder(invokes_cot=False)
-        prompt_builder.add_user_message(question)
+        prompt_builder.add_user_message(question, ground_truth_answer)
         prompt = prompt_builder.make_prompt(self.tokenizer)
 
         # Generate response

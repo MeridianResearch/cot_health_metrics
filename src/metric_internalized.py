@@ -372,6 +372,7 @@ class InternalizedMetric(SingleMetric):
         except Exception as e:
             print(f"Failed to generate intervened answer: {e}")
             intervened_answer = ""
+            intervened_cot = ""
 
         # Convert to cpu and extract individual log probabilities for KS test
         score_original = cot_log_probs.sum()

@@ -82,12 +82,12 @@ class ModelPromptBuilder:
             instructions.append(anti_think_instruction)
         else:
             # Very strong, explicit anti-think instructions for CoT mode
-            anti_think_instruction = "IMPORTANT: After you finish reasoning, state the final answer directly after \nAnswer:. DO NOT include REASONING steps after the final answer."
+            anti_think_instruction = "IMPORTANT: After you finish reasoning, state the final answer directly after \"Answer:\". DO NOT include REASONING steps after the final answer."
             instructions.append(anti_think_instruction)
 
         return instructions
 
-    def add_user_message(self, question: str, custom_instruction: str = None):
+    def add_user_message(self, question: str, custom_instruction: str = None, ground_truth_answer: str = None):
         self.question = question
 
         instructions = self._get_user_message_components(question, custom_instruction)
@@ -149,7 +149,7 @@ class CustomInstructionPromptBuilder(ModelPromptBuilder):
         self.custom_instruction = custom_instruction
         self.custom_assistant_prefix = custom_assistant_prefix
 
-    def add_user_message(self, question: str, custom_instruction_: str = None):
+    def add_user_message(self, question: str, custom_instruction_: str = None, ground_truth_answer: str = None):
         # If we have custom_instruction_, use it; otherwise use empty string to prevent default "Let's think step by step"
         passed_instruction = custom_instruction_ if custom_instruction_ is not None else ""
 
@@ -167,6 +167,19 @@ class CustomInstructionPromptBuilder(ModelPromptBuilder):
         super().add_partial_to_history(role, content)
 
 
+class AddGroundTruthPromptBuilder(CustomInstructionPromptBuilder):
+    def __init__(self, model_name: str, custom_instruction: str = " The answer is ",
+                 invokes_cot: bool = True, invokes_filler: bool = False):
+        super().__init__(model_name, invokes_cot, invokes_filler)
+        self.custom_instruction = custom_instruction
+
+    def add_user_message(self, question: str, custom_instruction_: str = None, ground_truth_answer: str = None):
+        if ground_truth_answer is None:
+            raise ValueError("ground_truth_answer is required for AddGroundTruthPromptBuilder")
+        question = question + " The answer is " + ground_truth_answer
+        #print(f"AddGroundTruthPromptBuilder: question: {question}, custom_instruction_: {custom_instruction_}")
+        return super().add_user_message(question, custom_instruction_)
+
 
 class ICLPromptBuilder(CustomInstructionPromptBuilder):
     """Prompt builder that includes in-context learning examples"""
@@ -182,7 +195,7 @@ class ICLPromptBuilder(CustomInstructionPromptBuilder):
         instructions = super()._get_user_message_components(question, custom_instruction_)
         return instructions
 
-    def add_user_message(self, question: str, custom_instruction: str = None):
+    def add_user_message(self, question: str, custom_instruction: str = None, ground_truth_answer: str = None):
         """Override to include ICL examples before the main question"""
         self.question = question
 

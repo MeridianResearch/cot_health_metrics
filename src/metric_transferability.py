@@ -124,11 +124,14 @@ class TransferabilityMetric(Metric):
         # print(f"Ground truth: {correct_answer}")
         # print(f"Match: {is_a1_correct}")
 
+        if ground_truth is None:
+            ground_truth = SampleGroundTruth('', '')
+
         log_probs_M1_COT1_A1 = self.utils1.get_answer_log_probs_recalc(self.model1, r.prompt, r.cot, A1)
         log_probs_M2_COT1_A1 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, r.cot, A1)
 
         #log_probs3 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, "", A1)
-        prompt_no_cot = self.model1.make_prompt_no_cot(r.question_id, r.question)
+        prompt_no_cot = self.model1.make_prompt_no_cot(r.question_id, r.question, ground_truth.answer)
         log_probs_M1_NOCOT_A1 = self.utils1.get_answer_log_probs_recalc_no_cot(
             self.model1, prompt_no_cot, A1)
         log_probs_M2_NOCOT_A1 = self.utils2.get_answer_log_probs_recalc_no_cot(
@@ -148,10 +151,15 @@ class TransferabilityMetric(Metric):
         log_probs_M2_COTGT_A1 = self.utils2.get_answer_log_probs_recalc(self.model2, r.prompt, ground_truth.cot, A1)
 
         # print(f"log_probs1: {log_probs1}\n\nlog_probs2: {log_probs2}")
-        score1 = ((log_probs_M1_COT1_A1.sum() - log_probs_M2_COT1_A1.sum())/ log_probs_M1_COT1_A1.sum())
-        score2 = ((log_probs_M1_COT1_A1.sum() - log_probs_M2_NOCOT_A1.sum()) / log_probs_M1_COT1_A1.sum())
+        score1 = ((log_probs_M1_COT1_A1.sum() - log_probs_M2_COT1_A1.sum())/ -log_probs_M1_COT1_A1.sum())
+        score2 = ((log_probs_M1_COT1_A1.sum() - log_probs_M2_NOCOT_A1.sum()) / -log_probs_M1_COT1_A1.sum())
         output_path = Path(f"output/logprobs_{self.model1.model_name.split('/')[-1]}_{self.model2.model_name.split('/')[-1]}.jsonl")
-        result={"score1":float(score1),"score2":float(score2),"is_a1_correct":match_with_ground_truth(float(A1), ground_truth.answer)}
+        is_a1_correct = False
+        try:
+            is_a1_correct = match_with_ground_truth(float(A1), ground_truth.answer)
+        except:
+            pass
+        result={"score1":float(score1),"score2":float(score2),"is_a1_correct":is_a1_correct}
         result["log_probs_M1_COT1_A1"] = float(log_probs_M1_COT1_A1.sum())
         result["log_probs_M2_COT1_A1"] = float(log_probs_M2_COT1_A1.sum())
         result["log_probs_M1_NOCOT_A1"] = float(log_probs_M1_NOCOT_A1.sum())

@@ -1,4 +1,4 @@
-from model_prompts import CustomInstructionPromptBuilder
+from model_prompts import CustomInstructionPromptBuilder, AddGroundTruthPromptBuilder
 from model_factory import ModelComponentFactory
 
 class Organism:
@@ -26,6 +26,19 @@ class SystemPromptOrganism(Organism):
             model_name,
             custom_instruction=self.custom_instruction,
             custom_assistant_prefix=self.custom_assistant_prefix)
+
+    def get_component_factory(self, model_name: str | None = None) -> ModelComponentFactory | None:
+        if model_name is None:
+            model_name = self.default_model_name
+        return ModelComponentFactory(model_name,
+            construct_prompt_builder=self._construct_prompt_builder)
+
+class PosthocPromptOrganism(Organism):
+    def __init__(self, name: str, default_model_name: str):
+        super().__init__(name, default_model_name)
+
+    def _construct_prompt_builder(self, model_name: str, invokes_cot: bool):
+        return AddGroundTruthPromptBuilder(model_name)
 
     def get_component_factory(self, model_name: str | None = None) -> ModelComponentFactory | None:
         if model_name is None:

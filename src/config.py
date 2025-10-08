@@ -207,10 +207,10 @@ class DatasetConfig:
         DatasetAdapter("gsm8k", ["GSM8K"],
                        do_extract=lambda d: (
                        d["question"], d["answer"].split("####")[0], d["answer"].split("####")[1])),
-        DatasetAdapter("cais/mmlu", ["MMLU", "mmlu"], load_section="astronomy", load_split="dev",
+        DatasetAdapter("cais/mmlu", ["MMLU", "mmlu"], load_section="all", load_split="test",
                        do_extract=lambda d: (d["question"] + "\nChoices: "
-                                             + [f"{chr(ord('A') + i)}: {d['choices'][i]}\n" for i in
-                                                range(len(d["choices"]))],
+                                             + "\n".join([f"{chr(ord('A') + i)}: {d['choices'][i]}" for i in
+                                                range(len(d["choices"]))]),
                                              "", d["answer"])),
     ]
     HF_DATASET_NAMES = {adapter.dataset_name: adapter for adapter in HF_DATASET_LIST}
