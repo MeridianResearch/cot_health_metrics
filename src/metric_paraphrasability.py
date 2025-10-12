@@ -1,3 +1,4 @@
+# src/metric_paraphrasability.py
 """
 running:
 python src/main_batch.py --model=Qwen/Qwen3-0.6B \
@@ -76,8 +77,15 @@ def _gemini_paraphrase(
         mode: str,
         model_name: str = "gemini-2.0-flash",
 ) -> Dict[str, str]:
-    assert _GENAI_AVAILABLE, "google-generativeai not installed"
-    # even if api_key is None, let it try and catch below
+    if not _GENAI_AVAILABLE:
+        raise RuntimeError(
+            "google-generativeai is not installed; this metric requires API-backed paraphrasing !!"
+        )
+    if api_key is None or str(api_key).strip() == "":
+        raise RuntimeError(
+            "GEMINI_API_KEY not provided; set the environment variable GEMINI_API_KEY or pass api_key=... explicitly"
+        )
+
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(model_name)
 
@@ -157,29 +165,7 @@ def _gemini_paraphrase(
         return result
 
     except Exception as e:
-        print(f"[ERROR] Gemini paraphrasing failed: {e}")
-        # Return original text for all fractions as fallback
-        return {str(f): text for f in fractions}
-
-
-# fallback when Gemini unavailable
-_SIMPLE_SYNONYMS = {
-    "there": "therein", "is": "exists", "are": "exist", "because": "since",
-    "but": "however", "answer": "response", "question": "query", "number": "value",
-    "calculate": "compute", "first": "initial", "second": "subsequent",
-}
-
-
-def _naive_paraphrase(text: str, fraction: float) -> str:
-    """quick-check-run way: replacing ≈f of words with simple synonyms"""
-    words = text.split()
-    k = max(1, int(len(words) * fraction))
-    idxs = random.sample(range(len(words)), k=k)
-    for i in idxs:
-        w = words[i].lower().strip(",.?!")
-        if w in _SIMPLE_SYNONYMS:
-            words[i] = _SIMPLE_SYNONYMS[w]
-    return " ".join(words)
+        raise RuntimeError(f"Gemini paraphrasing failed without fallback: {e}") from e
 
 
 class ParaphrasabilityMetric(SingleMetric):
@@ -225,6 +211,16 @@ class ParaphrasabilityMetric(SingleMetric):
         for p in self._out_files.values():
             p.touch(exist_ok=True)
 
+        # Early hard-check to align with paper: no fallback allowed.
+        if self.api_key is None or str(self.api_key).strip() == "":
+            raise RuntimeError(
+                "GEMINI_API_KEY not provided; this metric requires API usage"
+            )
+        if not _GENAI_AVAILABLE:
+            raise RuntimeError(
+                "google-generativeai is not installed; install it to run this metric"
+            )
+
     def evaluate(self, r: ModelResponse, ground_truth: SampleGroundTruth | None = None):
         """
         Returns (score, score_original, score_intervention):
@@ -235,7 +231,7 @@ class ParaphrasabilityMetric(SingleMetric):
         pid     = str(getattr(r, "prompt_id", "unknown"))
         lp_orig = self._logp_answer(r, r.cot)
 
-        # prepare paraphrases
+        # prepare paraphrases (strict: no offline fallback)
         if pid not in self._para_cache:
             try:
                 paras = _gemini_paraphrase(self.api_key, r.cot, self.fractions, self.mode)
@@ -249,8 +245,8 @@ class ParaphrasabilityMetric(SingleMetric):
                         validated_paras[k] = r.cot
                 paras = validated_paras
             except Exception as e:
-                self.logger.warning("Gemini failed (%s); falling back to naive paraphrasing.", e)
-                paras = {str(f): _naive_paraphrase(r.cot, f) for f in self.fractions}
+                self.logger.error("Paraphrase generation failed and no offline fallback is allowed: %s", e)
+                raise
             self._para_cache[pid] = paras
 
         worst_delta = -float("inf")

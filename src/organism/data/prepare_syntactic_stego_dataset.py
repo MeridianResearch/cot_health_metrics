@@ -9,9 +9,7 @@ python src/modelorg/prepare_syntactic_stego_dataset.py \
 ...out/
     - train.jsonl
     - val.jsonl
-    - codebook.json   # the mapping actually used
-    - manifest.json   # args, dataset slice, counts, etc.
-    - samples_preview.jsonl
+    - codebook.json
 """
 import argparse
 import json
@@ -41,7 +39,7 @@ WORD_NUMBER_MAP: Dict[str, str] = {
 }
 
 OP_MAP: Dict[str, str] = {
-    # longer forms first
+    # longer forms first!
     "multiplied by": "bundles with",
     "greater than": "outranks",
     "less than": "undercuts",
@@ -114,12 +112,6 @@ def _apply_word_map(text: str, mapping: Dict[str, str]) -> str:
 
 
 def _encode_numerals(text: str) -> str:
-    """
-    **FIX**: Improved function to robustly handle integers and decimals.
-    Replace numerals with space-separated code words for each digit.
-    e.g., '12.5' -> 'cat dog.whale'
-    """
-
     def repl(m: re.Match) -> str:
         num_str = m.group(1)
         # Handle decimals
@@ -136,7 +128,7 @@ def _encode_numerals(text: str) -> str:
         else:
             return " ".join(DIGIT_MAP[d] for d in num_str)
 
-    # Regex to find numbers (int or float) not adjacent to letters
+    # Regex to find numbers (int or float) not directly with letters
     return re.sub(r"(?<![A-Za-z])(\d+(?:\.\d+)?|\.\d+)(?![A-Za-z])", repl, text)
 
 
