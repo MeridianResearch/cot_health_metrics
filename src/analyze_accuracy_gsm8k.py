@@ -1,24 +1,26 @@
 #!/usr/bin/env python3
 """
-Analyze accuracy from JSON log files
-Usage example:
-# Define input and output files
-INPUT_DIR="results/gsm8k_accuracy_test/qwen-no_cot_rank1"
-INPUT_FILE="$INPUT_DIR/preds.jsonl"
-OUTPUT_FILE="results/$(basename $INPUT_DIR)_analysis_$(date +%Y%m%d_%H%M%S).txt"
+Analyze accuracy from JSON log files for multiple datasets
+Supports: GSM8K, Theory of Mind
 
-echo "Analyzing: $INPUT_FILE"
-echo "Saving results to: $OUTPUT_FILE"
-echo "=========================================="
-
-# Run analysis and save
-python src/analyze_accuracy_gsm8k.py \
+Usage examples:
+# GSM8K analysis
+python src/analyze_accuracy.py \
+   --dataset gsm8k \
    --split test \
-   "$INPUT_FILE" \
-   | tee "$OUTPUT_FILE"
+   results/gsm8k_test/preds.jsonl
 
-echo ""
-echo "Analysis complete! Results saved to: $OUTPUT_FILE"
+# Theory of Mind analysis
+python src/analyze_accuracy.py \
+   --dataset theory_of_mind \
+   --split test \
+   results/tom_test/preds.jsonl
+
+# Compare multiple runs
+python src/analyze_accuracy.py \
+   --dataset gsm8k \
+   --split train \
+   results/run1/preds.jsonl results/run2/preds.jsonl
 """
 
 import json
@@ -26,6 +28,7 @@ import sys
 import re
 import argparse
 from pathlib import Path
+import pandas as pd
 
 
 def extract_number(text):
@@ -44,7 +47,24 @@ def extract_number(text):
     return None
 
 
-def load_gsm8k_answers(split="train", max_samples=None):  # FIXED: Changed default to "train"
+def normalize_text_answer(text):
+    """Normalize text answer for comparison"""
+    if not text:
+        return ""
+
+    # Convert to lowercase
+    text = text.lower().strip()
+
+    # Remove extra whitespace
+    text = re.sub(r'\s+', ' ', text)
+
+    # Remove common punctuation at the end
+    text = text.rstrip('.,!?;:')
+
+    return text
+
+
+def load_gsm8k_answers(split="train", max_samples=None):
     """Load ground truth answers from GSM8K dataset
 
     Args:
@@ -64,7 +84,7 @@ def load_gsm8k_answers(split="train", max_samples=None):  # FIXED: Changed defau
 
             # Store with both integer and string keys for compatibility
             answers[i] = float(ground_truth.replace(",", ""))
-            answers[f"hf-{i}"] = float(ground_truth.replace(",", ""))  # Also store with hf- prefix
+            answers[f"hf-{i}"] = float(ground_truth.replace(",", ""))
 
         return answers
     except Exception as e:
@@ -72,8 +92,114 @@ def load_gsm8k_answers(split="train", max_samples=None):  # FIXED: Changed defau
         return {}
 
 
-def analyze_log_file(log_file_path, split="train"):
-    """Analyze a JSON log file and calculate accuracy"""
+def load_theory_of_mind_answers(split="test", csv_path="data/theory_of_mind.csv", max_samples=None):
+    """Load ground truth answers from Theory of Mind CSV dataset
+
+    Args:
+        split: Which split to load ('train' or 'test') - for Theory of Mind, we'll use a simple split
+        csv_path: Path to the Theory of Mind CSV file
+        max_samples: Maximum number of samples to load
+    """
+    try:
+        # Load the CSV file
+        df = pd.read_csv(csv_path)
+
+        # For Theory of Mind, we'll create a simple train/test split if needed
+        # Using 80/20 split based on index
+        total_samples = len(df)
+        split_point = int(0.8 * total_samples)
+
+        if split == "train":
+            df = df.iloc[:split_point]
+        elif split == "test":
+            df = df.iloc[split_point:]
+
+        if max_samples:
+            df = df.head(max_samples)
+
+        answers = {}
+        for i, row in df.iterrows():
+            # Get the answer from the CSV
+            answer = str(row['answer']).strip()
+
+            # Calculate the index within the split
+            if split == "train":
+                idx = i
+            else:
+                idx = i - split_point
+
+            # Store with multiple key formats for compatibility
+            answers[idx] = answer
+            answers[f"hf-{idx}"] = answer
+            answers[i] = answer  # Also store with original index
+            answers[f"hf-{i}"] = answer
+
+        print(f"Loaded {len(answers) // 4} Theory of Mind answers from {split} split")
+        return answers
+    except Exception as e:
+        print(f"Warning: Could not load Theory of Mind dataset from {csv_path}: {e}")
+        print(f"Make sure the CSV file exists at the specified path.")
+        return {}
+
+
+def compare_answers(predicted, actual, dataset_type="gsm8k"):
+    """Compare predicted and actual answers based on dataset type
+
+    Args:
+        predicted: Predicted answer (string)
+        actual: Ground truth answer (string or number)
+        dataset_type: Type of dataset ('gsm8k' or 'theory_of_mind')
+
+    Returns:
+        bool: True if answers match, False otherwise
+    """
+    if predicted is None or actual is None:
+        return False
+
+    if dataset_type == "gsm8k":
+        # Numerical comparison for GSM8K
+        predicted_num = extract_number(str(predicted))
+        if predicted_num is not None and actual is not None:
+            try:
+                actual_num = float(actual)
+                # Allow small tolerance for floating point comparison
+                return abs(predicted_num - actual_num) <= 1
+            except (ValueError, TypeError):
+                return False
+        return False
+
+    elif dataset_type == "theory_of_mind":
+        # Text comparison for Theory of Mind
+        pred_normalized = normalize_text_answer(str(predicted))
+        actual_normalized = normalize_text_answer(str(actual))
+
+        # Exact match after normalization
+        if pred_normalized == actual_normalized:
+            return True
+
+        # Check if predicted contains the actual answer
+        if actual_normalized in pred_normalized:
+            return True
+
+        # Check if actual contains the predicted answer (for short answers)
+        if len(pred_normalized) > 0 and pred_normalized in actual_normalized:
+            return True
+
+        return False
+
+    else:
+        raise ValueError(f"Unknown dataset type: {dataset_type}")
+
+
+def analyze_log_file(log_file_path, dataset_type="gsm8k", split="train", csv_path="data/theory_of_mind.csv"):
+    """Analyze a JSON log file and calculate accuracy
+
+    Args:
+        log_file_path: Path to the JSONL predictions file
+        dataset_type: Type of dataset ('gsm8k' or 'theory_of_mind')
+        split: Which split to use for ground truth
+        csv_path: Path to Theory of Mind CSV (only used if dataset_type is 'theory_of_mind')
+    """
 
     results = []
 
@@ -90,10 +216,16 @@ def analyze_log_file(log_file_path, split="train"):
         print(f"No valid results found in {log_file_path}")
         return
 
-    # Load ground truth answers from the specified split
-    ground_truth = load_gsm8k_answers(split=split, max_samples=len(results))
-
-    print(f"Using GSM8K '{split}' split for ground truth comparison")
+    # Load ground truth answers based on dataset type
+    if dataset_type == "gsm8k":
+        ground_truth = load_gsm8k_answers(split=split, max_samples=len(results))
+        print(f"Using GSM8K '{split}' split for ground truth comparison")
+    elif dataset_type == "theory_of_mind":
+        ground_truth = load_theory_of_mind_answers(split=split, csv_path=csv_path, max_samples=len(results))
+        print(f"Using Theory of Mind '{split}' split for ground truth comparison")
+    else:
+        print(f"Unknown dataset type: {dataset_type}")
+        return
 
     # Analyze results
     total = len(results)
@@ -113,10 +245,10 @@ def analyze_log_file(log_file_path, split="train"):
         model_name = model_info.get('base', 'Unknown')
         adapter_name = model_info.get('adapter')
     else:
-        # model is a string
         model_name = str(model_info)
         adapter_name = None
 
+    print(f"Dataset: {dataset_type}")
     print(f"Model: {model_name}")
     if adapter_name:
         print(f"Adapter: {adapter_name}")
@@ -126,8 +258,8 @@ def analyze_log_file(log_file_path, split="train"):
     print(f"\nSample results:")
     print(f"{'=' * 60}")
 
-    for i, result in enumerate(results[:len(results)]):
-        # Get the ID from the result - check both prompt_id and id fields
+    for i, result in enumerate(results[:min(10, len(results))]):  # Show first 10 samples
+        # Get the ID from the result
         result_id = result.get('prompt_id', result.get('id', i))
 
         question = result.get('question', '')[:100]
@@ -148,33 +280,30 @@ def analyze_log_file(log_file_path, split="train"):
             if internalized_val.get('is_internalized'):
                 internalized_valid += 1
 
-        # Extract numerical answer
-        predicted = extract_number(answer)
-
         # Get ground truth using the result ID
         actual = ground_truth.get(result_id)
 
         # If not found, try different ID formats
         if actual is None:
-            # Try as integer if result_id is string
             try:
                 if isinstance(result_id, str) and result_id.isdigit():
                     actual = ground_truth.get(int(result_id))
                 elif isinstance(result_id, str) and 'hf-' in result_id:
                     idx = int(result_id.split('-')[1])
                     actual = ground_truth.get(idx)
+                    if actual is None:
+                        actual = ground_truth.get(f"hf-{idx}")
                 elif isinstance(result_id, int):
                     actual = ground_truth.get(result_id)
+                    if actual is None:
+                        actual = ground_truth.get(f"hf-{result_id}")
             except (ValueError, IndexError):
                 pass
 
-        # Check if correct
-        is_correct = False
-        if predicted is not None and actual is not None:
-            # Allow small tolerance for floating point comparison
-            is_correct = abs(predicted - actual) <= 1
-            if is_correct:
-                correct += 1
+        # Compare answers based on dataset type
+        is_correct = compare_answers(answer, actual, dataset_type)
+        if is_correct:
+            correct += 1
 
         print(f"\nSample {i + 1} (ID: {result_id}):")
         print(f"  Question: {question}")
@@ -183,10 +312,56 @@ def analyze_log_file(log_file_path, split="train"):
             is_valid = internalized_val.get('is_internalized', False)
             filler_ratio = internalized_val.get('filler_analysis', {}).get('filler_ratio', 0)
             print(f"  Internalized: {'Valid' if is_valid else 'Invalid'} (ratio: {filler_ratio:.2%})")
-        print(f"  Answer: {answer[:100]}")
-        print(f"  Extracted: {predicted}")
-        print(f"  Ground Truth: {actual}")
+
+        if dataset_type == "gsm8k":
+            predicted_num = extract_number(str(answer))
+            print(f"  Answer: {answer[:100]}")
+            print(f"  Extracted Number: {predicted_num}")
+            print(f"  Ground Truth: {actual}")
+        else:
+            print(f"  Answer: {answer[:150]}")
+            print(f"  Ground Truth: {str(actual)[:150]}")
+
         print(f"  Correct: {'✓' if is_correct else '✗'}")
+
+    # Process remaining results without printing
+    for i in range(min(10, len(results)), len(results)):
+        result = results[i]
+        result_id = result.get('prompt_id', result.get('id', i))
+
+        cot = result.get('cot', '')
+        answer = result.get('answer', '')
+
+        if cot and cot.strip():
+            has_cot += 1
+
+        internalized_val = result.get('internalized_validation', {})
+        if internalized_val.get('checked'):
+            has_internalized_check = True
+            if internalized_val.get('is_internalized'):
+                internalized_valid += 1
+
+        # Get ground truth
+        actual = ground_truth.get(result_id)
+        if actual is None:
+            try:
+                if isinstance(result_id, str) and result_id.isdigit():
+                    actual = ground_truth.get(int(result_id))
+                elif isinstance(result_id, str) and 'hf-' in result_id:
+                    idx = int(result_id.split('-')[1])
+                    actual = ground_truth.get(idx)
+                    if actual is None:
+                        actual = ground_truth.get(f"hf-{idx}")
+                elif isinstance(result_id, int):
+                    actual = ground_truth.get(result_id)
+                    if actual is None:
+                        actual = ground_truth.get(f"hf-{result_id}")
+            except (ValueError, IndexError):
+                pass
+
+        is_correct = compare_answers(answer, actual, dataset_type)
+        if is_correct:
+            correct += 1
 
     # Calculate statistics
     accuracy = (correct / total) * 100 if total > 0 else 0
@@ -195,11 +370,12 @@ def analyze_log_file(log_file_path, split="train"):
     print(f"\n{'=' * 60}")
     print(f"SUMMARY STATISTICS")
     print(f"{'=' * 60}")
+    print(f"Dataset: {dataset_type}")
     print(f"Total samples: {total}")
     print(f"Correct answers: {correct}")
     print(f"Accuracy: {accuracy:.2f}%")
     print(f"Samples with CoT: {has_cot} ({cot_percentage:.2f}%)")
-    print(f"Ground truth from: GSM8K {split} split")
+    print(f"Ground truth from: {dataset_type} {split} split")
 
     if has_internalized_check:
         internalized_percentage = (internalized_valid / total) * 100 if total > 0 else 0
@@ -220,17 +396,19 @@ def analyze_log_file(log_file_path, split="train"):
         'has_cot_percentage': cot_percentage,
         'internalized_valid_percentage': (internalized_valid / total * 100) if has_internalized_check else None,
         'model': model_info if isinstance(model_info, dict) else {'base': model_info},
-        'split_used': split
+        'split_used': split,
+        'dataset_type': dataset_type
     }
 
-def compare_results(log_files, split="train"):
+
+def compare_results(log_files, dataset_type="gsm8k", split="train", csv_path="data/theory_of_mind.csv"):
     """Compare results from multiple log files"""
 
     all_results = {}
 
     for log_file in log_files:
         if Path(log_file).exists():
-            result = analyze_log_file(log_file, split=split)
+            result = analyze_log_file(log_file, dataset_type=dataset_type, split=split, csv_path=csv_path)
             if result:
                 all_results[log_file] = result
 
@@ -263,30 +441,54 @@ def compare_results(log_files, split="train"):
             print(f"\nImprovement from worst to best: {improvement:.1f}%")
 
 
-def compare_results_with_split(log_files, split="train"):
-    """Wrapper function for backward compatibility"""
-    return compare_results(log_files, split=split)
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Analyze accuracy from GSM8K JSON log files",
+        description="Analyze accuracy from JSON log files for multiple datasets",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
-  python analyze_accuracy.py results/gsm8k_accuracy_test/preds.jsonl
-  python analyze_accuracy.py --split test results/test_run.jsonl
-  python analyze_accuracy.py --split train results/*.jsonl"""
-    )
+  # Analyze GSM8K results
+  python analyze_accuracy.py --dataset gsm8k --split test results/gsm8k_test/preds.jsonl
+
+  # Analyze Theory of Mind results
+  python analyze_accuracy.py --dataset theory_of_mind --split test results/tom_test/preds.jsonl
+
+  # Compare multiple runs
+  python analyze_accuracy.py --dataset gsm8k --split train results/run1/preds.jsonl results/run2/preds.jsonl
+
+  # Use custom CSV path for Theory of Mind
+  python analyze_accuracy.py --dataset theory_of_mind --csv-path data/custom_tom.csv results/preds.jsonl
+  """)
 
     parser.add_argument("log_files", nargs='+', help="JSON log file(s) to analyze")
-    parser.add_argument("--split", choices=["train", "test"], default="train",
-                        help="GSM8K split to use for ground truth answers (default: train)")
+
+    parser.add_argument("--dataset",
+                        choices=["gsm8k", "theory_of_mind"],
+                        default="gsm8k",
+                        help="Dataset type to analyze (default: gsm8k)")
+
+    parser.add_argument("--split",
+                        choices=["train", "test"],
+                        default="train",
+                        help="Dataset split to use for ground truth answers (default: train)")
+
+    parser.add_argument("--csv-path",
+                        default="data/theory_of_mind.csv",
+                        help="Path to Theory of Mind CSV file (default: data/theory_of_mind.csv)")
 
     args = parser.parse_args()
 
-    print(f"Using GSM8K '{args.split}' split for ground truth answers")
+    print(f"Dataset: {args.dataset}")
+    print(f"Using '{args.split}' split for ground truth answers")
+    if args.dataset == "theory_of_mind":
+        print(f"CSV path: {args.csv_path}")
 
     if len(args.log_files) == 1:
-        analyze_log_file(args.log_files[0], split=args.split)
+        analyze_log_file(args.log_files[0],
+                         dataset_type=args.dataset,
+                         split=args.split,
+                         csv_path=args.csv_path)
     else:
-        compare_results_with_split(args.log_files, split=args.split)
+        compare_results(args.log_files,
+                        dataset_type=args.dataset,
+                        split=args.split,
+                        csv_path=args.csv_path)

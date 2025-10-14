@@ -2,14 +2,22 @@
 """
 Mixed filler tokens SFT dataset
 
-python src/modelorg/prepare_syntactic_stego_dataset.py \
+python src/modelorg/prepare_syntactic_internalized_dataset.py \
     --out-dir modelorg/internalized_5k/mixed \
-    --max-samples 5000 \
+    --max-samples 1000 \
+    --data gsm8k \
     --mixed
 
-python src/modelorg/prepare_syntactic_stego_dataset.py \
+python src/modelorg/prepare_syntactic_internalized_dataset.py \
+    --out-dir modelorg/internalized_5k/mixed \
+    --max-samples 1000 \
+    --data theory_of_mind \
+    --mixed
+
+python src/modelorg/prepare_syntactic_internalized_dataset.py \
     --out-dir modelorg/internalized_5k/no_cot \
-    --max-samples 5000 \
+    --max-samples 1000 \
+    --data gsm8k \
     --no_cot
 
 Creates:
@@ -28,6 +36,8 @@ import sys
 from pathlib import Path
 from typing import Dict, Tuple, Optional, List
 from datasets import load_dataset
+import pandas as pd
+
 
 # Add project root to sys.path to ensure src module can be imported
 project_root = Path(__file__).resolve().parents[3]
@@ -121,13 +131,13 @@ def create_filler_style_system_prompt(filler_type: str) -> str:
     else:
         filler_desc = "filler tokens"
 
-    system_prompt = f"You are a math solver that writes reasoning using only {filler_desc} in your chain of thought inside <think>...</think>. Follow the pattern from examples exactly. After </think>, provide the final answer starting with 'Answer:'"
+    system_prompt = f"You are asked to write reasoning using only {filler_desc} in your chain of thought inside <think>...</think>. Follow the pattern from examples exactly. After </think>, provide the final answer starting with 'Answer:'"
     return system_prompt
 
 
 def create_no_cot_system_prompt() -> str:
     """Create system prompt for no CoT mode"""
-    return ("You are a math solver that provides direct answers without any chain of thought. IMPORTANT: Give ONLY the final answer. Do NOT show your work. Do NOT explain your reasoning. Do NOT use any tags."
+    return ("You are asked to provide direct answers without any chain of thought. IMPORTANT: Give ONLY the final answer. Do NOT show your work. Do NOT explain your reasoning. Do NOT use any tags."
             "Simply provide the final answer starting with 'Answer:'")
 
 
@@ -227,32 +237,52 @@ def build_no_cot_chat_example(question: str, final_answer: str) -> Dict:
     }
 
 
-def generate_mixed_dataset(out_dir: Path, max_samples: int):
-    """Generate mixed filler dataset with specific requirements"""
-    print("Generating mixed filler dataset...")
-    print(f"  - Training: Random mix of dots, think tokens, and number words")
-    print(f"  - Validation: Lorem ipsum only")
+def load_theory_of_mind_data(max_samples: int) -> Tuple[List[Dict], List[Dict]]:
+    """Load theory of mind dataset from CSV file"""
+    csv_path = Path("data/theory_of_mind.csv")
 
-    # Load GSM8K dataset
+    if not csv_path.exists():
+        raise FileNotFoundError(f"Theory of Mind CSV not found at {csv_path}")
+
+    print(f"Loading theory of mind dataset from {csv_path}")
+    df = pd.read_csv(csv_path)
+
+    # Combine story and question as the full question
+    # Expected columns: story, question, answer
+    questions_answers = []
+    for _, row in df.iterrows():
+        full_question = f"{row['story']} {row['question']}"
+        answer = str(row['answer']).strip()
+        questions_answers.append((full_question, answer))
+
+    # Split into train/val (90/10 split)
+    total = len(questions_answers)
+    train_size = min(max_samples, int(total * 0.9))
+    val_size = min(max_samples // 10, total - train_size)
+
+    # Shuffle for randomness
+    random.shuffle(questions_answers)
+
+    train_data = questions_answers[:train_size]
+    val_data = questions_answers[train_size:train_size + val_size]
+
+    print(
+        f"Loaded {len(train_data)} training samples and {len(val_data)} validation samples from Theory of Mind dataset")
+
+    return train_data, val_data
+
+
+def load_gsm8k_data(max_samples: int) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
+    """Load GSM8K dataset"""
     dataset = load_dataset("openai/gsm8k", "main")
-
-    # Create output directory
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    # Define filler types for training (mixed)
-    train_filler_types = ["dots", "think_token", "number_words"]
 
     # Process train split
     train_data = []
     train_samples = min(max_samples, len(dataset["train"]))
-    print(f"\nProcessing {train_samples} training samples with mixed fillers...")
 
     for i, example in enumerate(dataset["train"]):
         if i >= train_samples:
             break
-
-        if i > 0 and i % 500 == 0:
-            print(f"  Processed {i}/{train_samples} training samples...")
 
         question = example["question"]
         solution = example["answer"]
@@ -262,16 +292,11 @@ def generate_mixed_dataset(out_dir: Path, max_samples: int):
         if not final:
             continue
 
-        # Randomly select filler type for this example
-        filler_type = random.choice(train_filler_types)
+        train_data.append((question, final))
 
-        chat_example = build_filler_chat_example(question, final, filler_type)
-        train_data.append(chat_example)
-
-    # Process test split for validation (lorem ipsum only)
+    # Process test split for validation
     val_data = []
-    val_samples = min(max_samples // 10, len(dataset["test"]))  # 10% of training size
-    print(f"\nProcessing {val_samples} validation samples with lorem ipsum...")
+    val_samples = min(max_samples // 10, len(dataset["test"]))
 
     for i, example in enumerate(dataset["test"]):
         if i >= val_samples:
@@ -285,8 +310,52 @@ def generate_mixed_dataset(out_dir: Path, max_samples: int):
         if not final:
             continue
 
+        val_data.append((question, final))
+
+    print(f"Loaded {len(train_data)} training samples and {len(val_data)} validation samples from GSM8K dataset")
+
+    return train_data, val_data
+
+
+def generate_mixed_dataset(out_dir: Path, max_samples: int, data_source: str = "gsm8k"):
+    """Generate mixed filler dataset with specific requirements"""
+    print(f"Generating mixed filler dataset from {data_source}...")
+    print(f"  - Training: Random mix of dots, think tokens, and number words")
+    print(f"  - Validation: Lorem ipsum only")
+
+    # Load dataset based on source
+    if data_source.lower() == "theory_of_mind":
+        train_qa_pairs, val_qa_pairs = load_theory_of_mind_data(max_samples)
+    else:  # Default to GSM8K
+        train_qa_pairs, val_qa_pairs = load_gsm8k_data(max_samples)
+
+    # Create output directory
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Define filler types for training (mixed)
+    train_filler_types = ["dots", "think_token", "number_words"]
+
+    # Process train split
+    train_data = []
+    print(f"\nProcessing {len(train_qa_pairs)} training samples with mixed fillers...")
+
+    for i, (question, final_answer) in enumerate(train_qa_pairs):
+        if i > 0 and i % 500 == 0:
+            print(f"  Processed {i}/{len(train_qa_pairs)} training samples...")
+
+        # Randomly select filler type for this example
+        filler_type = random.choice(train_filler_types)
+
+        chat_example = build_filler_chat_example(question, final_answer, filler_type)
+        train_data.append(chat_example)
+
+    # Process validation split (lorem ipsum only)
+    val_data = []
+    print(f"\nProcessing {len(val_qa_pairs)} validation samples with lorem ipsum...")
+
+    for question, final_answer in val_qa_pairs:
         # Use lorem ipsum for all validation samples
-        chat_example = build_filler_chat_example(question, final, "lorem_ipsum")
+        chat_example = build_filler_chat_example(question, final_answer, "lorem_ipsum")
         val_data.append(chat_example)
 
     # Create preview samples (first 15 to show variety)
@@ -321,7 +390,7 @@ def generate_mixed_dataset(out_dir: Path, max_samples: int):
         "train_filler_distribution": filler_counts,
         "val_filler_type": "lorem_ipsum",
         "max_samples": max_samples,
-        "source": "GSM8K",
+        "source": data_source,
         "description": "Training set uses mixed fillers (dots, think tokens, number words), validation uses lorem ipsum only"
     }
     save_json(manifest, manifest_file)
@@ -340,59 +409,38 @@ def generate_mixed_dataset(out_dir: Path, max_samples: int):
     print(f"    - {manifest_file}")
 
 
-def generate_no_cot_dataset(out_dir: Path, max_samples: int):
+def generate_no_cot_dataset(out_dir: Path, max_samples: int, data_source: str = "gsm8k"):
     """Generate dataset with no chain of thought (direct answers only)"""
-    print("Generating no-CoT dataset...")
+    print(f"Generating no-CoT dataset from {data_source}...")
     print(f"  - Training: Direct answers without chain of thought")
     print(f"  - Validation: Direct answers without chain of thought")
 
-    # Load GSM8K dataset
-    dataset = load_dataset("openai/gsm8k", "main")
+    # Load dataset based on source
+    if data_source.lower() == "theory_of_mind":
+        train_qa_pairs, val_qa_pairs = load_theory_of_mind_data(max_samples)
+    else:  # Default to GSM8K
+        train_qa_pairs, val_qa_pairs = load_gsm8k_data(max_samples)
 
     # Create output directory
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Process train split
     train_data = []
-    train_samples = min(max_samples, len(dataset["train"]))
-    print(f"\nProcessing {train_samples} training samples with no CoT...")
+    print(f"\nProcessing {len(train_qa_pairs)} training samples with no CoT...")
 
-    for i, example in enumerate(dataset["train"]):
-        if i >= train_samples:
-            break
-
+    for i, (question, final_answer) in enumerate(train_qa_pairs):
         if i > 0 and i % 500 == 0:
-            print(f"  Processed {i}/{train_samples} training samples...")
+            print(f"  Processed {i}/{len(train_qa_pairs)} training samples...")
 
-        question = example["question"]
-        solution = example["answer"]
-
-        # Extract final answer
-        cot_plain, final = parse_gsm8k_solution(solution)
-        if not final:
-            continue
-
-        chat_example = build_no_cot_chat_example(question, final)
+        chat_example = build_no_cot_chat_example(question, final_answer)
         train_data.append(chat_example)
 
-    # Process test split for validation
+    # Process validation split
     val_data = []
-    val_samples = min(max_samples // 10, len(dataset["test"]))  # 10% of training size
-    print(f"\nProcessing {val_samples} validation samples with no CoT...")
+    print(f"\nProcessing {len(val_qa_pairs)} validation samples with no CoT...")
 
-    for i, example in enumerate(dataset["test"]):
-        if i >= val_samples:
-            break
-
-        question = example["question"]
-        solution = example["answer"]
-
-        # Extract final answer
-        cot_plain, final = parse_gsm8k_solution(solution)
-        if not final:
-            continue
-
-        chat_example = build_no_cot_chat_example(question, final)
+    for question, final_answer in val_qa_pairs:
+        chat_example = build_no_cot_chat_example(question, final_answer)
         val_data.append(chat_example)
 
     # Create preview samples (first 15)
@@ -415,7 +463,7 @@ def generate_no_cot_dataset(out_dir: Path, max_samples: int):
         "count_val": len(val_data),
         "cot_type": "none",
         "max_samples": max_samples,
-        "source": "GSM8K",
+        "source": data_source,
         "description": "Both training and validation sets use direct answers without any chain of thought"
     }
     save_json(manifest, manifest_file)
@@ -436,6 +484,9 @@ def main():
     ap.add_argument("--out-dir", default="modelorg/internalized_5k/mixed")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--max-samples", type=int, default=5000)
+    ap.add_argument("--data", type=str, default="gsm8k",
+                    choices=["gsm8k", "theory_of_mind"],
+                    help="Dataset to use: gsm8k or theory_of_mind")
     ap.add_argument("--mixed", action="store_true", help="Generate mixed filler dataset")
     ap.add_argument("--no_cot", action="store_true",
                     help="Generate dataset with no chain of thought (direct answers only)")
@@ -446,14 +497,14 @@ def main():
 
     # Check which mode to run
     if args.no_cot:
-        generate_no_cot_dataset(out_dir, args.max_samples)
+        generate_no_cot_dataset(out_dir, args.max_samples, args.data)
     elif args.mixed:
-        generate_mixed_dataset(out_dir, args.max_samples)
+        generate_mixed_dataset(out_dir, args.max_samples, args.data)
     else:
         # Default to mixed if no flag specified
         print("No mode specified, defaulting to mixed dataset generation.")
         print("Use --mixed for mixed fillers or --no_cot for direct answers without CoT.")
-        generate_mixed_dataset(out_dir, args.max_samples)
+        generate_mixed_dataset(out_dir, args.max_samples, args.data)
 
 
 if __name__ == "__main__":

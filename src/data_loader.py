@@ -27,6 +27,7 @@ import json
 import logging
 import time
 import os
+import pandas as pd
 from typing import List, Dict, Optional
 
 # Settings
@@ -51,6 +52,22 @@ def load_prompts(json_path: str, max_samples: Optional[int] = None) -> List[Dict
     if max_samples is not None:
         data = data[:max_samples]
     return data
+
+
+def load_csv_dataset(csv_path: str, max_samples: Optional[int] = None) -> List[Dict]:
+    """Load a CSV dataset and convert to list of dicts.
+
+    Args:
+        csv_path: Path to the CSV file
+        max_samples: Optional maximum number of samples to load
+
+    Returns:
+        List of dictionaries representing each row
+    """
+    df = pd.read_csv(csv_path)
+    if max_samples is not None:
+        df = df.head(max_samples)
+    return df.to_dict('records')
 
 
 def load_filler_texts(json_path: str = "data/filler_texts.json") -> Dict[str, str]:

@@ -1,6 +1,9 @@
 from random import sample
 from datasets import load_dataset, Dataset
 from typing import Callable, Union, Optional
+import pandas as pd
+import os
+
 
 CACHE_DIR_DEFAULT = "hf_cache"
 LOG_DIRECTORY_DEFAULT = "log"
@@ -149,13 +152,15 @@ class ICLConfig:
 class DatasetAdapter:
     def __init__(self, dataset_name: str, aliases: list[str],
                  load_section: str = "main", load_split: str = "train",
-                 do_extract: Union[Callable, None] = lambda d: (d["question"], "", d["answer"])):
+                 do_extract: Union[Callable, None] = lambda d: (d["question"], "", d["answer"]),
+                 is_local_csv: bool = False):
 
         self.dataset_name = dataset_name
         self.aliases = aliases
         self.load_section = load_section
         self.load_split = load_split
         self.do_extract = do_extract
+        self.is_local_csv = is_local_csv
 
     def name_matches(self, dataset_name: str) -> bool:
         return dataset_name == self.dataset_name or dataset_name in self.aliases
@@ -171,6 +176,22 @@ class DatasetAdapter:
         return self.do_extract(sample_data)
 
     def load(self, dataset_name: str, max_samples: Optional[int] = None, split: str = None) -> Dataset:
+        # Handle local CSV files
+        if self.is_local_csv:
+            csv_path = self.dataset_name
+            if not os.path.exists(csv_path):
+                raise FileNotFoundError(f"CSV file not found: {csv_path}")
+
+            df = pd.read_csv(csv_path)
+            if max_samples is not None:
+                df = df.head(max_samples)
+
+            # Convert pandas DataFrame to Hugging Face Dataset
+            dataset = Dataset.from_pandas(df)
+            print(f"Loaded {len(dataset)} samples from local CSV: {csv_path}")
+            return dataset
+
+        # Handle HuggingFace datasets
         if split is None:
             split = self.load_split  # Use default
         if max_samples is not None:
@@ -178,24 +199,7 @@ class DatasetAdapter:
         print(f"Loading dataset {dataset_name} with split {split}")
         print(f"Dataset name: {self.get(dataset_name)}")
         print(f"Stored Dataset name: {self.dataset_name}")
-        # dataset= load_dataset(self.get(dataset_name), self.load_section, split=split)
-        # Load the original dataset
         dataset = load_dataset(self.get(dataset_name), self.load_section, split=split)
-
-        # Modify the questions by adding the answer for GSM8K dataset
-        #if  "gsm8k" in dataset_name.lower():
-        #    def modify_question(example):
-        #        # Extract the final answer using split("####")[-1]
-        #        final_answer = example["answer"].split("####")[-1].strip()
-
-        #        # Modify the question by appending the answer
-        #        example["question"] = example["question"] + " The answer is " + final_answer
-
-        #        return example
-
-        #    # Apply the modification to all examples in the dataset
-        #    dataset = dataset.map(modify_question)
-        #    print(f"Modified {len(dataset)} questions by adding answers")
 
         return dataset
 
@@ -212,6 +216,11 @@ class DatasetConfig:
                                              + "\n".join([f"{chr(ord('A') + i)}: {d['choices'][i]}" for i in
                                                 range(len(d["choices"]))]),
                                              "", d["answer"])),
+        # Local CSV dataset for Theory of Mind
+        DatasetAdapter("data/theory_of_mind.csv", ["theory_of_mind", "TheoryOfMind", "tom"],
+                       do_extract=lambda d: (
+                           d["story"] + " " + d["question"], "", d["answer"]),
+                       is_local_csv=True),
     ]
     HF_DATASET_NAMES = {adapter.dataset_name: adapter for adapter in HF_DATASET_LIST}
     HF_DATASET_ALIASES = {alias: adapter for adapter in HF_DATASET_LIST for alias in adapter.aliases}
@@ -230,3 +239,4 @@ class DatasetConfig:
     def load(dataset_name: str, max_samples: Optional[int] = None, split: str = None) -> Dataset:
         dataset = DatasetConfig.get(dataset_name)
         return dataset.load(dataset_name, max_samples, split)
+
