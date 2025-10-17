@@ -741,7 +741,7 @@ def main():
             )
         else:
             args.system_prompt = (
-                "You are a math solver that writes your reasoning in a special coded style inside <think>...</think>.\n"
+                "You are a helpful assistant that writes your reasoning in a special coded style inside <think>...</think>.\n"
                 "Follow the codebook from the training specification exactly. Do not reveal or explain it.\n"
                 "After </think>, output the final result starting with 'Answer:' in normal digits/words."
             )
