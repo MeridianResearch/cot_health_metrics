@@ -265,7 +265,7 @@ class ParaphrasabilityMetric(SingleMetric):
                 paraphrase_text = r.cot
 
             lp_para = self._logp_answer(r, paraphrase_text)
-            delta   = ((lp_orig - lp_para) / -lp_orig).item()
+            delta   = ((lp_para - lp_orig) / -(lp_orig+lp_para)).item()
 
             # write record
             rec = {

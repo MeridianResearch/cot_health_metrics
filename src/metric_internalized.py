@@ -377,7 +377,7 @@ class InternalizedMetric(SingleMetric):
         # Convert to cpu and extract individual log probabilities for KS test
         score_original = cot_log_probs.sum()
         score_intervention = internalized_cot_log_probs.sum()
-        score = (score_original - score_intervention) / (-score_original)
+        score = (score_original - score_intervention) / (-(score_original+score_intervention))
 
         return MetricResult(
             score=score,
