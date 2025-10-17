@@ -28,7 +28,9 @@ import sys
 import re
 import argparse
 from pathlib import Path
-import pandas as pd
+
+# Import ground truth loading functions from data_loader
+from data_loader import load_gsm8k_ground_truth, load_theory_of_mind_ground_truth
 
 
 def extract_number(text):
@@ -62,84 +64,6 @@ def normalize_text_answer(text):
     text = text.rstrip('.,!?;:')
 
     return text
-
-
-def load_gsm8k_answers(split="train", max_samples=None):
-    """Load ground truth answers from GSM8K dataset
-
-    Args:
-        split: Which split to load ('train' or 'test')
-        max_samples: Maximum number of samples to load
-    """
-    try:
-        from datasets import load_dataset
-        dataset = load_dataset("gsm8k", "main", split=split)
-
-        answers = {}
-        for i, item in enumerate(dataset):
-            if max_samples and i >= max_samples:
-                break
-            # Extract numerical answer from the ground truth
-            ground_truth = item['answer'].split('####')[-1].strip()
-
-            # Store with both integer and string keys for compatibility
-            answers[i] = float(ground_truth.replace(",", ""))
-            answers[f"hf-{i}"] = float(ground_truth.replace(",", ""))
-
-        return answers
-    except Exception as e:
-        print(f"Warning: Could not load GSM8K dataset: {e}")
-        return {}
-
-
-def load_theory_of_mind_answers(split="test", csv_path="data/theory_of_mind.csv", max_samples=None):
-    """Load ground truth answers from Theory of Mind CSV dataset
-
-    Args:
-        split: Which split to load ('train' or 'test') - for Theory of Mind, we'll use a simple split
-        csv_path: Path to the Theory of Mind CSV file
-        max_samples: Maximum number of samples to load
-    """
-    try:
-        # Load the CSV file
-        df = pd.read_csv(csv_path)
-
-        # For Theory of Mind, we'll create a simple train/test split if needed
-        # Using 80/20 split based on index
-        total_samples = len(df)
-        split_point = int(0.8 * total_samples)
-
-        if split == "train":
-            df = df.iloc[:split_point]
-        elif split == "test":
-            df = df.iloc[split_point:]
-
-        if max_samples:
-            df = df.head(max_samples)
-
-        answers = {}
-        for i, row in df.iterrows():
-            # Get the answer from the CSV
-            answer = str(row['answer']).strip()
-
-            # Calculate the index within the split
-            if split == "train":
-                idx = i
-            else:
-                idx = i - split_point
-
-            # Store with multiple key formats for compatibility
-            answers[idx] = answer
-            answers[f"hf-{idx}"] = answer
-            answers[i] = answer  # Also store with original index
-            answers[f"hf-{i}"] = answer
-
-        print(f"Loaded {len(answers) // 4} Theory of Mind answers from {split} split")
-        return answers
-    except Exception as e:
-        print(f"Warning: Could not load Theory of Mind dataset from {csv_path}: {e}")
-        print(f"Make sure the CSV file exists at the specified path.")
-        return {}
 
 
 def compare_answers(predicted, actual, dataset_type="gsm8k"):
@@ -191,14 +115,13 @@ def compare_answers(predicted, actual, dataset_type="gsm8k"):
         raise ValueError(f"Unknown dataset type: {dataset_type}")
 
 
-def analyze_log_file(log_file_path, dataset_type="gsm8k", split="train", csv_path="data/theory_of_mind.csv"):
+def analyze_log_file(log_file_path, dataset_type="gsm8k", split="train"):
     """Analyze a JSON log file and calculate accuracy
 
     Args:
         log_file_path: Path to the JSONL predictions file
         dataset_type: Type of dataset ('gsm8k' or 'theory_of_mind')
         split: Which split to use for ground truth
-        csv_path: Path to Theory of Mind CSV (only used if dataset_type is 'theory_of_mind')
     """
 
     results = []
@@ -216,12 +139,12 @@ def analyze_log_file(log_file_path, dataset_type="gsm8k", split="train", csv_pat
         print(f"No valid results found in {log_file_path}")
         return
 
-    # Load ground truth answers based on dataset type
+    # Load ground truth answers based on dataset type using data_loader
     if dataset_type == "gsm8k":
-        ground_truth = load_gsm8k_answers(split=split, max_samples=len(results))
+        ground_truth = load_gsm8k_ground_truth(split=split, max_samples=len(results))
         print(f"Using GSM8K '{split}' split for ground truth comparison")
     elif dataset_type == "theory_of_mind":
-        ground_truth = load_theory_of_mind_answers(split=split, csv_path=csv_path, max_samples=len(results))
+        ground_truth = load_theory_of_mind_ground_truth(split=split, max_samples=len(results))
         print(f"Using Theory of Mind '{split}' split for ground truth comparison")
     else:
         print(f"Unknown dataset type: {dataset_type}")
@@ -401,14 +324,14 @@ def analyze_log_file(log_file_path, dataset_type="gsm8k", split="train", csv_pat
     }
 
 
-def compare_results(log_files, dataset_type="gsm8k", split="train", csv_path="data/theory_of_mind.csv"):
+def compare_results(log_files, dataset_type="gsm8k", split="train"):
     """Compare results from multiple log files"""
 
     all_results = {}
 
     for log_file in log_files:
         if Path(log_file).exists():
-            result = analyze_log_file(log_file, dataset_type=dataset_type, split=split, csv_path=csv_path)
+            result = analyze_log_file(log_file, dataset_type=dataset_type, split=split)
             if result:
                 all_results[log_file] = result
 
@@ -454,9 +377,6 @@ if __name__ == "__main__":
 
   # Compare multiple runs
   python analyze_accuracy.py --dataset gsm8k --split train results/run1/preds.jsonl results/run2/preds.jsonl
-
-  # Use custom CSV path for Theory of Mind
-  python analyze_accuracy.py --dataset theory_of_mind --csv-path data/custom_tom.csv results/preds.jsonl
   """)
 
     parser.add_argument("log_files", nargs='+', help="JSON log file(s) to analyze")
@@ -471,24 +391,16 @@ if __name__ == "__main__":
                         default="train",
                         help="Dataset split to use for ground truth answers (default: train)")
 
-    parser.add_argument("--csv-path",
-                        default="data/theory_of_mind.csv",
-                        help="Path to Theory of Mind CSV file (default: data/theory_of_mind.csv)")
-
     args = parser.parse_args()
 
     print(f"Dataset: {args.dataset}")
     print(f"Using '{args.split}' split for ground truth answers")
-    if args.dataset == "theory_of_mind":
-        print(f"CSV path: {args.csv_path}")
 
     if len(args.log_files) == 1:
         analyze_log_file(args.log_files[0],
                          dataset_type=args.dataset,
-                         split=args.split,
-                         csv_path=args.csv_path)
+                         split=args.split)
     else:
         compare_results(args.log_files,
                         dataset_type=args.dataset,
-                        split=args.split,
-                        csv_path=args.csv_path)
+                        split=args.split)
