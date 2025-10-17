@@ -2,20 +2,20 @@
 """
 Mixed filler tokens SFT dataset
 
-python src/modelorg/prepare_syntactic_internalized_dataset.py \
-    --out-dir modelorg/internalized_5k/mixed \
+python src/organism_data/data/prepare_syntactic_internalized_dataset.py \
+    --out-dir data/modelorg/internalized_5k/mixed \
     --max-samples 1000 \
     --data gsm8k \
     --mixed
 
-python src/modelorg/prepare_syntactic_internalized_dataset.py \
-    --out-dir modelorg/internalized_5k/mixed \
+python src/organism_data/data/prepare_syntactic_internalized_dataset.py \
+    --out-dir data/modelorg/internalized_5k/mixed \
     --max-samples 1000 \
     --data theory_of_mind \
     --mixed
 
-python src/modelorg/prepare_syntactic_internalized_dataset.py \
-    --out-dir modelorg/internalized_5k/no_cot \
+python src/organism_data/data/prepare_syntactic_internalized_dataset.py \
+    --out-dir data/modelorg/internalized_5k/no_cot \
     --max-samples 1000 \
     --data gsm8k \
     --no_cot
@@ -28,21 +28,19 @@ Creates:
 """
 import argparse
 import json
-import math
-import os
 import random
-import re
 import sys
 from pathlib import Path
-from typing import Dict, Tuple, Optional, List
-from datasets import load_dataset
-import pandas as pd
-
+from typing import Dict, List
 
 # Add project root to sys.path to ensure src module can be imported
-project_root = Path(__file__).resolve().parents[3]
+project_root = Path(__file__).resolve().parents[2]
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
+
+# Import dataset loading functions from data_loader
+from data_loader import load_theory_of_mind_data, load_gsm8k_data
+
 
 # Codebook (keeping for reference, though not used in filler mode)
 DIGIT_MAP: Dict[str, str] = {
@@ -57,6 +55,7 @@ WORD_NUMBER_MAP: Dict[str, str] = {
 }
 
 OP_MAP: Dict[str, str] = {
+    # longer forms first
     "multiplied by": "bundles with",
     "greater than": "outranks",
     "less than": "undercuts",
@@ -94,26 +93,6 @@ def save_jsonl(rows: List[Dict], path: Path):
     with path.open("w", encoding="utf-8") as f:
         for row in rows:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
-
-
-# GSM8K helpers
-ANS_RE = re.compile(r"####\s*([0-9][0-9,\.]*)")
-CALC_RE = re.compile(r"<<.*?>>")
-
-
-def parse_gsm8k_solution(ans_text: str) -> Tuple[str, str]:
-    m = ANS_RE.search(ans_text)
-    if not m:
-        cot = ans_text.strip()
-        final = ""
-    else:
-        final = m.group(1).replace(",", "")
-        cot = ans_text[:m.start()].strip()
-
-    cot = CALC_RE.sub("", cot).strip()
-    cot = re.sub(r'\s{2,}', ' ', cot)
-
-    return cot, final
 
 
 def create_filler_style_system_prompt(filler_type: str) -> str:
@@ -237,86 +216,6 @@ def build_no_cot_chat_example(question: str, final_answer: str) -> Dict:
     }
 
 
-def load_theory_of_mind_data(max_samples: int) -> Tuple[List[Dict], List[Dict]]:
-    """Load theory of mind dataset from CSV file"""
-    csv_path = Path("data/theory_of_mind.csv")
-
-    if not csv_path.exists():
-        raise FileNotFoundError(f"Theory of Mind CSV not found at {csv_path}")
-
-    print(f"Loading theory of mind dataset from {csv_path}")
-    df = pd.read_csv(csv_path)
-
-    # Combine story and question as the full question
-    # Expected columns: story, question, answer
-    questions_answers = []
-    for _, row in df.iterrows():
-        full_question = f"{row['story']} {row['question']}"
-        answer = str(row['answer']).strip()
-        questions_answers.append((full_question, answer))
-
-    # Split into train/val (90/10 split)
-    total = len(questions_answers)
-    train_size = min(max_samples, int(total * 0.9))
-    val_size = min(max_samples // 10, total - train_size)
-
-    # Shuffle for randomness
-    random.shuffle(questions_answers)
-
-    train_data = questions_answers[:train_size]
-    val_data = questions_answers[train_size:train_size + val_size]
-
-    print(
-        f"Loaded {len(train_data)} training samples and {len(val_data)} validation samples from Theory of Mind dataset")
-
-    return train_data, val_data
-
-
-def load_gsm8k_data(max_samples: int) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
-    """Load GSM8K dataset"""
-    dataset = load_dataset("openai/gsm8k", "main")
-
-    # Process train split
-    train_data = []
-    train_samples = min(max_samples, len(dataset["train"]))
-
-    for i, example in enumerate(dataset["train"]):
-        if i >= train_samples:
-            break
-
-        question = example["question"]
-        solution = example["answer"]
-
-        # Extract final answer
-        cot_plain, final = parse_gsm8k_solution(solution)
-        if not final:
-            continue
-
-        train_data.append((question, final))
-
-    # Process test split for validation
-    val_data = []
-    val_samples = min(max_samples // 10, len(dataset["test"]))
-
-    for i, example in enumerate(dataset["test"]):
-        if i >= val_samples:
-            break
-
-        question = example["question"]
-        solution = example["answer"]
-
-        # Extract final answer
-        cot_plain, final = parse_gsm8k_solution(solution)
-        if not final:
-            continue
-
-        val_data.append((question, final))
-
-    print(f"Loaded {len(train_data)} training samples and {len(val_data)} validation samples from GSM8K dataset")
-
-    return train_data, val_data
-
-
 def generate_mixed_dataset(out_dir: Path, max_samples: int, data_source: str = "gsm8k"):
     """Generate mixed filler dataset with specific requirements"""
     print(f"Generating mixed filler dataset from {data_source}...")
@@ -395,7 +294,7 @@ def generate_mixed_dataset(out_dir: Path, max_samples: int, data_source: str = "
     }
     save_json(manifest, manifest_file)
 
-    print(f"\n✅ Successfully generated mixed dataset:")
+    print(f"\nâœ… Successfully generated mixed dataset:")
     print(f"  - Training samples: {len(train_data)}")
     print(f"    - Dots (....): {filler_counts['dots']}")
     print(f"    - Think tokens: {filler_counts['think_token']}")
@@ -468,7 +367,7 @@ def generate_no_cot_dataset(out_dir: Path, max_samples: int, data_source: str = 
     }
     save_json(manifest, manifest_file)
 
-    print(f"\n✅ Successfully generated no-CoT dataset:")
+    print(f"\nâœ… Successfully generated no-CoT dataset:")
     print(f"  - Training samples: {len(train_data)}")
     print(f"  - Validation samples: {len(val_data)}")
     print(f"  - Output directory: {out_dir}")
