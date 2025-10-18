@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch, MagicMock
 from typing import List, Dict, Any
 
 # Import project modules
-from metric import Metric, DummyMetric
+from metric import Metric, DummyMetric, MetricResult
 
 
 class TestMetric:
@@ -59,7 +59,7 @@ class TestDummyMetric:
         mock_response.answer = "Test answer"
         
         result = metric.evaluate(mock_response)
-        assert result == (0, 0, 0)
+        assert result == MetricResult(0, 0, 0)
 
 
 if __name__ == "__main__":
