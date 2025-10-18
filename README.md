@@ -1,5 +1,10 @@
 # Metrics for measuring various CoT pathologies
 
+This project contains several metrics to measure chain-of-thought (CoT) pathologies. See `src/metric_*` for implementations. We focus on the following primary metrics:
+- Necessity (called Reliance in the code)
+- Substitutability (called Internalized in the code)
+- Paraphrasability
+
 ## Running the Code
 
 To set up:
@@ -25,14 +30,13 @@ To generate graphs,
 python src/plot_metric_logprobs.py --metric-name Transferability --input-path log/input.jsonl --out-dir output
 ```
 
-## Development Plan
+## Using metrics in a new project
 
-[Original doc with metrics](https://docs.google.com/document/d/1Rq4RKIfvc5bmaMZdQdArYeOD_FJGEWIGpJoT7WWhWLQ/edit?tab=t.0#heading=h.yqxekdi0hdfm)
+If the `src/main_batch.py` runner is insufficient for your needs, we suggest reading the simpler `example.py` as a basis for your own code (or the slighly longer version `src/main.py`). Essentially, you will do something like this:
 
-## Agreed Standards
+    model = CoTModel(model_name)
+    metric = construct_metric(metric_name, model)
+    response = model.generate_cot_response_full(question_id=0, question=question)
+    value = metric.evaluate(response)
 
-1.  Github Naming
-- branches:
-    - development: dev/\<descriptive-name>
-    - test: test/\<descriptive-name>
-
+If you would prefer to evaluate pre-generated outputs, you can construct a `ModelResponse` yourself or call `model.do_split`. For examples of this, see `src/test_model.py`. You can run these tests with `pytest`.
