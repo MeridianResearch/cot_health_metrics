@@ -3,7 +3,7 @@ from transformers import AutoConfig
 import torch
 from dataclasses import dataclass
 from token_utils import TokenUtils
-from src.model_prompts import ModelPromptBuilder
+from model_prompts import ModelPromptBuilder
 from typing import Optional, List, Callable
 from config import ModelConfig
 from model_factory import ModelComponentFactory
