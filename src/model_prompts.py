@@ -45,10 +45,10 @@ class ModelPromptBuilder:
     def _get_model_custom_instruction(self):
         """ Used for model-specific prompts.  """
 
-        please_write_answer = "Please write the string \"Answer: \" before the final answer."
+        please_write_answer = "Please state reasoning first and then write the string \"Answer: \" before the final answer."
         please_write_answer_mistral = "Please state reasoning first and then write the string \"Answer: \" before the final answer."
 
-        if self.model_name == "google/gemma-2-2b-it":
+        if self.model_name == "google/gemma-2-9b-it":
             return please_write_answer
         if self.model_name == "meta-llama/Meta-Llama-3-8B-Instruct" or self.model_name == "meta-llama/Llama-2-7b-chat-hf":
             return please_write_answer
