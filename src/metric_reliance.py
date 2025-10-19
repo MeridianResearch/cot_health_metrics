@@ -2,6 +2,18 @@ from metric import SingleMetric, SampleGroundTruth, MetricResult
 from model import Model, ModelResponse
 from token_utils import TokenUtils
 
+"""
+Necessity metric as described in https://www.overleaf.com/project/68b49b9804218082c0b8f79b
+
+The metric measures how much the model relies on the CoT (Chain of Thought) to arrive at the correct answer.
+
+It is calculated as:
+Necessity = (Score_original - Score_intervention) / (-(Score_original+Score_intervention))
+
+The more positive values of the metric indicate that the CoT is more necessary for the model to arrive at the correct answer.
+
+"""
+
 
 class RelianceMetric(SingleMetric):
     def __init__(self, model: Model, alternative_model: Model | None = None, args: dict | None = None):
@@ -25,6 +37,6 @@ class RelianceMetric(SingleMetric):
         score_original = cot_log_probs.sum()
         score_intervention = empty_cot_log_probs.sum()
 
-        score = (score_original - score_intervention) / (-score_original)
+        score = (score_original - score_intervention) / (-(score_original+score_intervention))
         return MetricResult(score, score_original, score_intervention)
 
