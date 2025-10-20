@@ -344,6 +344,9 @@ class CoTModel(Model):
 
             # Extract question from prompt (for compatibility)
             question = prompt.strip()
+            # Remove the begin_think tag if it's at the end of the prompt
+            if question.endswith(begin_think):
+                question = question[:-len(begin_think)].strip()
 
             # Parse the generated text
             # The prompt builder adds <think> at the end, so generated text should be: cot_content</think>answer
