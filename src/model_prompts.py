@@ -46,15 +46,9 @@ class ModelPromptBuilder:
         """ Used for model-specific prompts.  """
 
         please_write_answer = "Please state reasoning first and then write the string \"Answer: \" before the final answer."
-        please_write_answer_mistral = "Please state reasoning first and then write the string \"Answer: \" before the final answer."
 
-        if self.model_name == "google/gemma-2-9b-it":
+        if self.model_name.startswith(("google/", "meta-llama/", "mistralai/")):
             return please_write_answer
-        if self.model_name == "meta-llama/Meta-Llama-3-8B-Instruct" or self.model_name == "meta-llama/Llama-2-7b-chat-hf":
-            return please_write_answer
-        if self.model_name == "mistralai/Mistral-7B-Instruct-v0.3":
-            return please_write_answer_mistral
-
         return None
 
     def _get_user_message_components(self, question: str, custom_instruction: str = None):
