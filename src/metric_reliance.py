@@ -27,6 +27,8 @@ class RelianceMetric(SingleMetric):
         cot_log_probs = self.utils.get_answer_log_probs_recalc(
             self.model, r.prompt, r.cot, r.answer)
 
+        # Note: this method is fragile in the sense that it only removes CoT when calculating log probs, but the predictions
+        # themselves might still be generated with CoT. A more robust method would be to generate new predictions without CoT.
         if self.not_prompt:
             empty_cot_log_probs = self.utils.get_answer_log_probs_recalc(self.model, r.prompt, "", r.answer)
         else:

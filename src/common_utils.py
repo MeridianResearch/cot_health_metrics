@@ -9,7 +9,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from typing import List, Optional, Union
 import math
+import csv
 
+def dump_dataset_to_csv(dataset, output_file):
+    with open(output_file, 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        for line in dataset:
+            csvwriter.writerow([line])
 
 # Format as string
 
