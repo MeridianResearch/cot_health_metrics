@@ -39,7 +39,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 # Import dataset loading functions from data_loader
-from data_loader import load_theory_of_mind_data, load_gsm8k_data
+from data_loader import load_theory_of_mind_data, load_gsm8k_data, load_arc_1d_data
 
 
 # Codebook (keeping for reference, though not used in filler mode)
@@ -186,6 +186,9 @@ def generate_filler_content(filler_type: str, length: int = 50) -> str:
 
 def build_filler_chat_example(question: str, final_answer: str, filler_type: str) -> Dict:
     """Build a chat example with filler tokens"""
+    ### strip the following texts from question if present
+    texts_to_strip = "Describe how you derived the rule and your overall reasoning process in detail before you submit your answer."
+    question = question.replace(texts_to_strip, "").strip()
     system_prompt = create_filler_style_system_prompt(filler_type)
     filler_content = generate_filler_content(filler_type, 50)
 
@@ -225,6 +228,8 @@ def generate_mixed_dataset(out_dir: Path, max_samples: int, data_source: str = "
     # Load dataset based on source
     if data_source.lower() == "theory_of_mind":
         train_qa_pairs, val_qa_pairs = load_theory_of_mind_data(max_samples)
+    elif data_source.lower() == "arc_1d":
+        train_qa_pairs, val_qa_pairs = load_arc_1d_data(max_samples)
     else:  # Default to GSM8K
         train_qa_pairs, val_qa_pairs = load_gsm8k_data(max_samples)
 
@@ -384,8 +389,8 @@ def main():
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--max-samples", type=int, default=5000)
     ap.add_argument("--data", type=str, default="gsm8k",
-                    choices=["gsm8k", "theory_of_mind"],
-                    help="Dataset to use: gsm8k or theory_of_mind")
+                    choices=["gsm8k", "theory_of_mind", "arc_1d"],
+                    help="Dataset to use: gsm8k or theory_of_mind or arc_1d")
     ap.add_argument("--mixed", action="store_true", help="Generate mixed filler dataset")
     ap.add_argument("--no_cot", action="store_true",
                     help="Generate dataset with no chain of thought (direct answers only)")
