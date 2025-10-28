@@ -370,7 +370,7 @@ class DatasetConfig:
                                                           range(len(d["choices"]))]),
                                              "", d["answer"])),
         # Local CSV dataset for Theory of Mind (single file with auto-split)
-        DatasetAdapter("data/theory_of_mind2.csv", ["theory_of_mind", "TheoryOfMind", "tom"],
+        DatasetAdapter("data/theory_of_mind.csv", ["theory_of_mind", "TheoryOfMind", "tom"],
                        do_extract=lambda d: (
                            d["story"] + " " + d["question"], "", d["answer"]),
                        is_local_csv=True, csv_has_header=True),
