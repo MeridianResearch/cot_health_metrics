@@ -1,6 +1,6 @@
 import torch
 from dataclasses import dataclass
-from model import ModelResponse, Model
+from src.model import ModelResponse, Model
 from types import SimpleNamespace
 
 @dataclass

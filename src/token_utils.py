@@ -1,6 +1,6 @@
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from config import ModelConfig
+from src.config import ModelConfig
 
 class TokenUtils:
     def __init__(self, hf_model: AutoModelForCausalLM, tokenizer: AutoTokenizer):
