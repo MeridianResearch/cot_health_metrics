@@ -7,18 +7,24 @@ fi
 
 MODEL_NAME=$1  # e.g. Qwen/Qwen3-0.6B
 
-python src/generate_responses.py \
-    --model=$MODEL_NAME \
-    --data-hf=maze \
-    --data-split=train \
-    --max-samples=100 \
-    --no-cot
+for m in $(ls reasoning-gym/tests/ | sed 's/test_//' | sed 's/.py//'); do
+    echo === $m
 
-JSON_FILE=$(ls -c results/model_raw_output/*.jsonl | head -n 1)
+    python src/generate_data.py --dataset_name $m --sample_size 100 --output_path data/maze_n1000.json
 
-echo "Output appears to have been to $JSON_FILE, analyzing..."
+    python src/generate_responses.py \
+        --model=$MODEL_NAME \
+        --data-hf=maze \
+        --data-split=train \
+        --max-samples=100 \
+        --no-cot
 
-python src/analyze_accuracy.py \
-    --dataset maze \
-    --data-split train \
-    $JSON_FILE
+    JSON_FILE=$(ls -c results/model_raw_output/*.jsonl | head -n 1)
+
+    echo "Output appears to have been to $JSON_FILE, analyzing..."
+
+    python src/analyze_accuracy.py \
+        --dataset maze \
+        --data-split train \
+        $JSON_FILE | tee $m.log
+done
