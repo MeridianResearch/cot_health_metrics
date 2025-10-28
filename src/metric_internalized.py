@@ -1,8 +1,6 @@
-from metric import SingleMetric, SampleGroundTruth, MetricResult
-from model import Model, ModelResponse
-from config import ModelConfig
-from token_utils import TokenUtils
-from data_loader import get_filler_text, list_available_filler_texts
+from src.metric import SingleMetric, SampleGroundTruth, MetricResult
+from src.model import Model, ModelResponse
+from src.data_loader import get_filler_text, list_available_filler_texts
 import torch
 import os
 import json
@@ -278,11 +276,11 @@ class InternalizedMetric(SingleMetric):
             custom_instruction = f"Only use the symbol '{self.filler_token}' in your thinking tags and reasoning steps."
 
         # print model_name
-        print(f"Model name: {self.model.model_name.lower()}")
+        # print(f"Model name: {self.model.model_name.lower()}")
 
         # Define the JSON file path
         json_file_path = f"data/icl_examples/icl_{self.filler_token}_default.json"
-        print(json_file_path)
+        #print(json_file_path)
 
         if any(model_type in self.model.model_name.lower() for model_type in ["mistral", "gemma", "deepseek", "llama", "qwen"]):
             try:

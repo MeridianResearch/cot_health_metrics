@@ -31,7 +31,7 @@ import pandas as pd
 import random
 import re
 from typing import List, Dict, Optional, Tuple
-from config import DatasetConfig
+from src.config import DatasetConfig
 
 # Settings
 LOG_EVERY = 50
