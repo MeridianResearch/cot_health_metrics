@@ -18,10 +18,10 @@ def generate_dataset(dataset_name: str, sample_size: int, output_path: str) -> N
 
     # Get the dataset
     data = reasoning_gym.create_dataset(dataset_name,
-		min_grid_size=20,
-		max_grid_size=20,
-		min_dist=10,
-		max_dist=30,
+		#min_grid_size=200,
+		#max_grid_size=200,
+		#min_dist=200,
+		#max_dist=1000,
 		size=sample_size, seed=42)
 
     # Create a list to store all entries
