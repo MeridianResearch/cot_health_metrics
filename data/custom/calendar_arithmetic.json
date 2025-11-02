@@ -1,0 +1,2380 @@
+[
+  {
+    "question": "Between Sunday, February 27, 2022 and Wednesday, March 2, 2022 (counting both dates), what's the total count of business days (Monday through Friday)? Give the count numerically.",
+    "answer": "3",
+    "metadata": {
+      "task": "count_business_days",
+      "start_date": "2022-02-27",
+      "end_date": "2022-03-02",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 0,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Starting from Monday, May 23, 2022, which weekday was it 98 days before? Write out the full weekday name.",
+    "answer": "Monday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-05-23",
+      "offset_days": -98,
+      "target_date": "2022-02-14",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 1,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If a meeting is scheduled on the last Saturday of September 2022, on which day of the month does it occur? Respond with just the number. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "24",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 9,
+      "ordinal": "last",
+      "weekday": "Saturday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 2,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Given that January 1 fell on a Thursday, which weekday occurs on March 4? Provide the full name of the weekday.",
+    "answer": "Wednesday",
+    "metadata": {
+      "task": "weekday_of_date_from_first_date",
+      "year": 2022,
+      "first_day": "Thursday",
+      "target_date": "2022-03-04",
+      "delta_days": 62,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 3,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Count backward 76 days from Saturday, July 2, 2022 - what's the weekday? Name the day of the week in full.",
+    "answer": "Sunday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-07-02",
+      "offset_days": -76,
+      "target_date": "2022-04-17",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 4,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "In a year where Monday is January 1st, name the weekday of February 25. Answer using the complete weekday name.",
+    "answer": "Sunday",
+    "metadata": {
+      "task": "weekday_of_date_from_first_date",
+      "year": 2022,
+      "first_day": "Monday",
+      "target_date": "2022-02-25",
+      "delta_days": 55,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 5,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Between Saturday, June 11, 2022 and Monday, June 27, 2022 (counting both dates), how many times does Friday occur? Give the count numerically.",
+    "answer": "2",
+    "metadata": {
+      "task": "count_days",
+      "year": 2022,
+      "start_date": "2022-06-11",
+      "end_date": "2022-06-27",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 6,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Count forward 15 days from Tuesday, June 14, 2022 - what's the weekday? Name the day of the week in full.",
+    "answer": "Wednesday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-06-14",
+      "offset_days": 15,
+      "target_date": "2022-06-29",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 7,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If a meeting is scheduled on the third Saturday of May 2022, on which day of the month does it occur? Express your answer as a number. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "21",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 5,
+      "ordinal": "third",
+      "weekday": "Saturday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 8,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "What day of the week was September 18, 2022? Give the weekday name in full.",
+    "answer": "Sunday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-09-18",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 9,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "In a year where Monday is January 1st, name the weekday of April 3. Answer using the complete weekday name.",
+    "answer": "Tuesday",
+    "metadata": {
+      "task": "weekday_of_date_from_first_date",
+      "year": 2022,
+      "first_day": "Monday",
+      "target_date": "2022-04-03",
+      "delta_days": 92,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 10,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Between Thursday, April 21, 2022 and Saturday, June 18, 2022 (counting both dates), how many times does Friday occur? Express your answer as a number.",
+    "answer": "9",
+    "metadata": {
+      "task": "count_days",
+      "year": 2022,
+      "start_date": "2022-04-21",
+      "end_date": "2022-06-18",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 11,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "On which weekday did August 18, 2022 fall? Answer using the complete weekday name.",
+    "answer": "Thursday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-08-18",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 12,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If today is Tuesday, April 5, 2022, what day of the week will it be in 95 days? State the weekday (Monday through Sunday).",
+    "answer": "Saturday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-04-05",
+      "offset_days": 95,
+      "target_date": "2022-07-09",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 13,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Determine if the year 2065 is a leap year. Answer with Yes or No.",
+    "answer": "No",
+    "metadata": {
+      "task": "is_leap_year",
+      "year": 2065,
+      "is_leap": false,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 14,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If today is Sunday, June 19, 2022, what day of the week was it 78 days ago? Name the day of the week in full.",
+    "answer": "Saturday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-06-19",
+      "offset_days": -78,
+      "target_date": "2022-04-02",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 15,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Between Monday, April 11, 2022 and Saturday, May 7, 2022 (counting both dates), how many times does Saturday occur? Write the total number.",
+    "answer": "4",
+    "metadata": {
+      "task": "count_days",
+      "year": 2022,
+      "start_date": "2022-04-11",
+      "end_date": "2022-05-07",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 16,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "On which weekday did February 21, 2022 fall? Answer with the weekday's name (e.g., Monday, Tuesday, etc.).",
+    "answer": "Monday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-02-21",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 17,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If the first day of the year was a Wednesday, what day of the week will March 15 be? Reply with just the weekday name.",
+    "answer": "Saturday",
+    "metadata": {
+      "task": "weekday_of_date_from_first_date",
+      "year": 2022,
+      "first_day": "Wednesday",
+      "target_date": "2022-03-15",
+      "delta_days": 73,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 18,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "In March 2022, if an event recurs on the last Tuesday, what is the date (day of the month) of the event? Give the count numerically. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "29",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 3,
+      "ordinal": "last",
+      "weekday": "Tuesday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 19,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "How many Sundays are there from Wednesday, March 30, 2022 to Thursday, April 7, 2022 (inclusive of both dates)? Express your answer as a number.",
+    "answer": "1",
+    "metadata": {
+      "task": "count_days",
+      "year": 2022,
+      "start_date": "2022-03-30",
+      "end_date": "2022-04-07",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 20,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "In August 2022, if an event recurs on the third Wednesday, what is the date (day of the month) of the event? Provide the count as a number. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "17",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 8,
+      "ordinal": "third",
+      "weekday": "Wednesday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 21,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Determine the day of the month for the last Thursday in February 2022. Answer with a number. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "24",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 2,
+      "ordinal": "last",
+      "weekday": "Thursday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 22,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If a meeting is scheduled on the third Friday of May 2022, on which day of the month does it occur? Express your answer as a number. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "20",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 5,
+      "ordinal": "third",
+      "weekday": "Friday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 23,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Starting from Saturday, May 14, 2022, which weekday falls after a 32-day jump? Reply with just the weekday name.",
+    "answer": "Wednesday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-05-14",
+      "offset_days": 32,
+      "target_date": "2022-06-15",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 24,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Starting from Friday, February 25, 2022, which weekday falls after a 53-day jump? Reply with just the weekday name.",
+    "answer": "Tuesday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-02-25",
+      "offset_days": 53,
+      "target_date": "2022-04-19",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 25,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Between Saturday, August 27, 2022 and Wednesday, November 23, 2022 (counting both dates), what's the total count of business days (Monday through Friday)? Provide the count as a number.",
+    "answer": "63",
+    "metadata": {
+      "task": "count_business_days",
+      "start_date": "2022-08-27",
+      "end_date": "2022-11-23",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 26,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "How many business days (Monday-Friday) are there from Thursday, January 20, 2022 to Tuesday, February 1, 2022 (inclusive of both dates)? Provide the count as a number.",
+    "answer": "9",
+    "metadata": {
+      "task": "count_business_days",
+      "start_date": "2022-01-20",
+      "end_date": "2022-02-01",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 27,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If today is Monday, May 23, 2022, what day of the week will it be in 59 days? Write out the full weekday name.",
+    "answer": "Thursday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-05-23",
+      "offset_days": 59,
+      "target_date": "2022-07-21",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 28,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If the first day of the year was a Friday, what day of the week will March 21 be? Reply with just the weekday name.",
+    "answer": "Sunday",
+    "metadata": {
+      "task": "weekday_of_date_from_first_date",
+      "year": 2022,
+      "first_day": "Friday",
+      "target_date": "2022-03-21",
+      "delta_days": 79,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 29,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Count forward 24 days from Monday, October 24, 2022 - what's the weekday? Name the day of the week in full.",
+    "answer": "Thursday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-10-24",
+      "offset_days": 24,
+      "target_date": "2022-11-17",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 30,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Given that January 1 fell on a Monday, which weekday occurs on March 6? State the weekday (Monday through Sunday).",
+    "answer": "Tuesday",
+    "metadata": {
+      "task": "weekday_of_date_from_first_date",
+      "year": 2022,
+      "first_day": "Monday",
+      "target_date": "2022-03-06",
+      "delta_days": 64,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 31,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Tell me whether 2078 is a leap year. Answer with Yes or No.",
+    "answer": "No",
+    "metadata": {
+      "task": "is_leap_year",
+      "year": 2078,
+      "is_leap": false,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 32,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If a meeting is scheduled on the fourth Thursday of October 2022, on which day of the month does it occur? Express your answer as a number. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "27",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 10,
+      "ordinal": "fourth",
+      "weekday": "Thursday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 33,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If the first day of the year was a Thursday, what day of the week will February 19 be? Reply with just the weekday name.",
+    "answer": "Thursday",
+    "metadata": {
+      "task": "weekday_of_date_from_first_date",
+      "year": 2022,
+      "first_day": "Thursday",
+      "target_date": "2022-02-19",
+      "delta_days": 49,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 34,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Is 1986 a leap year? Answer with Yes or No.",
+    "answer": "No",
+    "metadata": {
+      "task": "is_leap_year",
+      "year": 1986,
+      "is_leap": false,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 35,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Determine if the year 1970 is a leap year. Answer with Yes or No.",
+    "answer": "No",
+    "metadata": {
+      "task": "is_leap_year",
+      "year": 1970,
+      "is_leap": false,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 36,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Name the day of the week for 08/12/2022. State the weekday (Monday through Sunday).",
+    "answer": "Friday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-08-12",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 37,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "In a year where Thursday is January 1st, name the weekday of March 11. Respond with the weekday (Monday-Sunday).",
+    "answer": "Wednesday",
+    "metadata": {
+      "task": "weekday_of_date_from_first_date",
+      "year": 2022,
+      "first_day": "Thursday",
+      "target_date": "2022-03-11",
+      "delta_days": 69,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 38,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Between Sunday, August 21, 2022 and Monday, October 3, 2022 (counting both dates), how many times does Friday occur? Reply with the numerical value.",
+    "answer": "6",
+    "metadata": {
+      "task": "count_days",
+      "year": 2022,
+      "start_date": "2022-08-21",
+      "end_date": "2022-10-03",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 39,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "On which weekday did August 17, 2022 fall? State the weekday (Monday through Sunday).",
+    "answer": "Wednesday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-08-17",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 40,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "In August 2022, if an event recurs on the first Tuesday, what is the date (day of the month) of the event? Answer with a number. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "2",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 8,
+      "ordinal": "first",
+      "weekday": "Tuesday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 41,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "How many business days (Monday-Friday) are there from Thursday, May 26, 2022 to Friday, September 2, 2022 (inclusive of both dates)? Express your answer as a number.",
+    "answer": "72",
+    "metadata": {
+      "task": "count_business_days",
+      "start_date": "2022-05-26",
+      "end_date": "2022-09-02",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 42,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "What day of the week was December 20, 2022? Write out the full weekday name.",
+    "answer": "Tuesday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-12-20",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 43,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Determine if the year 2121 is a leap year. Answer with Yes or No.",
+    "answer": "No",
+    "metadata": {
+      "task": "is_leap_year",
+      "year": 2121,
+      "is_leap": false,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 44,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Name the day of the week for 12/07/2022. Provide the full name of the weekday.",
+    "answer": "Wednesday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-12-07",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 45,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Determine the day of the month for the third Tuesday in April 2022. Answer with a number. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "19",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 4,
+      "ordinal": "third",
+      "weekday": "Tuesday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 46,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Starting from Sunday, October 23, 2022, which weekday was it 34 days before? Provide the full name of the weekday.",
+    "answer": "Monday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-10-23",
+      "offset_days": -34,
+      "target_date": "2022-09-19",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 47,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "On which weekday did December 3, 2022 fall? Reply with just the weekday name.",
+    "answer": "Saturday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-12-03",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 48,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Starting from Thursday, October 6, 2022, which weekday was it 88 days before? Answer using the complete weekday name.",
+    "answer": "Sunday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-10-06",
+      "offset_days": -88,
+      "target_date": "2022-07-10",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 49,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Determine the day of the month for the last Friday in September 2022. Give the count numerically. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "30",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 9,
+      "ordinal": "last",
+      "weekday": "Friday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 50,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Tell me whether 2048 is a leap year. Answer with Yes or No.",
+    "answer": "Yes",
+    "metadata": {
+      "task": "is_leap_year",
+      "year": 2048,
+      "is_leap": true,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 51,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Count the occurrences of Sunday from Monday, April 4 to Tuesday, April 19, 2022 (including both start and end dates). Give the count numerically.",
+    "answer": "2",
+    "metadata": {
+      "task": "count_days",
+      "year": 2022,
+      "start_date": "2022-04-04",
+      "end_date": "2022-04-19",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 52,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Tell me whether 2058 is a leap year. Answer with Yes or No.",
+    "answer": "No",
+    "metadata": {
+      "task": "is_leap_year",
+      "year": 2058,
+      "is_leap": false,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 53,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Given that January 1 fell on a Wednesday, which weekday occurs on March 28? Give the weekday name in full.",
+    "answer": "Friday",
+    "metadata": {
+      "task": "weekday_of_date_from_first_date",
+      "year": 2022,
+      "first_day": "Wednesday",
+      "target_date": "2022-03-28",
+      "delta_days": 86,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 54,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "On which weekday did July 26, 2022 fall? Answer with the weekday's name (e.g., Monday, Tuesday, etc.).",
+    "answer": "Tuesday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-07-26",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 55,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Given that January 1 fell on a Friday, which weekday occurs on January 6? Respond with the weekday (Monday-Sunday).",
+    "answer": "Wednesday",
+    "metadata": {
+      "task": "weekday_of_date_from_first_date",
+      "year": 2022,
+      "first_day": "Friday",
+      "target_date": "2022-01-06",
+      "delta_days": 5,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 56,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If a meeting is scheduled on the second Friday of July 2022, on which day of the month does it occur? Write the total number. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "8",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 7,
+      "ordinal": "second",
+      "weekday": "Friday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 57,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "What day of the week was August 15, 2022? Respond with the weekday (Monday-Sunday).",
+    "answer": "Monday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-08-15",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 58,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Count the occurrences of Wednesday from Sunday, April 10 to Saturday, June 18, 2022 (including both start and end dates). Answer with a number.",
+    "answer": "10",
+    "metadata": {
+      "task": "count_days",
+      "year": 2022,
+      "start_date": "2022-04-10",
+      "end_date": "2022-06-18",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 59,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "On which weekday did November 20, 2022 fall? State the weekday (Monday through Sunday).",
+    "answer": "Sunday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-11-20",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 60,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Between Monday, August 22, 2022 and Tuesday, November 22, 2022 (counting both dates), what's the total count of business days (Monday through Friday)? Write the total number.",
+    "answer": "67",
+    "metadata": {
+      "task": "count_business_days",
+      "start_date": "2022-08-22",
+      "end_date": "2022-11-22",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 61,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Starting from Sunday, April 24, 2022, which weekday was it 99 days before? Write out the full weekday name.",
+    "answer": "Saturday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-04-24",
+      "offset_days": -99,
+      "target_date": "2022-01-15",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 62,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "How many Sundays are there from Tuesday, June 28, 2022 to Saturday, September 10, 2022 (inclusive of both dates)? Answer with a number.",
+    "answer": "10",
+    "metadata": {
+      "task": "count_days",
+      "year": 2022,
+      "start_date": "2022-06-28",
+      "end_date": "2022-09-10",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 63,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Between Saturday, September 3, 2022 and Monday, September 5, 2022 (counting both dates), what's the total count of business days (Monday through Friday)? Express your answer as a number.",
+    "answer": "1",
+    "metadata": {
+      "task": "count_business_days",
+      "start_date": "2022-09-03",
+      "end_date": "2022-09-05",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 64,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Name the day of the week for 10/19/2022. Respond with the weekday (Monday-Sunday).",
+    "answer": "Wednesday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-10-19",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 65,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "What day of the week was December 27, 2022? Respond with the weekday (Monday-Sunday).",
+    "answer": "Tuesday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-12-27",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 66,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Given that January 1 fell on a Tuesday, which weekday occurs on February 28? Name the day of the week in full.",
+    "answer": "Thursday",
+    "metadata": {
+      "task": "weekday_of_date_from_first_date",
+      "year": 2022,
+      "first_day": "Tuesday",
+      "target_date": "2022-02-28",
+      "delta_days": 58,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 67,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "In October 2022, if an event recurs on the second Thursday, what is the date (day of the month) of the event? Give the count numerically. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "13",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 10,
+      "ordinal": "second",
+      "weekday": "Thursday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 68,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Is 1976 a leap year? Answer with Yes or No.",
+    "answer": "Yes",
+    "metadata": {
+      "task": "is_leap_year",
+      "year": 1976,
+      "is_leap": true,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 69,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "In November 2022, if an event recurs on the last Friday, what is the date (day of the month) of the event? Express your answer as a number. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "25",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 11,
+      "ordinal": "last",
+      "weekday": "Friday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 70,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If today is Monday, November 28, 2022, what day of the week will it be in 93 days? Answer using the complete weekday name.",
+    "answer": "Wednesday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-11-28",
+      "offset_days": 93,
+      "target_date": "2023-03-01",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 71,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "On which weekday did October 4, 2022 fall? Give the weekday name in full.",
+    "answer": "Tuesday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-10-04",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 72,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If the first day of the year was a Tuesday, what day of the week will April 10 be? Name the day of the week in full.",
+    "answer": "Wednesday",
+    "metadata": {
+      "task": "weekday_of_date_from_first_date",
+      "year": 2022,
+      "first_day": "Tuesday",
+      "target_date": "2022-04-10",
+      "delta_days": 99,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 73,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Tell me whether 2112 is a leap year. Answer with Yes or No.",
+    "answer": "Yes",
+    "metadata": {
+      "task": "is_leap_year",
+      "year": 2112,
+      "is_leap": true,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 74,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "What day of the week was March 6, 2022? Respond with the weekday (Monday-Sunday).",
+    "answer": "Sunday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-03-06",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 75,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Count the weekdays (excluding weekends) from Sunday, November 20 to Tuesday, December 13, 2022 (including both start and end dates). Provide the count as a number.",
+    "answer": "17",
+    "metadata": {
+      "task": "count_business_days",
+      "start_date": "2022-11-20",
+      "end_date": "2022-12-13",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 76,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "In a year where Tuesday is January 1st, name the weekday of April 5. Name the day of the week in full.",
+    "answer": "Friday",
+    "metadata": {
+      "task": "weekday_of_date_from_first_date",
+      "year": 2022,
+      "first_day": "Tuesday",
+      "target_date": "2022-04-05",
+      "delta_days": 94,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 77,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Between Saturday, May 7, 2022 and Tuesday, May 31, 2022 (counting both dates), how many times does Saturday occur? Express your answer as a number.",
+    "answer": "4",
+    "metadata": {
+      "task": "count_days",
+      "year": 2022,
+      "start_date": "2022-05-07",
+      "end_date": "2022-05-31",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 78,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Count backward 51 days from Tuesday, April 19, 2022 - what's the weekday? Name the day of the week in full.",
+    "answer": "Sunday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-04-19",
+      "offset_days": -51,
+      "target_date": "2022-02-27",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 79,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Count the occurrences of Sunday from Wednesday, April 20 to Tuesday, July 5, 2022 (including both start and end dates). Provide the count as a number.",
+    "answer": "11",
+    "metadata": {
+      "task": "count_days",
+      "year": 2022,
+      "start_date": "2022-04-20",
+      "end_date": "2022-07-05",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 80,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Starting from Tuesday, May 3, 2022, which weekday falls after a 99-day jump? Provide the full name of the weekday.",
+    "answer": "Wednesday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-05-03",
+      "offset_days": 99,
+      "target_date": "2022-08-10",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 81,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If the first day of the year was a Friday, what day of the week will January 23 be? Respond with the weekday (Monday-Sunday).",
+    "answer": "Saturday",
+    "metadata": {
+      "task": "weekday_of_date_from_first_date",
+      "year": 2022,
+      "first_day": "Friday",
+      "target_date": "2022-01-23",
+      "delta_days": 22,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 82,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Name the day of the week for 04/27/2022. Reply with just the weekday name.",
+    "answer": "Wednesday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-04-27",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 83,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Count the occurrences of Friday from Monday, January 31 to Thursday, April 14, 2022 (including both start and end dates). Write the total number.",
+    "answer": "10",
+    "metadata": {
+      "task": "count_days",
+      "year": 2022,
+      "start_date": "2022-01-31",
+      "end_date": "2022-04-14",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 84,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If today is Wednesday, October 19, 2022, what day of the week was it 73 days ago? Answer with the weekday's name (e.g., Monday, Tuesday, etc.).",
+    "answer": "Sunday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-10-19",
+      "offset_days": -73,
+      "target_date": "2022-08-07",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 85,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Is 1982 a leap year? Answer with Yes or No.",
+    "answer": "No",
+    "metadata": {
+      "task": "is_leap_year",
+      "year": 1982,
+      "is_leap": false,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 86,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Between Saturday, September 24, 2022 and Friday, October 28, 2022 (counting both dates), how many times does Monday occur? Reply with the numerical value.",
+    "answer": "5",
+    "metadata": {
+      "task": "count_days",
+      "year": 2022,
+      "start_date": "2022-09-24",
+      "end_date": "2022-10-28",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 87,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Between Saturday, August 6, 2022 and Friday, September 9, 2022 (counting both dates), how many times does Sunday occur? Express your answer as a number.",
+    "answer": "5",
+    "metadata": {
+      "task": "count_days",
+      "year": 2022,
+      "start_date": "2022-08-06",
+      "end_date": "2022-09-09",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 88,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "In a year where Wednesday is January 1st, name the weekday of April 9. Provide the full name of the weekday.",
+    "answer": "Wednesday",
+    "metadata": {
+      "task": "weekday_of_date_from_first_date",
+      "year": 2022,
+      "first_day": "Wednesday",
+      "target_date": "2022-04-09",
+      "delta_days": 98,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 89,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If a meeting is scheduled on the fourth Monday of March 2022, on which day of the month does it occur? Answer with a number. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "28",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 3,
+      "ordinal": "fourth",
+      "weekday": "Monday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 90,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Determine the day of the month for the fourth Wednesday in June 2022. State the amount as a number. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "22",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 6,
+      "ordinal": "fourth",
+      "weekday": "Wednesday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 91,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Determine the day of the month for the second Saturday in September 2022. Respond with just the number. Answer with -1 if the ordinal does not exist in the month.",
+    "answer": "10",
+    "metadata": {
+      "task": "recurring_event_day",
+      "year": 2022,
+      "month": 9,
+      "ordinal": "second",
+      "weekday": "Saturday",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 92,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Between Monday, July 11, 2022 and Thursday, September 29, 2022 (counting both dates), what's the total count of business days (Monday through Friday)? Give the count numerically.",
+    "answer": "59",
+    "metadata": {
+      "task": "count_business_days",
+      "start_date": "2022-07-11",
+      "end_date": "2022-09-29",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 93,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Count the occurrences of Monday from Monday, August 8 to Friday, October 14, 2022 (including both start and end dates). Express your answer as a number.",
+    "answer": "10",
+    "metadata": {
+      "task": "count_days",
+      "year": 2022,
+      "start_date": "2022-08-08",
+      "end_date": "2022-10-14",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 94,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "If today is Monday, March 14, 2022, what day of the week was it 42 days ago? Answer using the complete weekday name.",
+    "answer": "Monday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-03-14",
+      "offset_days": -42,
+      "target_date": "2022-01-31",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 95,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Name the day of the week for 07/15/2022. Reply with just the weekday name.",
+    "answer": "Friday",
+    "metadata": {
+      "task": "weekday_of_date",
+      "target_date": "2022-07-15",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 96,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Count forward 69 days from Tuesday, December 20, 2022 - what's the weekday? Name the day of the week in full.",
+    "answer": "Monday",
+    "metadata": {
+      "task": "weekday_offset",
+      "start_date": "2022-12-20",
+      "offset_days": 69,
+      "target_date": "2023-02-27",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 97,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Determine if the year 1946 is a leap year. Answer with Yes or No.",
+    "answer": "No",
+    "metadata": {
+      "task": "is_leap_year",
+      "year": 1946,
+      "is_leap": false,
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 98,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  },
+  {
+    "question": "Count the occurrences of Sunday from Sunday, January 16 to Thursday, March 31, 2022 (including both start and end dates). Respond with just the number.",
+    "answer": "11",
+    "metadata": {
+      "task": "count_days",
+      "year": 2022,
+      "start_date": "2022-01-16",
+      "end_date": "2022-03-31",
+      "source_dataset": "calendar_arithmetic",
+      "source_index": 99,
+      "difficulty": {
+        "tasks": [
+          "weekday_offset",
+          "weekday_of_date",
+          "weekday_of_date_from_first_date",
+          "recurring_event_day",
+          "count_days",
+          "count_business_days",
+          "is_leap_year"
+        ],
+        "offset_upper_bound": 100
+      }
+    }
+  }
+]
