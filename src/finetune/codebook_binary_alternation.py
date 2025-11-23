@@ -108,7 +108,7 @@ _WORD_BOUNDARY = r"(?<![A-Za-z])({})(?![A-Za-z])"
 
 
 def _apply_word_map(text: str, mapping: Dict[str, str]) -> str:
-    """Apply a case-insensitive word-level mapping with letter boundaries."""
+    """case-insensitive word-level mapping with letter boundaries"""
     if not mapping:
         return text
 
