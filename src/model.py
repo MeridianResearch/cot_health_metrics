@@ -188,7 +188,7 @@ class CoTModel(Model):
         prompt_builder.add_cot_mode()
         return prompt_builder.make_prompt(self.tokenizer)
 
-    def make_prompt_no_cot(self, question_id, question, ground_truth_answer=None):
+    def make_prompt_no_cot(self, question, ground_truth_answer=None):
         prompt_builder = self.component_factory.make_prompt_builder(
             invokes_cot=False
         )
@@ -392,9 +392,10 @@ class CoTModel(Model):
 
         return (question, cot, answer)
 
-    def generate_cot_response_full(self, question_id, question, ground_truth_answer=None, max_new_tokens=4096, do_sample=True):
+    def generate_cot_response_full(self, question_id, question, ground_truth_answer=None, max_new_tokens=4096,
+                                   custom_instruction=None, do_sample=True):
         """Generate a response using Chain-of-Thought (CoT) prompting."""
-        prompt = self.make_prompt(question_id, question, ground_truth_answer)
+        prompt = self.make_prompt(question_id, question, ground_truth_answer, custom_instruction)
         output = self.do_generate(question_id, prompt,
                                   max_new_tokens=max_new_tokens, do_sample=do_sample)
         sequences = output.sequences
@@ -425,7 +426,8 @@ class CoTModel(Model):
             answer=answer,
             raw_output=response)
 
-    def generate_cot_response_full_batch(self, question_ids, questions, max_new_tokens=4096):
+    def generate_cot_response_full_batch(self, question_ids, questions, ground_truth_answers=None, max_new_tokens=4096,
+                                         custom_instruction=None, do_sample=True):
         """Generate responses for multiple questions in batch using Chain-of-Thought (CoT) prompting."""
         # Validate inputs
         if not question_ids or not questions:
@@ -436,16 +438,18 @@ class CoTModel(Model):
 
         # Create prompts for all questions
         prompts = []
-        for qid, question in zip(question_ids, questions):
+        for i, (qid, question) in enumerate(zip(question_ids, questions)):
             if not question or question.strip() == "":
                 raise ValueError(f"Empty question for question_id {qid}")
-            prompt = self.make_prompt(qid, question)  # ground_truth_answer is not used here
+            gt_answer = ground_truth_answers[i] if ground_truth_answers and i < len(ground_truth_answers) else None
+            prompt = self.make_prompt(qid, question, ground_truth_answer=gt_answer,
+                                      custom_instruction=custom_instruction)
             if not prompt or prompt.strip() == "":
                 raise ValueError(f"Empty prompt generated for question_id {qid}")
             prompts.append(prompt)
 
         # Generate responses in batch
-        output = self.do_generate_batch(question_ids, prompts, max_new_tokens)
+        output = self.do_generate_batch(question_ids, prompts, max_new_tokens, do_sample)
         sequences = output.sequences
 
         # Process each response
@@ -528,11 +532,13 @@ class CoTModel(Model):
                     tokens = tokens.tolist()
                 end_think_tokens.extend(tokens)
             return ([], end_think_tokens)
-    def generate_no_cot_response_full(self, question_id, question, ground_truth_answer=None, max_new_tokens=4096, do_sample=True):
+
+    def generate_no_cot_response_full(self, question_id, question, ground_truth_answer=None, max_new_tokens=4096,
+                                      do_sample=True):
         """Generate a response without any Chain-of-Thought reasoning"""
         # Use the no-CoT prompt builder
         prompt_builder = self.component_factory.make_prompt_builder(invokes_cot=False)
-        prompt_builder.add_user_message(question, ground_truth_answer)
+        prompt_builder.add_user_message(question, ground_truth_answer=ground_truth_answer)
         prompt = prompt_builder.make_prompt(self.tokenizer)
 
         # Generate response
@@ -556,6 +562,58 @@ class CoTModel(Model):
             answer=answer,
             raw_output=raw_output
         )
+
+    def generate_no_cot_response_full_batch(self, question_ids, questions, ground_truth_answers=None,
+                                            max_new_tokens=4096, do_sample=True):
+        """Generate responses for multiple questions in batch without Chain-of-Thought reasoning"""
+        # Validate inputs
+        if not question_ids or not questions:
+            raise ValueError("Empty question_ids or questions list provided")
+
+        if len(question_ids) != len(questions):
+            raise ValueError(f"Mismatch between question_ids ({len(question_ids)}) and questions ({len(questions)})")
+
+        # Create prompts for all questions
+        prompts = []
+        for i, (qid, question) in enumerate(zip(question_ids, questions)):
+            if not question or question.strip() == "":
+                raise ValueError(f"Empty question for question_id {qid}")
+
+            prompt_builder = self.component_factory.make_prompt_builder(invokes_cot=False)
+            gt_answer = ground_truth_answers[i] if ground_truth_answers and i < len(ground_truth_answers) else None
+            prompt_builder.add_user_message(question, gt_answer)
+            prompt = prompt_builder.make_prompt(self.tokenizer)
+
+            if not prompt or prompt.strip() == "":
+                raise ValueError(f"Empty prompt generated for question_id {qid}")
+            prompts.append(prompt)
+
+        # Generate responses in batch
+        output = self.do_generate_batch(question_ids, prompts, max_new_tokens, do_sample)
+        sequences = output.sequences
+
+        # Process each response
+        responses = []
+        for i, (question_id, question, prompt) in enumerate(zip(question_ids, questions, prompts)):
+            raw_output = self.tokenizer.decode(sequences[i], skip_special_tokens=False)
+
+            # For no-CoT, the entire generated text is the answer (no splitting needed)
+            input_tokens = self.tokenizer(prompt, return_tensors="pt")
+            prompt_length = len(input_tokens.input_ids[0])
+            generated_tokens = sequences[i][prompt_length:]
+            answer = self.tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
+
+            response = ModelResponse(
+                question_id=question_id,
+                question=question,
+                prompt=prompt,
+                cot="",  # No CoT
+                answer=answer,
+                raw_output=raw_output
+            )
+            responses.append(response)
+
+        return responses
 
     def do_split_no_cot(self, sequences, prompt):
         """Handle splitting for no-CoT responses where there are no think tokens"""
