@@ -657,7 +657,7 @@ class EncodedDataset(Dataset, DatasetMaskingMixin):
             module_path = Path(codebook_path)
         else:
             # Default codebook for binary alternation
-            if dataset_name in ["ba", "binary_alternation", "binary_alteration"]:
+            if dataset_name in ["ba", "binary_alternation", "binary_alteration","calendar_arithmetic","largest_island","spell_backward","string_manipulation","tsumego"]:
                 # Try multiple possible locations
                 possible_paths = [
                     Path(__file__).parent / "codebook_binary_alternation.py",
