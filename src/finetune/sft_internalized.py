@@ -197,7 +197,7 @@ def main():
     # Evaluation arguments
     parser.add_argument("--track_metrics", action="store_true",
                         help="Track metrics during training")
-    parser.add_argument("--num_checkpoints", type=int, default=50,
+    parser.add_argument("--num_checkpoints", type=int, default=5,
                         help="Number of checkpoints to save (evenly spaced)")
     parser.add_argument("--metric_eval_samples", type=int, default=100,
                         help="Samples to evaluate for metrics")
