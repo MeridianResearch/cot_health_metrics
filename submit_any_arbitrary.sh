@@ -9,10 +9,10 @@ sbatch <<EOF
 #!/bin/bash
 #SBATCH -N 1
 #SBATCH --job-name=$PROJECT_NAME
-#SBATCH --time=6:00:00
+#SBATCH --time=16:00:00
 #SBATCH --mem=50G
 #SBATCH --cpus-per-task=5
-#SBATCH --gres=gpu:rtx8000:1
+#SBATCH --gres=gpu:l40s:1
 #SBATCH -o job/$PROJECT_NAME.out
 #SBATCH -e job/$PROJECT_NAME.err
 
@@ -20,7 +20,7 @@ cd /network/scratch/l/let/projects/cot_health_metrics2
 
 module load cuda/12.6.0/cudnn/9.3
 module load anaconda
-conda activate /network/scratch/l/let/envs/guardbench
+conda activate /network/scratch/l/let/envs/cot-env
 
 export PYTHONBREAKPOINT=0
 
