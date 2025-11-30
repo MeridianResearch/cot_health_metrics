@@ -4,7 +4,8 @@ export PYTHONPATH=.
 mkdir -p output
 
 #for dataset in binary_alternation calendar_arithmetic largest_island spell_backward string_manipulation; do
-for dataset in calendar_arithmetic; do
+for dataset in largest_island; do
+#for dataset in calendar_arithmetic; do
     python src/finetune/sft_internalized.py \
         --model Qwen/Qwen3-4B \
         --load_in_4bit \
@@ -18,6 +19,6 @@ for dataset in calendar_arithmetic; do
         --use_lora \
         --training_type baseline \
         --wandb_project baseline-training-$dataset \
-        --num_checkpoints 50 \
+        --num_checkpoints 5 \
         --batch_size 16
 done
