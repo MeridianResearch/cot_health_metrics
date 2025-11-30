@@ -317,6 +317,7 @@ def load_any_reasoning_gym_ground_truth(dataset_name: str, split: str = "test",
 
                 # Clean and store the answer
                 answer_clean = str(answer).strip()
+                answer_clean = answer_clean.removesuffix('<|im_end|>')
 
                 # For boolean answers, normalize them
                 if answer_clean.lower() in ['true', 'false']:

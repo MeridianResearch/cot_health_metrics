@@ -291,7 +291,7 @@ class CheckpointEvaluator:
                             })
 
                             # Log accuracy details for first few samples
-                            if len(accuracy_details) <= 3:
+                            if len(accuracy_details) <= 5:
                                 logging.info(f"[Evaluator] Sample {idx} accuracy: "
                                            f"GT='{ground_truth}', Pred='{response.answer}', "
                                            f"Correct={is_correct}")
