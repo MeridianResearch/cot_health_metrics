@@ -20,16 +20,16 @@ for lorapath in $(cat list.1); do
                 --model $model \
                 --adapter-path $lorapath \
                 --metric $metric \
-                --max-samples 2100 \
-                --skip-samples 2000 \
+                --max-samples 2000 \
+                --data-split test \
                 --data-hf $dataset
             python src/main_batch.py \
                 --cache-dir ../models \
                 --model $model \
                 --adapter-path $lorapath \
                 --metric $metric \
-                --max-samples 2100 \
-                --skip-samples 2000 \
+                --max-samples 2000 \
+                --data-split test \
                 --data-hf $dataset
         done
     done
