@@ -134,6 +134,34 @@ def load_model_and_tokenizer(args):
     return model, tokenizer
 
 
+def get_latest_checkpoint(output_dir):
+    """Find the latest checkpoint in the output directory."""
+    checkpoint_dirs = []
+    output_path = Path(output_dir)
+    
+    if not output_path.exists():
+        return None
+    
+    # Look for checkpoint directories (e.g., checkpoint-100, checkpoint-200)
+    for item in output_path.iterdir():
+        if item.is_dir() and item.name.startswith("checkpoint-"):
+            try:
+                # Extract step number
+                step = int(item.name.split("-")[-1])
+                checkpoint_dirs.append((step, str(item)))
+            except ValueError:
+                continue
+    
+    if not checkpoint_dirs:
+        return None
+    
+    # Return the checkpoint with the highest step number
+    checkpoint_dirs.sort(key=lambda x: x[0])
+    latest_checkpoint = checkpoint_dirs[-1][1]
+    logging.info(f"Found latest checkpoint: {latest_checkpoint}")
+    return latest_checkpoint
+
+
 def main():
     parser = argparse.ArgumentParser(description="Enhanced SFT training for internalized CoT")
 
@@ -221,6 +249,10 @@ def main():
     # Random seed
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
 
+    # Checkpoint resuming
+    parser.add_argument("--resume_from_checkpoint", type=str, default=None,
+                        help="Resume from checkpoint. Use 'auto' to automatically find the latest checkpoint, or provide a specific checkpoint path")
+
     args = parser.parse_args()
 
     # Setup
@@ -240,6 +272,24 @@ def main():
     for key, value in sorted(vars(args).items()):
         logging.info(f"  {key}: {value}")
     logging.info("=" * 80)
+
+    # Handle checkpoint resuming
+    resume_from_checkpoint = None
+    if args.resume_from_checkpoint:
+        if args.resume_from_checkpoint.lower() == "auto":
+            resume_from_checkpoint = get_latest_checkpoint(args.output_dir)
+            if resume_from_checkpoint:
+                logging.info(f"Auto-detected checkpoint to resume from: {resume_from_checkpoint}")
+            else:
+                logging.info("No checkpoint found to resume from, starting from scratch")
+        else:
+            resume_from_checkpoint = args.resume_from_checkpoint
+            if os.path.exists(resume_from_checkpoint):
+                logging.info(f"Resuming from checkpoint: {resume_from_checkpoint}")
+            else:
+                logging.warning(f"Checkpoint path does not exist: {resume_from_checkpoint}")
+                logging.warning("Starting training from scratch")
+                resume_from_checkpoint = None
 
     # Load model and tokenizer
     model, tokenizer = load_model_and_tokenizer(args)
@@ -465,8 +515,10 @@ def main():
     logging.info(f"Training type: {args.training_type}")
     if args.max_cot_length:
         logging.info(f"CoT truncated to max {args.max_cot_length} characters for speed")
+    if resume_from_checkpoint:
+        logging.info(f"Resuming training from: {resume_from_checkpoint}")
 
-    train_result = trainer.train()
+    train_result = trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
     # Save final model
     logging.info("Saving final model...")
