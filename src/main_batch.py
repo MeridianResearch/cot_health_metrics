@@ -217,9 +217,9 @@ def main():
     if args.data_hf:
         dataset_name = args.data_hf
         if args.max_samples:
-            dataset = DatasetConfig.load(dataset_name, max_samples=args.max_samples, split=args.data_split)
+            dataset = DatasetConfig.get(dataset_name).load(max_samples=args.max_samples, split=args.data_split)
         else:
-            dataset = DatasetConfig.load(dataset_name, split=args.data_split)
+            dataset = DatasetConfig.get(dataset_name).load(split=args.data_split)
 
         datapoints = _iterate_dataset(dataset_name, dataset)
     elif args.data_path:
