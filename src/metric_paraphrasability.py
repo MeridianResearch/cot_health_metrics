@@ -26,9 +26,12 @@ ENV_FRACTIONS = os.getenv("PARAPHRASE_FRACTIONS", "0.10,0.5,0.98")
 ENV_MODE      = os.getenv("PARAPHRASE_MODE", "length")
 ENV_GEMINIKEY = os.getenv("GEMINI_API_KEY")
 
-# Where JSONL outputs go
-PARAPHRASE_DIR = Path("data/paraphrases")
-LOGPROB_DIR    = Path("data/logprobs")
+# possible run tag so different experiments don't overwrite each other
+ENV_RUN_TAG = os.getenv("PARAPHRASE_RUN_TAG", "default")
+
+# for JSONL outputs
+PARAPHRASE_DIR = Path("data/paraphrases") / ENV_RUN_TAG
+LOGPROB_DIR    = Path("data/logprobs") / ENV_RUN_TAG
 
 def ensure_output_dirs() -> None:
     for d in (PARAPHRASE_DIR, LOGPROB_DIR):
@@ -77,9 +80,17 @@ def _gemini_paraphrase(
         model_name: str = "gemini-2.0-flash",
 ) -> Dict[str, str]:
     assert _GENAI_AVAILABLE, "google-generativeai not installed"
-    # even if api_key is None, let it try and catch below
+    # wanted failure, must have an API key
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY is not set")
+
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(model_name)
+
+    # Force JSON output
+    model = genai.GenerativeModel(
+        model_name,
+        generation_config={"response_mime_type": "application/json"},
+    )
 
     # craft prompt
     if mode == "length":
@@ -139,47 +150,48 @@ def _gemini_paraphrase(
     try:
         rsp = model.generate_content([sys_msg, user_msg])
         print(f"[DEBUG] Gemini Prompt:\n{user_msg}")
-        data = _extract_json(rsp.text)
 
-        # Ensure all values are strings and validate
-        result = {}
-        for f in fractions:
-            key = str(f)
-            paraphrase = data.get(key, text)
+        raw = rsp.text
+        if raw is None:
+            raw = "".join(
+                getattr(part, "text", "")
+                for cand in (rsp.candidates or [])
+                for part in (cand.content.parts or [])
+            )
 
-            # Double-check that paraphrase is a string
-            if not isinstance(paraphrase, str):
-                print(f"[WARNING] Paraphrase for fraction {f} is not a string: {type(paraphrase)}, using original text")
-                paraphrase = text
+        data = json.loads(raw)
 
-            result[key] = paraphrase
-
-        return result
+        # normalize possible list-wrapped JSON into a dict
+        if isinstance(data, list):
+            if len(data) == 1 and isinstance(data[0], dict):
+                data = data[0]
+            else:
+                raise RuntimeError(
+                    f"Gemini JSON is a list, expected a single object. Got: {repr(data)[:200]}"
+                )
 
     except Exception as e:
-        print(f"[ERROR] Gemini paraphrasing failed: {e}")
-        # Return original text for all fractions as fallback
-        return {str(f): text for f in fractions}
+        # hard failure! let the caller decide whether to skip or abort the run
+        raise RuntimeError(f"Gemini paraphrase call failed: {e}") from e
 
+    # so all values are strings
+    result: Dict[str, str] = {}
+    for key, value in data.items():
+        if isinstance(value, dict):
+            if "text" in value:
+                result[key] = str(value["text"])
+            elif len(value) == 1:
+                result[key] = str(next(iter(value.values())))
+            else:
+                result[key] = str(value)
+        else:
+            result[key] = str(value)
 
-# fallback when Gemini unavailable
-_SIMPLE_SYNONYMS = {
-    "there": "therein", "is": "exists", "are": "exist", "because": "since",
-    "but": "however", "answer": "response", "question": "query", "number": "value",
-    "calculate": "compute", "first": "initial", "second": "subsequent",
-}
+    missing = [f for f in fractions if str(f) not in result]
+    if missing:
+        raise RuntimeError(f"Gemini JSON missing keys for fractions {missing}; got keys {list(result.keys())}")
 
-
-def _naive_paraphrase(text: str, fraction: float) -> str:
-    """quick-check-run way: replacing ≈f of words with simple synonyms"""
-    words = text.split()
-    k = max(1, int(len(words) * fraction))
-    idxs = random.sample(range(len(words)), k=k)
-    for i in idxs:
-        w = words[i].lower().strip(",.?!")
-        if w in _SIMPLE_SYNONYMS:
-            words[i] = _SIMPLE_SYNONYMS[w]
-    return " ".join(words)
+    return result
 
 
 class ParaphrasabilityMetric(SingleMetric):
@@ -237,20 +249,16 @@ class ParaphrasabilityMetric(SingleMetric):
 
         # prepare paraphrases
         if pid not in self._para_cache:
-            try:
-                paras = _gemini_paraphrase(self.api_key, r.cot, self.fractions, self.mode)
-                # Additional validation to ensure all values are strings
-                validated_paras = {}
-                for k, v in paras.items():
-                    if isinstance(v, str):
-                        validated_paras[k] = v
-                    else:
-                        self.logger.warning(f"Paraphrase for key {k} is not a string: {type(v)}, using original text")
-                        validated_paras[k] = r.cot
-                paras = validated_paras
-            except Exception as e:
-                self.logger.warning("Gemini failed (%s); falling back to naive paraphrasing.", e)
-                paras = {str(f): _naive_paraphrase(r.cot, f) for f in self.fractions}
+            paras = _gemini_paraphrase(self.api_key, r.cot, self.fractions, self.mode)
+            # so all values are strings
+            validated_paras = {}
+            for k, v in paras.items():
+                if isinstance(v, str):
+                    validated_paras[k] = v
+                else:
+                    self.logger.warning(f"Paraphrase for key {k} is not a string: {type(v)}, using original text")
+                    validated_paras[k] = r.cot
+            paras = validated_paras
             self._para_cache[pid] = paras
 
         worst_delta = -float("inf")
@@ -274,6 +282,8 @@ class ParaphrasabilityMetric(SingleMetric):
                 "orig_lp":      lp_orig.item(),
                 "induced_lp":   lp_para.item(),
                 "delta":        delta,
+                "mode":         self.mode,
+                "run_tag":      os.getenv("PARAPHRASE_RUN_TAG", "default"),
             }
             with self._out_files[str(f)].open("a") as fh:
                 fh.write(json.dumps(rec) + "\n")
