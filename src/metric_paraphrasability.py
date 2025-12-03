@@ -29,7 +29,7 @@ ENV_GEMINIKEY = os.getenv("GEMINI_API_KEY")
 # possible run tag so different experiments don't overwrite each other
 ENV_RUN_TAG = os.getenv("PARAPHRASE_RUN_TAG", "default")
 
-# for JSONL outputs
+# Where JSONL outputs go
 PARAPHRASE_DIR = Path("data/paraphrases") / ENV_RUN_TAG
 LOGPROB_DIR    = Path("data/logprobs") / ENV_RUN_TAG
 
