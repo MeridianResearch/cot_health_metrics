@@ -162,7 +162,7 @@ def parse_gsm8k_solution(ans_text: str) -> Tuple[str, str]:
 
 
 def load_theory_of_mind_data(max_samples: int) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
-    """Load theory of mind dataset using DatasetConfig.
+    """Load theory of mind dataset using DatasetConfig with consistent splitting.
 
     Args:
         max_samples: Maximum number of samples to load
@@ -172,26 +172,24 @@ def load_theory_of_mind_data(max_samples: int) -> Tuple[List[Tuple[str, str]], L
     """
     print(f"Loading theory of mind dataset using DatasetConfig...")
 
-    # Load full dataset using DatasetConfig
-    dataset = DatasetConfig.load("theory_of_mind")
     adapter = DatasetConfig.get("theory_of_mind")
 
-    # Extract question-answer pairs
-    questions_answers = []
-    for sample in dataset:
+    # Load train split using DatasetConfig
+    train_dataset = DatasetConfig.load("theory_of_mind", max_samples=max_samples, split="train")
+    train_data = []
+
+    for sample in train_dataset:
         question, _, answer = adapter.extract_pieces(sample)
-        questions_answers.append((question, answer))
+        train_data.append((question, answer))
 
-    # Split into train/val (90/10 split)
-    total = len(questions_answers)
-    train_size = min(max_samples, int(total * 0.9))
-    val_size = min(max_samples // 10, total - train_size)
+    # Load test split for validation (use smaller sample size for validation)
+    val_samples = max_samples // 10 if max_samples else None
+    val_dataset = DatasetConfig.load("theory_of_mind", max_samples=val_samples, split="test")
+    val_data = []
 
-    # Shuffle for randomness
-    random.shuffle(questions_answers)
-
-    train_data = questions_answers[:train_size]
-    val_data = questions_answers[train_size:train_size + val_size]
+    for sample in val_dataset:
+        question, _, answer = adapter.extract_pieces(sample)
+        val_data.append((question, answer))
 
     print(
         f"Loaded {len(train_data)} training samples and {len(val_data)} validation samples from Theory of Mind dataset")
@@ -238,6 +236,242 @@ def load_gsm8k_data(max_samples: int) -> Tuple[List[Tuple[str, str]], List[Tuple
         val_data.append((question, final))
 
     print(f"Loaded {len(train_data)} training samples and {len(val_data)} validation samples from GSM8K dataset")
+
+    return train_data, val_data
+
+def load_3sum_data(max_samples: Optional[int] = None) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
+    """Load 3SUM dataset using DatasetConfig with consistent splitting.
+
+    Args:
+        max_samples: Maximum number of samples to load
+
+    Returns:
+        Tuple of (train_data, val_data) where each is a list of (question, answer) tuples
+    """
+    print(f"Loading 3SUM dataset using DatasetConfig...")
+
+    adapter = DatasetConfig.get("3sum")
+
+    # Load train split using DatasetConfig
+    train_dataset = DatasetConfig.load("3sum", max_samples=max_samples, split="train")
+    train_data = []
+
+    for sample in train_dataset:
+        question, cot, answer = adapter.extract_pieces(sample)
+        if not question:
+            continue
+        train_data.append((question, answer))
+
+    # Load test split for validation (use smaller sample size for validation)
+    val_samples = max_samples // 10 if max_samples else None
+    val_dataset = DatasetConfig.load("3sum", max_samples=val_samples, split="test")
+    val_data = []
+
+    for sample in val_dataset:
+        question, cot, answer = adapter.extract_pieces(sample)
+        if not question:
+            continue
+        val_data.append((question, answer))
+
+    print(
+        f"Loaded {len(train_data)} training samples and {len(val_data)} validation samples from 3SUM dataset")
+
+    return train_data, val_data
+
+
+def load_maze_data(max_samples: Optional[int] = None) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
+    """Load Maze dataset using DatasetConfig with consistent splitting.
+
+    Args:
+        max_samples: Maximum number of samples to load
+
+    Returns:
+        Tuple of (train_data, val_data) where each is a list of (question, answer) tuples
+    """
+    print(f"Loading Maze dataset using DatasetConfig...")
+
+    adapter = DatasetConfig.get("maze")
+
+    # Load train split using DatasetConfig
+    train_dataset = DatasetConfig.load("maze", max_samples=max_samples, split="train")
+    train_data = []
+
+    for sample in train_dataset:
+        question, cot, answer = adapter.extract_pieces(sample)
+        if not question:
+            continue
+        train_data.append((question, answer))
+
+    # Load test split for validation (use smaller sample size for validation)
+    val_samples = max_samples // 10 if max_samples else None
+    val_dataset = DatasetConfig.load("maze", max_samples=val_samples, split="test")
+    val_data = []
+
+    for sample in val_dataset:
+        question, cot, answer = adapter.extract_pieces(sample)
+        if not question:
+            continue
+        val_data.append((question, answer))
+
+    print(
+        f"Loaded {len(train_data)} training samples and {len(val_data)} validation samples from Maze dataset")
+
+    return train_data, val_data
+
+def load_aiw_data(max_samples: Optional[int] = None) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
+    """Load Alice in Wonderland dataset using DatasetConfig with consistent splitting.
+
+    Args:
+        max_samples: Maximum number of samples to load
+    print(f"Loading Alice in Wonderland dataset using DatasetConfig...")
+    Returns:
+        Tuple of (train_data, val_data) where each is a list of (question, answer) tuples
+    """
+    print(f"Loading Alice in Wonderland dataset using DatasetConfig...")
+
+    adapter = DatasetConfig.get("aiw")
+
+    # Load train split using DatasetConfig
+    train_dataset = DatasetConfig.load("aiw", max_samples=max_samples, split="train")
+    train_data = []
+
+    for sample in train_dataset:
+        question, cot, answer = adapter.extract_pieces(sample)
+        if not question:
+            continue
+        train_data.append((question, answer))
+
+    # Load test split for validation (use smaller sample size for validation)
+    val_samples = max_samples // 10 if max_samples else None
+    val_dataset = DatasetConfig.load("aiw", max_samples=val_samples, split="test")
+    val_data = []
+
+    for sample in val_dataset:
+        question, cot, answer = adapter.extract_pieces(sample)
+        if not question:
+            continue
+        val_data.append((question, answer))
+
+    print(
+        f"Loaded {len(train_data)} training samples and {len(val_data)} validation samples from Alice in Wonderland dataset")
+
+    return train_data, val_data
+
+
+def load_arc_agi_data(max_samples: Optional[int] = None) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
+    """Load ARC-AGI dataset using DatasetConfig with consistent splitting.
+
+    Args:
+        max_samples: Maximum number of samples to load
+
+    Returns:
+        Tuple of (train_data, val_data) where each is a list of (question, answer) tuples
+    """
+    print(f"Loading ARC-AGI dataset using DatasetConfig...")
+
+    adapter = DatasetConfig.get("arc_agi")
+
+    # Load train split using DatasetConfig
+    train_dataset = DatasetConfig.load("arc_agi", max_samples=max_samples, split="train")
+    train_data = []
+
+    for sample in train_dataset:
+        question, cot, answer = adapter.extract_pieces(sample)
+        if not question:
+            continue
+        train_data.append((question, answer))
+
+    # Load test split for validation (use smaller sample size for validation)
+    val_samples = max_samples // 10 if max_samples else None
+    val_dataset = DatasetConfig.load("arc_agi", max_samples=val_samples, split="test")
+    val_data = []
+
+    for sample in val_dataset:
+        question, cot, answer = adapter.extract_pieces(sample)
+        if not question:
+            continue
+        val_data.append((question, answer))
+
+    print(
+        f"Loaded {len(train_data)} training samples and {len(val_data)} validation samples from ARC-AGI dataset")
+
+    return train_data, val_data
+
+def load_arc_1d_data(max_samples: Optional[int] = None) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
+    """Load ARC-1D dataset using DatasetConfig with consistent splitting.
+
+    Args:
+        max_samples: Maximum number of samples to load
+    Returns:
+        Tuple of (train_data, val_data) where each is a list of (question, answer) tuples
+    """
+    print(f"Loading ARC-1D dataset using DatasetConfig...")
+
+    adapter = DatasetConfig.get("arc_1d")
+
+    # Load train split using DatasetConfig
+    train_dataset = DatasetConfig.load("arc_1d", max_samples=max_samples, split="train")
+    train_data = []
+
+    for sample in train_dataset:
+        question, cot, answer = adapter.extract_pieces(sample)
+        if not question:
+            continue
+        train_data.append((question, answer))
+
+    # Load test split for validation (use smaller sample size for validation)
+    val_samples = max_samples // 10 if max_samples else None
+    val_dataset = DatasetConfig.load("arc_1d", max_samples=val_samples, split="test")
+    val_data = []
+
+    for sample in val_dataset:
+        question, cot, answer = adapter.extract_pieces(sample)
+        if not question:
+            continue
+        val_data.append((question, answer))
+
+    print(
+        f"Loaded {len(train_data)} training samples and {len(val_data)} validation samples from ARC-AGI dataset")
+
+    return train_data, val_data
+
+
+def load_leg_counting_data(max_samples: Optional[int] = None) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
+    """Load Leg Counting dataset using DatasetConfig with consistent splitting.
+
+    Args:
+        max_samples: Maximum number of samples to load
+
+    Returns:
+        Tuple of (train_data, val_data) where each is a list of (question, answer) tuples
+    """
+    print(f"Loading Leg Counting dataset using DatasetConfig...")
+
+    adapter = DatasetConfig.get("leg_counting")
+
+    # Load train split using DatasetConfig
+    train_dataset = DatasetConfig.load("leg_counting", max_samples=max_samples, split="train")
+    train_data = []
+
+    for sample in train_dataset:
+        question, cot, answer = adapter.extract_pieces(sample)
+        if not question:
+            continue
+        train_data.append((question, answer))
+
+    # Load test split for validation (use smaller sample size for validation)
+    val_samples = max_samples // 10 if max_samples else None
+    val_dataset = DatasetConfig.load("leg_counting", max_samples=val_samples, split="test")
+    val_data = []
+
+    for sample in val_dataset:
+        question, cot, answer = adapter.extract_pieces(sample)
+        if not question:
+            continue
+        val_data.append((question, answer))
+
+    print(
+        f"Loaded {len(train_data)} training samples and {len(val_data)} validation samples from Leg Counting dataset")
 
     return train_data, val_data
 
@@ -288,46 +522,231 @@ def load_theory_of_mind_ground_truth(split: str = "test", max_samples: Optional[
     """
     try:
         adapter = DatasetConfig.get("theory_of_mind")
-        dataset = DatasetConfig.load("theory_of_mind")
-
-        # Convert dataset to list for splitting
-        all_samples = list(dataset)
-        total_samples = len(all_samples)
-        split_point = int(0.8 * total_samples)
-
-        # Split into train/test
-        if split == "train":
-            samples = all_samples[:split_point]
-            offset = 0
-        elif split == "test":
-            samples = all_samples[split_point:]
-            offset = split_point
-        else:
-            samples = all_samples
-            offset = 0
-
-        # Apply max_samples limit
-        if max_samples:
-            samples = samples[:max_samples]
+        dataset = DatasetConfig.load("theory_of_mind", max_samples=max_samples, split=split)
 
         answers = {}
-        for local_idx, sample in enumerate(samples):
+        for i, sample in enumerate(dataset):
             question, _, answer = adapter.extract_pieces(sample)
-            answer = str(answer).strip()
+            # Store with both integer and string keys for compatibility
+            answers[i] = answer.strip()
+            answers[f"hf-{i}"] = answer.strip()
 
-            # Calculate the original index
-            original_idx = offset + local_idx
-
-            # Store with multiple key formats for compatibility
-            answers[local_idx] = answer
-            answers[f"hf-{local_idx}"] = answer
-            answers[original_idx] = answer
-            answers[f"hf-{original_idx}"] = answer
-
-        print(f"Loaded {len(samples)} Theory of Mind ground truth answers from {split} split")
+        print(f"Loaded {len(answers) // 2} Theory of Mind ground truth answers from {split} split")
         return answers
     except Exception as e:
         print(f"Warning: Could not load Theory of Mind dataset: {e}")
+        return {}
+
+
+def load_3sum_ground_truth(split: str = "test", max_samples: Optional[int] = None) -> Dict:
+    """Load ground truth answers from 3SUM dataset for accuracy evaluation.
+
+    Args:
+        split: Which split to load ('train' or 'test')
+        max_samples: Maximum number of samples to load
+
+    Returns:
+        Dictionary mapping sample IDs to text answers (True/False)
+    """
+    try:
+        adapter = DatasetConfig.get("3sum")
+        dataset = DatasetConfig.load("3sum", max_samples=max_samples, split=split)
+
+        answers = {}
+        for i, sample in enumerate(dataset):
+            question, cot, answer = adapter.extract_pieces(sample)
+            if not answer:
+                continue
+
+            # Store with both integer and string keys for compatibility
+            answers[i] = answer.strip()
+            answers[f"hf-{i}"] = answer.strip()
+
+        print(f"Loaded {len(answers) // 2} 3SUM ground truth answers from {split} split")
+        return answers
+    except Exception as e:
+        print(f"Warning: Could not load 3SUM dataset: {e}")
+        return {}
+
+
+def load_maze_ground_truth(split: str = "test", max_samples: Optional[int] = None) -> Dict:
+    """Load ground truth answers from Maze dataset for accuracy evaluation.
+
+    Args:
+        split: Which split to load ('train' or 'test')
+        max_samples: Maximum number of samples to load
+
+    Returns:
+        Dictionary mapping sample IDs to text answers (number of steps)
+    """
+    try:
+        adapter = DatasetConfig.get("maze")
+        dataset = DatasetConfig.load("maze", max_samples=max_samples, split=split)
+
+        answers = {}
+        for i, sample in enumerate(dataset):
+            question, cot, answer = adapter.extract_pieces(sample)
+            if not answer:
+                continue
+
+            # Store with both integer and string keys for compatibility
+            answers[i] = answer.strip()
+            answers[f"hf-{i}"] = answer.strip()
+
+        print(f"Loaded {len(answers) // 2} Maze ground truth answers from {split} split")
+        return answers
+    except Exception as e:
+        print(f"Warning: Could not load Maze dataset: {e}")
+        return {}
+
+def load_aiw_ground_truth(split: str = "test", max_samples: Optional[int] = None) -> Dict:
+    """Load ground truth answers from AIW dataset for accuracy evaluation.
+
+    Args:
+        split: Which split to load ('train' or 'test')
+        max_samples: Maximum number of samples to load
+
+    Returns:
+        Dictionary mapping sample IDs to text answers
+    """
+    try:
+        adapter = DatasetConfig.get("aiw")
+        dataset = DatasetConfig.load("aiw", max_samples=max_samples, split=split)
+
+        answers = {}
+        for i, sample in enumerate(dataset):
+            question, cot, answer = adapter.extract_pieces(sample)
+            if not answer:
+                continue
+
+            # Store with both integer and string keys for compatibility
+            answers[i] = answer.strip()
+            answers[f"hf-{i}"] = answer.strip()
+
+        print(f"Loaded {len(answers) // 2} AIW ground truth answers from {split} split")
+        return answers
+    except Exception as e:
+        print(f"Warning: Could not load AIW dataset: {e}")
+        return {}
+
+
+def load_arc_agi_ground_truth(split: str = "test", max_samples: Optional[int] = None) -> Dict:
+    """Load ground truth answers from ARC-AGI dataset for accuracy evaluation.
+
+    Args:
+        split: Which split to load ('train' or 'test')
+        max_samples: Maximum number of samples to load
+
+    Returns:
+        Dictionary mapping sample IDs to text answers (grid strings)
+    """
+    try:
+        adapter = DatasetConfig.get("arc_agi")
+        dataset = DatasetConfig.load("arc_agi", max_samples=max_samples, split=split)
+
+        answers = {}
+        for i, sample in enumerate(dataset):
+            question, cot, answer = adapter.extract_pieces(sample)
+            if not answer:
+                continue
+
+            # Store with both integer and string keys for compatibility
+            answers[i] = answer.strip()
+            answers[f"hf-{i}"] = answer.strip()
+
+        print(f"Loaded {len(answers) // 2} ARC-AGI ground truth answers from {split} split")
+        return answers
+    except Exception as e:
+        print(f"Warning: Could not load ARC-AGI dataset: {e}")
+        return {}
+
+def load_arc_1d_ground_truth(split: str = "test", max_samples: Optional[int] = None) -> Dict:
+    """Load ground truth answers from ARC-1D dataset for accuracy evaluation.
+
+    Args:
+        split: Which split to load ('train' or 'test')
+        max_samples: Maximum number of samples to load
+    Returns:
+        Dictionary mapping sample IDs to text answers (grid strings)
+    """
+    try:
+        adapter = DatasetConfig.get("arc_1d")
+        dataset = DatasetConfig.load("arc_1d", max_samples=max_samples, split=split)
+
+        answers = {}
+        for i, sample in enumerate(dataset):
+            question, cot, answer = adapter.extract_pieces(sample)
+            if not answer:
+                continue
+
+            # Store with both integer and string keys for compatibility
+            answers[i] = answer.strip()
+            answers[f"hf-{i}"] = answer.strip()
+
+        print(f"Loaded {len(answers) // 2} ARC-1D ground truth answers from {split} split")
+        return answers
+    except Exception as e:
+        print(f"Warning: Could not load ARC-1D dataset: {e}")
+        return {}
+
+def load_leg_counting_ground_truth(split: str = "test", max_samples: Optional[int] = None) -> Dict:
+    """Load ground truth answers from Leg Counting dataset for accuracy evaluation.
+
+    Args:
+        split: Which split to load ('train' or 'test')
+        max_samples: Maximum number of samples to load
+
+    Returns:
+        Dictionary mapping sample IDs to text answers
+    """
+    try:
+        adapter = DatasetConfig.get("leg_counting")
+        dataset = DatasetConfig.load("leg_counting", max_samples=max_samples, split=split)
+
+        answers = {}
+        for i, sample in enumerate(dataset):
+            question, cot, answer = adapter.extract_pieces(sample)
+            if not answer:
+                continue
+
+            # Store with both integer and string keys for compatibility
+            answers[i] = answer.strip()
+            answers[f"hf-{i}"] = answer.strip()
+
+        print(f"Loaded {len(answers) // 2} Leg Counting ground truth answers from {split} split")
+        return answers
+    except Exception as e:
+        print(f"Warning: Could not load Leg Counting dataset: {e}")
+        return {}
+
+def load_any_reasoning_gym_ground_truth(dataset_name: str, split: str = "test", max_samples: Optional[int] = None) -> Dict:
+    """Load ground truth answers from Leg Counting dataset for accuracy evaluation.
+
+    Args:
+        split: Which split to load ('train' or 'test')
+        max_samples: Maximum number of samples to load
+
+    Returns:
+        Dictionary mapping sample IDs to text answers
+    """
+    try:
+        dataset_list = load_prompts("data/custom/" + dataset_name + ".json", max_samples)
+
+        answers = {}
+        do_extract=lambda d: (d["question"], "", d["answer"])
+        for i, sample in enumerate(dataset_list):
+            question, cot, answer = do_extract(sample)
+            if not answer:
+                continue
+
+            # Store with both integer and string keys for compatibility
+            answers[i] = answer.strip()
+            answers[f"hf-{i}"] = answer.strip()
+
+        print(f"Loaded {len(answers) // 2} {dataset_name} ground truth answers from {split} split")
+        return answers
+    except Exception as e:
+        print(f"Warning: Could not load dataset {dataset_name}: {e}")
         return {}
 
 

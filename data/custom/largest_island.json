@@ -1,0 +1,9667 @@
+[
+  {
+    "question": "You are given the following 10 x 5 binary matrix grid:\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 0,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 7 binary matrix grid:\n0 0 1 1 1 0 1\n1 0 0 1 1 0 1\n1 0 0 0 0 1 1\n1 0 0 1 1 1 0\n1 0 0 1 1 1 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "10",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 1,
+      "grid": [
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "solution": 10,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 9 binary matrix grid:\n1 0 0 0 0 0 0 0 0\n1 1 1 0 0 0 0 0 1\n1 1 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 1 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "6",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 2,
+      "grid": [
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 6,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 8 binary matrix grid:\n0 0 0 0 1 0 0 0\n0 0 0 0 1 0 0 0\n0 1 1 0 0 0 0 0\n0 1 1 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "4",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 3,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 4,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 8 binary matrix grid:\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 4,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 5 binary matrix grid:\n0 0 0 0 0\n0 0 0 0 0\n0 0 1 1 1\n1 1 1 1 1\n1 1 1 1 0\n1 1 1 0 0\n0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "15",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 5,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 15,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 7 binary matrix grid:\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 1 1\n0 0 0 0 1 1 0\n0 0 0 0 1 1 0\n0 0 0 0 0 1 0\n0 0 0 0 0 1 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "8",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 6,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      ],
+      "solution": 8,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 7 binary matrix grid:\n0 0 1 0 0 1 1\n0 0 1 1 1 1 1\n0 0 0 0 1 1 1\n0 0 0 0 1 1 1\n0 0 0 0 0 1 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "16",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 7,
+      "grid": [
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ]
+      ],
+      "solution": 16,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 7 binary matrix grid:\n0 0 0 0 0 1 1\n0 0 0 0 0 1 1\n0 0 0 0 0 0 1\n0 0 0 0 0 1 1\n0 0 0 0 0 0 0\n1 1 0 0 0 0 0\n1 0 0 0 0 0 0\n0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "7",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 8,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 7,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 9 binary matrix grid:\n0 0 0 1 1 1 1 1 1\n0 0 0 1 1 1 1 1 1\n0 0 0 0 1 1 1 1 1\n0 0 0 0 0 0 0 1 1\n0 0 0 0 0 0 0 0 0\n1 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "19",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 9,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 19,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 5 binary matrix grid:\n1 1 1 1 1\n1 1 1 1 1\n1 1 0 0 1\n0 1 1 1 0\n0 1 1 1 0\n0 0 1 1 0\n0 1 1 1 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "24",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 10,
+      "grid": [
+        [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "solution": 24,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 6 binary matrix grid:\n1 1 1 1 1 0\n1 1 0 1 0 0\n0 0 0 1 1 0\n0 0 0 1 1 0\n0 0 0 1 1 0\n0 0 0 0 1 0\n0 0 0 0 0 0\n0 0 0 0 1 1\n0 1 1 1 1 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "15",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 11,
+      "grid": [
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "solution": 15,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 8 binary matrix grid:\n0 0 0 0 0 0 1 1\n0 0 0 0 0 1 1 1\n0 0 0 0 0 1 1 1\n0 0 0 1 1 1 1 0\n0 0 0 1 0 0 0 0\n0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "13",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 12,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 13,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 6 binary matrix grid:\n0 0 0 0 0 0\n0 0 0 0 0 0\n1 1 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "2",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 13,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 2,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 5 binary matrix grid:\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n1 1 1 1 0\n1 1 1 0 0\n1 1 1 0 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "10",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 14,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1
+        ]
+      ],
+      "solution": 10,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 7 binary matrix grid:\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n1 0 0 0 1 1 0\n1 0 0 1 1 1 1\n1 0 0 1 1 1 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "10",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 15,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "solution": 10,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 6 binary matrix grid:\n0 0 0 0 0 0\n1 0 0 0 0 0\n1 0 0 0 0 0\n1 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "3",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 16,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 3,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 5 binary matrix grid:\n0 1 1 1 1\n0 1 1 1 1\n0 1 1 1 1\n1 0 1 1 1\n1 0 0 0 0\n0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "15",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 17,
+      "grid": [
+        [
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 15,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 7 binary matrix grid:\n0 1 1 0 0 0 0\n0 0 1 0 0 0 0\n0 0 0 0 0 0 1\n0 0 0 0 0 0 1\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "3",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 18,
+      "grid": [
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 3,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 6 binary matrix grid:\n0 0 0 1 1 0\n0 0 1 1 0 0\n0 0 1 1 0 0\n0 0 1 1 0 0\n0 0 1 1 0 0\n0 1 1 1 1 1\n1 1 0 0 0 0\n0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "17",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 19,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 17,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 6 binary matrix grid:\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 20,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 8 binary matrix grid:\n0 0 0 0 0 0 0 0\n0 0 0 0 1 1 1 1\n0 0 0 0 1 1 0 0\n0 0 0 0 0 1 1 0\n0 0 0 0 0 0 1 1\n0 0 0 0 0 1 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "10",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 21,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 10,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 5 binary matrix grid:\n0 0 1 0 0\n0 0 1 0 0\n0 1 1 0 1\n1 1 1 1 1\n0 0 0 1 1\n0 0 0 1 1\n0 0 0 1 1\n0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "16",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 22,
+      "grid": [
+        [
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 16,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 7 binary matrix grid:\n0 0 1 1 0 0 0\n0 0 1 1 0 0 0\n0 0 1 1 0 1 1\n0 0 0 1 0 1 1\n0 0 0 0 0 1 1\n0 0 0 0 1 1 1\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "9",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 23,
+      "grid": [
+        [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 9,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 7 binary matrix grid:\n1 1 1 1 1 1 1\n0 1 1 1 1 0 1\n0 0 0 1 1 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "14",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 24,
+      "grid": [
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 14,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 5 binary matrix grid:\n1 1 1 1 1\n0 1 1 1 1\n1 1 0 1 1\n1 1 0 1 1\n0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "17",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 25,
+      "grid": [
+        [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 17,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 10 x 8 binary matrix grid:\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 1 1 0 0 0\n0 0 0 1 1 1 1 0\n0 0 1 1 1 0 0 0\n0 1 1 1 1 0 0 0\n0 1 0 1 0 1 0 0\n1 1 0 1 1 1 1 0\n1 1 1 1 1 1 1 0\n1 1 1 1 1 1 1 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "36",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 26,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "solution": 36,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 10 x 5 binary matrix grid:\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 27,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 7 binary matrix grid:\n0 1 1 1 0 0 0\n0 1 1 0 0 0 0\n0 0 0 0 0 0 1\n1 1 1 1 1 1 1\n1 1 1 1 1 1 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "15",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 28,
+      "grid": [
+        [
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "solution": 15,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 9 binary matrix grid:\n0 1 1 0 0 0 0 0 0\n0 1 1 0 0 0 0 0 0\n1 1 0 0 0 0 0 0 0\n1 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n1 1 1 1 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "7",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 29,
+      "grid": [
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 7,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 9 binary matrix grid:\n0 0 0 1 1 1 1 0 0\n1 0 0 1 1 1 1 1 0\n1 1 1 1 1 1 1 1 0\n1 1 1 1 1 1 1 0 0\n0 1 1 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "27",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 30,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 27,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 5 binary matrix grid:\n0 0 0 0 0\n1 1 0 0 0\n1 1 0 0 0\n0 1 1 1 1\n0 1 1 0 0\n0 0 0 0 0\n0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "10",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 31,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 10,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 9 binary matrix grid:\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 32,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 9 binary matrix grid:\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 1 0 0 0 0 0 0\n0 1 1 0 0 0 0 0 0\n1 1 0 0 0 0 0 0 0\n0 1 0 0 0 0 0 0 0\n1 1 0 0 0 0 0 0 0\n1 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "9",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 33,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 9,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 8 binary matrix grid:\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 1 1 1 0 0 0 0\n0 0 0 1 0 0 0 0\n0 0 0 0 0 0 1 0\n0 0 0 0 0 0 1 1\n0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "4",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 34,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 4,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 7 binary matrix grid:\n0 0 0 0 0 0 0\n0 1 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "1",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 35,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 1,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 5 binary matrix grid:\n0 0 1 1 1\n0 0 1 0 1\n0 0 0 0 1\n0 0 0 0 1\n0 0 0 0 1\n0 0 1 1 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "11",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 36,
+      "grid": [
+        [
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1
+        ]
+      ],
+      "solution": 11,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 8 binary matrix grid:\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 1 1 0 0 0 1 0\n0 0 1 0 0 0 1 0\n0 0 0 0 0 0 1 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "4",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 37,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ]
+      ],
+      "solution": 4,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 8 binary matrix grid:\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 1 0 0 0\n0 0 0 0 0 0 0 0\n0 0 1 1 1 1 1 0\n1 1 1 0 0 0 1 0\n0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "9",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 38,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 9,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 8 binary matrix grid:\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 1 1 0 0 0\n0 0 0 0 1 0 0 0\n0 0 0 0 1 0 0 0\n0 0 0 0 1 0 0 0\n0 1 0 1 1 0 0 0\n0 1 1 1 1 1 1 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "14",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 39,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "solution": 14,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 8 binary matrix grid:\n0 0 0 0 0 0 0 0\n0 0 0 0 1 1 0 0\n0 0 1 0 1 1 1 0\n0 0 1 0 0 0 1 0\n0 0 0 0 1 1 1 0\n0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "9",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 40,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 9,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 8 binary matrix grid:\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 41,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 10 x 7 binary matrix grid:\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 42,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 10 binary matrix grid:\n1 1 1 1 1 1 0 0 0 0\n0 0 0 1 1 0 0 0 1 1\n0 0 0 0 0 0 0 0 1 1\n0 0 0 0 0 0 0 1 1 1\n0 0 0 0 0 0 1 0 1 1\n0 0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "9",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 43,
+      "grid": [
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 9,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 9 binary matrix grid:\n0 1 0 1 1 0 1 1 0\n0 1 1 1 0 0 1 1 0\n0 1 1 0 0 0 1 1 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "8",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 44,
+      "grid": [
+        [
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 8,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 10 binary matrix grid:\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n0 0 1 0 0 0 0 0 0 0\n0 1 1 0 0 0 0 0 0 0\n0 1 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "4",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 45,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 4,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 6 binary matrix grid:\n1 1 1 0 0 0\n1 1 1 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "6",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 46,
+      "grid": [
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 6,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 9 binary matrix grid:\n1 1 1 1 1 1 1 1 1\n0 1 1 1 0 0 0 1 1\n0 1 1 0 0 0 0 1 1\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "18",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 47,
+      "grid": [
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 18,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 10 binary matrix grid:\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 48,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 9 binary matrix grid:\n0 0 0 0 0 1 1 0 0\n0 0 0 0 0 1 1 0 0\n0 0 0 1 1 1 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "7",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 49,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 7,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 9 binary matrix grid:\n0 0 1 1 1 1 0 0 0\n0 1 1 0 0 0 0 0 0\n0 1 1 1 1 0 0 0 0\n1 1 1 1 1 0 0 0 0\n1 1 1 0 0 0 0 0 0\n1 1 1 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "21",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 50,
+      "grid": [
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 21,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 9 binary matrix grid:\n0 0 1 1 1 0 0 0 0\n0 0 1 1 1 1 0 0 0\n0 0 0 0 0 1 0 0 0\n0 0 0 0 1 1 0 0 0\n0 0 0 0 1 0 0 0 0\n0 1 0 0 0 0 0 0 0\n0 1 1 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "11",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 51,
+      "grid": [
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 11,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 6 binary matrix grid:\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 52,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 9 binary matrix grid:\n0 0 0 0 0 1 1 1 1\n0 0 0 0 0 1 1 1 1\n0 0 0 0 0 0 0 1 0\n0 0 0 0 0 0 0 1 0\n0 0 0 0 0 0 0 0 0\n0 0 0 1 0 0 0 0 0\n0 0 1 1 1 1 1 0 0\n0 1 1 1 1 1 1 0 0\n0 1 1 1 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "15",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 53,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 15,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 7 binary matrix grid:\n0 1 1 1 1 0 0\n0 1 1 1 1 0 0\n1 1 0 0 0 0 0\n1 1 0 0 1 1 0\n1 0 1 1 1 1 0\n1 1 1 1 1 1 1\n0 0 0 1 1 1 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "30",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 54,
+      "grid": [
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "solution": 30,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 8 binary matrix grid:\n1 1 1 1 0 0 0 0\n1 1 1 1 0 0 0 0\n1 0 1 1 0 0 0 0\n1 1 1 0 0 0 0 0\n0 1 1 0 0 0 0 0\n0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "16",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 55,
+      "grid": [
+        [
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 16,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 9 binary matrix grid:\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 56,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 8 binary matrix grid:\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 1 1 1 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "3",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 57,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 3,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 8 binary matrix grid:\n0 0 0 1 1 1 0 0\n0 0 0 1 1 1 1 0\n0 0 0 0 0 1 1 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "9",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 58,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 9,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 6 binary matrix grid:\n0 0 0 1 1 0\n1 0 0 1 1 0\n1 0 0 1 1 0\n1 0 0 1 0 0\n1 0 0 1 0 0\n1 0 0 0 0 0\n1 1 0 0 0 0\n0 1 0 0 0 0\n0 1 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "9",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 59,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 9,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 10 binary matrix grid:\n0 0 0 1 1 0 0 0 0 0\n1 1 1 1 1 0 0 0 0 1\n1 1 1 0 1 0 0 0 0 0\n1 1 0 0 1 1 0 0 0 0\n1 0 0 1 0 1 1 0 0 0\n1 1 1 1 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "23",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 60,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 23,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 10 x 8 binary matrix grid:\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 1 1 1 1\n0 1 1 1 1 0 1 1\n1 0 0 0 0 1 1 0\n1 0 1 1 0 1 1 0\n1 1 1 1 1 1 0 0\n0 1 1 1 1 1 1 0\n0 1 0 1 1 0 1 0\n0 1 0 1 1 1 1 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "39",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 61,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "solution": 39,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 6 binary matrix grid:\n1 1 1 1 1 1\n1 1 0 1 0 1\n0 1 0 1 1 1\n0 1 1 1 1 1\n0 0 0 1 1 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "22",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 62,
+      "grid": [
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ]
+      ],
+      "solution": 22,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 7 binary matrix grid:\n1 1 0 0 0 0 0\n1 1 0 0 0 0 0\n0 0 0 0 0 0 0\n0 1 1 0 0 0 0\n0 0 1 0 0 0 0\n0 1 1 1 1 0 0\n0 0 0 0 1 1 1\n0 0 1 1 1 1 1\n0 0 1 1 1 1 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "19",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 63,
+      "grid": [
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "solution": 19,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 10 x 8 binary matrix grid:\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 64,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 9 binary matrix grid:\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 1\n1 0 0 0 0 0 0 0 1\n1 0 0 1 1 0 0 0 1\n1 0 0 0 0 0 0 1 1\n1 1 1 0 0 0 1 1 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "7",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 65,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ]
+      ],
+      "solution": 7,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 10 binary matrix grid:\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 66,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 6 binary matrix grid:\n1 1 1 1 1 0\n1 0 0 1 1 0\n1 0 0 0 0 0\n1 1 0 0 0 0\n1 1 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "13",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 67,
+      "grid": [
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 13,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 9 binary matrix grid:\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 1 1\n0 0 0 0 0 0 0 1 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "4",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 68,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ]
+      ],
+      "solution": 4,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 7 binary matrix grid:\n0 0 1 1 1 1 1\n0 0 1 1 1 1 1\n0 0 0 0 1 1 1\n0 0 0 0 1 1 1\n0 0 0 0 0 0 1\n0 0 0 0 0 0 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "18",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 69,
+      "grid": [
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "solution": 18,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 10 binary matrix grid:\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 1 1 0 0 0 0\n0 0 0 0 1 1 0 0 1 0\n0 0 0 0 1 1 1 1 1 0\n0 0 0 0 1 1 1 1 1 1\n0 0 0 0 0 0 0 0 1 1\n0 0 0 0 0 0 0 0 1 1\n0 0 0 0 0 1 1 1 1 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "25",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 70,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "solution": 25,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 10 binary matrix grid:\n1 1 1 1 0 0 1 0 0 0\n1 1 1 1 1 1 1 0 0 0\n1 1 1 1 1 1 0 0 0 0\n1 1 1 1 1 1 0 0 0 0\n1 1 0 0 1 1 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "28",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 71,
+      "grid": [
+        [
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 28,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 9 binary matrix grid:\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 72,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 6 binary matrix grid:\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 73,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 10 x 9 binary matrix grid:\n0 0 0 0 0 0 0 1 1\n0 0 0 0 0 0 0 1 1\n0 0 0 0 0 0 0 0 1\n0 0 0 0 0 0 1 0 1\n1 0 0 0 0 0 1 1 1\n1 0 0 0 0 0 0 1 1\n1 0 0 0 0 0 0 0 0\n1 0 0 1 0 0 0 0 0\n1 1 1 1 1 0 0 0 0\n1 1 1 1 1 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "15",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 74,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 15,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 6 binary matrix grid:\n0 0 0 0 0 0\n0 0 0 1 0 0\n0 0 0 1 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "2",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 75,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 2,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 10 x 10 binary matrix grid:\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n0 1 1 0 0 0 0 0 0 0\n0 0 1 0 0 0 0 0 0 0\n0 1 1 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "5",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 76,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 5,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 6 binary matrix grid:\n1 1 1 1 0 0\n1 1 1 0 0 0\n1 1 0 0 0 1\n1 1 1 1 1 1\n1 1 1 0 1 1\n1 1 1 0 1 1\n1 1 1 1 1 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "31",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 77,
+      "grid": [
+        [
+          1,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ]
+      ],
+      "solution": 31,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 6 binary matrix grid:\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n1 1 0 0 0 0\n1 1 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "4",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 78,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 4,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 6 binary matrix grid:\n0 1 1 1 1 1\n1 1 1 1 1 1\n1 1 1 1 1 1\n1 1 1 0 1 1\n1 1 1 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "25",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 79,
+      "grid": [
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 25,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 6 binary matrix grid:\n0 0 0 0 0 0\n0 0 0 1 0 0\n0 0 0 0 0 0\n1 1 0 0 0 0\n1 1 0 0 0 0\n0 1 0 0 1 1\n0 0 0 1 1 1\n0 0 0 1 1 1\n0 0 0 0 1 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "9",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 80,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      ],
+      "solution": 9,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 7 binary matrix grid:\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 81,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 9 binary matrix grid:\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "0",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 82,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 0,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 6 binary matrix grid:\n0 0 0 0 0 0\n1 1 1 1 1 1\n0 0 1 1 1 1\n0 0 1 1 1 0\n0 0 0 1 1 1\n0 0 0 1 1 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "19",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 83,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ]
+      ],
+      "solution": 19,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 5 binary matrix grid:\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0\n1 1 1 0 0\n1 1 1 0 0\n1 1 1 0 0\n1 1 0 0 0\n1 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "12",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 84,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 12,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 9 binary matrix grid:\n0 0 1 1 1 0 0 0 0\n0 0 0 0 0 0 0 0 0\n1 1 1 1 0 0 0 0 0\n1 1 1 0 0 0 0 0 0\n1 1 1 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "10",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 85,
+      "grid": [
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 10,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 8 binary matrix grid:\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n1 1 1 0 0 1 1 0\n1 1 1 1 1 1 0 0\n1 1 1 1 1 1 0 0\n1 1 0 0 0 1 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "20",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 86,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      ],
+      "solution": 20,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 9 binary matrix grid:\n0 0 0 0 0 1 1 0 0\n0 0 0 0 1 1 0 0 0\n0 0 0 0 1 0 0 0 0\n0 0 1 1 1 0 0 0 0\n0 0 1 1 0 0 0 0 0\n0 0 1 1 0 0 0 0 0\n0 0 0 1 1 1 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "15",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 87,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 15,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 8 binary matrix grid:\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 1 1 0 0 0\n0 0 0 0 1 1 1 1\n0 0 0 0 0 1 1 1\n0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "9",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 88,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 9,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 7 x 7 binary matrix grid:\n0 1 1 1 0 0 0\n0 1 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 0 0 1 0 0\n0 1 0 1 1 0 0\n0 1 1 1 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "7",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 89,
+      "grid": [
+        [
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 7,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 6 binary matrix grid:\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 0 0 0 0 0\n0 1 1 0 0 0\n1 1 0 0 0 0\n1 1 0 0 0 0\n1 1 0 0 0 0\n0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "8",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 90,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 8,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 7 binary matrix grid:\n0 1 1 0 0 0 0\n0 1 1 0 1 0 0\n0 0 0 0 1 1 0\n0 0 1 1 1 1 0\n0 0 1 1 0 0 0\n0 0 0 0 0 0 1\n0 0 0 0 0 1 1\n0 0 0 0 0 1 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "9",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 91,
+      "grid": [
+        [
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ]
+      ],
+      "solution": 9,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 8 x 9 binary matrix grid:\n0 1 1 1 0 0 0 0 0\n0 0 0 1 0 0 0 0 0\n1 0 0 1 0 0 0 0 0\n1 1 1 1 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "10",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 92,
+      "grid": [
+        [
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 10,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 10 x 7 binary matrix grid:\n0 0 0 0 0 0 0\n0 0 0 0 0 0 0\n0 0 1 0 0 0 0\n0 0 0 0 0 0 0\n0 1 0 0 1 0 0\n1 1 0 1 1 1 0\n0 0 0 0 0 1 0\n0 0 0 0 0 0 1\n0 0 1 1 1 1 1\n0 0 1 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "7",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 93,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 7,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 8 binary matrix grid:\n0 0 0 0 1 1 1 0\n0 0 0 0 1 1 1 0\n0 0 0 0 0 1 1 0\n0 0 0 0 0 1 0 0\n0 1 1 1 0 1 0 0\n0 1 0 1 0 1 0 0\n0 0 0 1 1 1 0 0\n0 0 0 1 0 0 0 0\n0 0 0 0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "20",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 94,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 20,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 6 binary matrix grid:\n0 0 1 1 0 0\n1 0 1 1 0 0\n1 1 1 1 1 1\n1 1 1 1 0 0\n1 1 0 1 1 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "19",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 95,
+      "grid": [
+        [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          1,
+          1,
+          0
+        ]
+      ],
+      "solution": 19,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 6 x 8 binary matrix grid:\n0 0 0 1 1 1 1 1\n0 0 0 1 1 1 1 1\n0 0 0 0 0 0 0 0\n0 0 0 0 0 0 0 0\n0 0 0 0 0 1 0 0\n0 0 0 0 1 1 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "10",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 96,
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ]
+      ],
+      "solution": 10,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 10 binary matrix grid:\n1 1 0 0 0 1 1 1 0 0\n1 1 0 0 0 0 0 1 0 1\n1 1 0 0 0 1 1 1 1 1\n0 0 0 0 0 1 1 1 1 1\n0 0 0 0 0 0 0 1 1 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "18",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 97,
+      "grid": [
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ]
+      ],
+      "solution": 18,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 5 x 5 binary matrix grid:\n1 1 0 0 0\n1 1 0 0 0\n0 1 1 0 0\n0 1 1 0 0\n0 0 0 0 0\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "8",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 98,
+      "grid": [
+        [
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "solution": 8,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  },
+  {
+    "question": "You are given the following 9 x 5 binary matrix grid:\n1 0 0 0 0\n1 0 0 0 0\n1 1 1 1 1\n0 0 1 1 0\n0 0 1 1 0\n1 1 1 1 0\n1 1 1 1 1\n1 1 1 1 1\n1 1 1 1 1\n\nAn island is a group of 1's (representing land) connected 4-directionally (horizontal or vertical).\nYou may assume all four edges of the grid are surrounded by water.\n\nThe area of an island is the number of cells with a value 1 in the island.\n\nReturn the maximum area of an island in grid. If there is no island, return 0.\n",
+    "answer": "30",
+    "metadata": {
+      "source_dataset": "largest_island",
+      "source_index": 99,
+      "grid": [
+        [
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      ],
+      "solution": 30,
+      "difficulty": {
+        "rows": [
+          5,
+          10
+        ],
+        "cols": [
+          5,
+          10
+        ],
+        "num_islands": [
+          0,
+          5
+        ],
+        "island_size": [
+          0,
+          10
+        ]
+      }
+    }
+  }
+]
